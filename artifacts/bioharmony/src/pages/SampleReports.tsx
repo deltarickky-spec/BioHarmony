@@ -433,25 +433,28 @@ export default function SampleReports() {
         <div className="container px-4 md:px-6 max-w-3xl mx-auto">
 
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="mb-10">
-            <div className="inline-flex w-full bg-white/[0.03] border border-white/8 rounded-2xl p-1.5 gap-1">
+            <div className="grid grid-cols-3 gap-3">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    flex-1 flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 text-center
+                    cursor-pointer flex flex-col items-center py-4 px-3 rounded-2xl border transition-all duration-200 text-center
                     ${activeTab === tab.id
-                      ? "bg-[#0C1919] border border-[#BFA14A]/25 shadow-[0_2px_16px_rgba(0,0,0,0.4)]"
-                      : "hover:bg-white/[0.03]"
+                      ? "bg-[#0C1919] border-[#BFA14A]/40 shadow-[0_0_24px_rgba(191,161,74,0.12)]"
+                      : "bg-white/[0.04] border-white/12 hover:bg-white/[0.07] hover:border-white/20"
                     }
                   `}
                 >
-                  <span className={`text-sm font-medium transition-colors duration-200 ${activeTab === tab.id ? "text-[#BFA14A]" : "text-[#F4EFE6]/45"}`}>
+                  <span className={`text-sm font-semibold transition-colors duration-200 ${activeTab === tab.id ? "text-[#BFA14A]" : "text-[#F4EFE6]/80"}`}>
                     {tab.label}
                   </span>
-                  <span className={`text-xs mt-0.5 transition-colors duration-200 ${activeTab === tab.id ? "text-[#F4EFE6]/50" : "text-[#F4EFE6]/25"}`}>
+                  <span className={`text-xs mt-1 transition-colors duration-200 ${activeTab === tab.id ? "text-[#F4EFE6]/55" : "text-[#F4EFE6]/45"}`}>
                     {tab.sub}
                   </span>
+                  {activeTab === tab.id && (
+                    <div className="mt-2 w-6 h-0.5 rounded-full bg-[#BFA14A]/60" />
+                  )}
                 </button>
               ))}
             </div>
