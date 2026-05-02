@@ -1,0 +1,19 @@
+uploads = []
+
+[[generated]]
+id = "PFxmBk2XpkIE5zDdPcl14"
+uri = "file://artifacts/bioharmony/src/assets/hero-bg.png"
+type = "image"
+title = "Soft focus abstract wellness image"
+
+[[generated]]
+id = "RkFh3ZB3fCM_7BtUx2_wt"
+uri = "file://artifacts/bioharmony/src/assets/pemf-visual.png"
+type = "image"
+title = "Abstract PEMF therapy visual"
+
+[[outputs]]
+id = "VXhwycBVOUzAZ2ghNaoU7"
+uri = "file://artifacts/bioharmony/src/assets/kathy-owens.jpg"
+type = "image"
+title = "professional middle aged woman portrait smiling"
