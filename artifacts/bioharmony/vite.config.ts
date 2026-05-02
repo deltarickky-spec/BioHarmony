@@ -54,9 +54,15 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   root: path.resolve(import.meta.dirname),
+  optimizeDeps: {
+    include: ["@react-pdf/renderer"],
+  },
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    commonjsOptions: {
+      include: [/@react-pdf\/renderer/, /node_modules/],
+    },
   },
   server: {
     port,

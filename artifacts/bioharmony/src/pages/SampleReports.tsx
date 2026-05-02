@@ -3,6 +3,8 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { DownloadReportButton } from "@/components/DownloadReportButton";
+import { REPORT_DATA } from "@/lib/reportData";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -458,6 +460,17 @@ export default function SampleReports() {
                 </button>
               ))}
             </div>
+          </motion.div>
+
+          {/* Download row */}
+          <motion.div
+            initial="hidden" animate="visible" variants={fadeInUp}
+            className="flex items-center justify-between mb-4"
+          >
+            <p className="text-[#F4EFE6]/35 text-xs">
+              Sample for {REPORT_DATA[activeTab].clientName}
+            </p>
+            <DownloadReportButton data={REPORT_DATA[activeTab]} />
           </motion.div>
 
           <AnimatePresence mode="wait">
