@@ -73,7 +73,8 @@ export function Navbar() {
 
   const links = [
     { href: "/", label: "For You" },
-    { href: "/for-practitioners", label: "For Practitioners" },
+    { href: "/sample-reports", label: "Sample Reports" },
+    { href: "/for-practitioners", label: "Practitioners" },
     { href: "/upload-scan", label: "Upload Scan" },
     { href: "/membership", label: "Membership" },
     { href: "/pet-scans", label: "Pet Scans" },
@@ -81,6 +82,7 @@ export function Navbar() {
 
   const mobileLinks = [
     { href: "/", label: "For You" },
+    { href: "/sample-reports", label: "Sample Reports" },
     { href: "/for-practitioners", label: "For Practitioners" },
     { href: "/upload-scan", label: "Upload Scan" },
     { href: "/membership", label: "Membership" },

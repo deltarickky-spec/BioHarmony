@@ -17,6 +17,7 @@ import UploadScan from "@/pages/UploadScan";
 import PetScans from "@/pages/PetScans";
 import Membership from "@/pages/Membership";
 import SampleReport from "@/pages/SampleReport";
+import SampleReports from "@/pages/SampleReports";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ function Router() {
           <Route path="/pet-scans" component={PetScans} />
           <Route path="/membership" component={Membership} />
           <Route path="/sample-report" component={SampleReport} />
+          <Route path="/sample-reports" component={SampleReports} />
           <Route component={NotFound} />
         </Switch>
       </main>
