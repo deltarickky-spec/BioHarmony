@@ -5,6 +5,11 @@ import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
 import pemfVisual from "@/assets/pemf-visual.png";
+import solexBlood from "@/assets/solex-report-blood.png";
+import solexChakra from "@/assets/solex-report-chakra.png";
+import solexDigestive from "@/assets/solex-report-digestive.png";
+import solexFood from "@/assets/solex-report-food.png";
+import solexEmotional from "@/assets/solex-report-emotional.png";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -224,50 +229,58 @@ export default function Home() {
                 <div className="w-2 h-2 rounded-full bg-red-400/60"></div>
                 <span className="text-red-400/70 text-xs font-bold tracking-[0.15em] uppercase">Before: Raw AO Scan Data</span>
               </div>
-              <div className="bg-white/4 border border-white/8 rounded-2xl p-6 md:p-8 flex flex-col h-full">
-                {/* Fake report header */}
-                <div className="flex items-center gap-2 mb-5 pb-4 border-b border-white/8">
-                  <div className="font-mono text-green-400/50 text-xs">scan_export_solex_2024.xlsx</div>
-                  <div className="ml-auto text-[10px] text-red-400/40 border border-red-400/20 rounded px-1.5 py-0.5">UNINTERPRETED</div>
+              <div className="bg-white/4 border border-white/8 rounded-2xl overflow-hidden flex flex-col h-full">
+                {/* Label bar */}
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-white/8 bg-black/20">
+                  <div className="text-[#F4EFE6]/35 text-xs font-medium">Example Raw AO Scan Report</div>
+                  <div className="ml-auto text-[10px] text-red-400/50 border border-red-400/20 rounded px-1.5 py-0.5 uppercase tracking-wide">Uninterpreted</div>
                 </div>
-                {/* Fake data sections */}
-                <div className="space-y-4 flex-grow">
-                  <div className="space-y-1.5">
-                    <div className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Blood Markers</div>
-                    {[["RBC", "4.21 M/uL", "L"], ["WBC", "7.8 K/uL", "N"], ["Ferritin", "11 ng/mL", "L"]].map(([k, v, s], i) => (
-                      <div key={i} className="flex justify-between font-mono text-[11px] text-[#F4EFE6]/30 bg-black/15 px-3 py-1.5 rounded">
-                        <span>{k}</span><span>{v}</span>
-                        <span className={s === "L" ? "text-red-400/50" : "text-[#F4EFE6]/20"}>{s}</span>
+
+                {/* Real report screenshot collage — slightly dimmed */}
+                <div className="relative flex-grow">
+                  {/* Main large image — blood/vitals report */}
+                  <div className="relative overflow-hidden" style={{ height: "340px" }}>
+                    <img
+                      src={solexBlood}
+                      alt="Raw Solex AO Scan blood report"
+                      className="w-full h-full object-cover object-top opacity-60 scale-105"
+                      style={{ filter: "saturate(0.7) brightness(0.85)" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A1818]/80"></div>
+                  </div>
+
+                  {/* Mini report thumbnails — 3 across */}
+                  <div className="grid grid-cols-3 gap-0 border-t border-white/8">
+                    {[
+                      { src: solexFood, alt: "Food sensitivity grid" },
+                      { src: solexDigestive, alt: "Digestive findings" },
+                      { src: solexEmotional, alt: "Emotional vitals page" },
+                    ].map((img, i) => (
+                      <div key={i} className="relative overflow-hidden" style={{ height: "100px" }}>
+                        <img
+                          src={img.src}
+                          alt={img.alt}
+                          className="w-full h-full object-cover object-top opacity-55"
+                          style={{ filter: "saturate(0.6) brightness(0.8)" }}
+                        />
+                        {i < 2 && <div className="absolute right-0 top-0 bottom-0 w-px bg-white/8"></div>}
                       </div>
                     ))}
                   </div>
-                  <div className="space-y-1.5">
-                    <div className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Chakra Frequencies</div>
-                    {[["Root", "194.18 Hz", "−0.003"], ["Sacral", "210.42 Hz", "+0.011"], ["Solar", "126.22 Hz", "−0.007"]].map(([k, v, d], i) => (
-                      <div key={i} className="flex justify-between font-mono text-[11px] text-[#F4EFE6]/30 bg-black/15 px-3 py-1.5 rounded">
-                        <span>{k}</span><span>{v}</span><span>{d}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Food Sensitivity Grid</div>
-                    <div className="grid grid-cols-4 gap-1">
-                      {["Gluten", "Dairy", "Soy", "Corn", "Eggs", "Nuts", "Sugar", "Yeast"].map((f, i) => (
-                        <div key={i} className={`text-[10px] text-center py-1 rounded font-mono ${i % 3 === 0 ? "bg-red-900/30 text-red-400/50" : "bg-black/20 text-[#F4EFE6]/25"}`}>{f}</div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
-                <p className="text-[#F4EFE6]/30 italic text-xs mt-5 text-center pt-4 border-t border-white/5">
-                  "Hundreds of readings. Technical language. Color codes. Charts. No clear explanation of what it means or where to begin."
-                </p>
-                <ul className="mt-4 space-y-1.5">
-                  {["Difficult to understand", "Hard to explain to clients", "Too much raw data", "No clear priority or story"].map((b, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs text-[#F4EFE6]/30">
-                      <div className="w-1 h-1 rounded-full bg-red-400/40 shrink-0"></div>{b}
-                    </li>
-                  ))}
-                </ul>
+
+                <div className="px-5 py-4 border-t border-white/8 space-y-3">
+                  <p className="text-[#F4EFE6]/35 italic text-xs text-center">
+                    "Hundreds of readings. Technical language. Color codes. Charts. No clear explanation of what it means or where to begin."
+                  </p>
+                  <ul className="grid grid-cols-2 gap-1.5">
+                    {["Difficult to understand", "Hard to explain to clients", "Too much raw data", "No clear priority or story"].map((b, i) => (
+                      <li key={i} className="flex items-center gap-1.5 text-[11px] text-[#F4EFE6]/30">
+                        <div className="w-1 h-1 rounded-full bg-red-400/40 shrink-0"></div>{b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </motion.div>
 
