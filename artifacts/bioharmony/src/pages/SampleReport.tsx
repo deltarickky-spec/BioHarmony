@@ -1,6 +1,10 @@
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage, type Language } from "@/contexts/LanguageContext";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -9,8 +13,49 @@ const fadeInUp = {
 
 const stagger = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.12 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
+
+interface ReportContent {
+  openingParagraph: string;
+  digestiveTitle: string;
+  digestiveText: string;
+  connectedInsight: string;
+  emotionalTitle: string;
+  emotionalText: string;
+  recommendations: Array<{ title: string; desc: string }>;
+  ctaHeadline: string;
+  ctaSubtext: string;
+}
+
+const ENGLISH_CONTENT: ReportContent = {
+  openingParagraph: "Jane, as I went through your scan, a few clear patterns began to stand out. What your body is showing isn't random — it's actually communicating a very connected story between your digestion, stress response, and energy levels. This is something I see quite often, and the good news is that once we understand the pattern, we can begin supporting it in a much more targeted and gentle way.",
+  digestiveTitle: "Digestive System Support",
+  digestiveText: "Your scan is showing that your digestive system may be working harder than it should right now. This can sometimes show up as bloating, slower digestion, or feeling tired after meals. What's interesting is that this is often connected to stress patterns as well — when the body is in a more stressed state, digestion naturally slows down.",
+  connectedInsight: "This is where things connect — your digestive patterns are not isolated. They're closely tied to your nervous system and emotional stress levels. When those are supported together, the body often responds much more quickly.",
+  emotionalTitle: "Emotional & Energetic Patterns",
+  emotionalText: "Your Inner Voice scan suggests a tendency toward internal pressure — feeling like you need to hold things together or push through even when your body is asking for rest. This can quietly impact both your energy and digestion over time.",
+  recommendations: [
+    { title: "Focus on Hydration", desc: "Consistent daily water intake supports cellular communication and gentle detox." },
+    { title: "Digestive Support", desc: "Prioritize warm, easy-to-digest foods and consider probiotic support." },
+    { title: "Stress Regulation", desc: "Short breathing practices or meditation to calm the nervous system response." },
+    { title: "Light Daily Movement", desc: "Gentle walks or stretching to encourage lymphatic flow and energy." },
+    { title: "Frequency Support (SEFI)", desc: "Targeted frequency support sessions aligned with your scan patterns." },
+  ],
+  ctaHeadline: "Ready to understand your own results?",
+  ctaSubtext: "Upload your AO Scan export and receive your own personalized BioHarmony interpretation.",
+};
+
+const SESSION_KEY = "bioharmony_report_session";
+
+function getSessionId(): string {
+  let id = sessionStorage.getItem(SESSION_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    sessionStorage.setItem(SESSION_KEY, id);
+  }
+  return id;
+}
 
 function SectionHeader({ label }: { label: string }) {
   return (
@@ -30,6 +75,56 @@ function InsightCard({ children }: { children: React.ReactNode }) {
 }
 
 export default function SampleReport() {
+  const { language } = useLanguage();
+  const [content, setContent] = useState<ReportContent>(ENGLISH_CONTENT);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationError, setTranslationError] = useState<string | null>(null);
+  const translationCache = useRef<Partial<Record<Language, ReportContent>>>({ en: ENGLISH_CONTENT });
+
+  useEffect(() => {
+    if (language === "en") {
+      setContent(ENGLISH_CONTENT);
+      setTranslationError(null);
+      return;
+    }
+
+    const cached = translationCache.current[language];
+    if (cached) {
+      setContent(cached);
+      setTranslationError(null);
+      return;
+    }
+
+    const sessionId = getSessionId();
+    setIsTranslating(true);
+    setTranslationError(null);
+
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+    fetch(`${base}/api/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: ENGLISH_CONTENT,
+        targetLanguage: language,
+        sessionId,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<{ translated: ReportContent }>;
+      })
+      .then(({ translated }) => {
+        translationCache.current[language] = translated;
+        setContent(translated);
+      })
+      .catch(() => {
+        setTranslationError("Translation unavailable — showing English version.");
+        setContent(ENGLISH_CONTENT);
+      })
+      .finally(() => setIsTranslating(false));
+  }, [language]);
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#060D0D] to-[#091515]">
 
@@ -45,6 +140,25 @@ export default function SampleReport() {
           </motion.div>
         </div>
       </section>
+
+      {/* Language selector bar */}
+      <div className="sticky top-[72px] z-30 bg-[#060D0D]/90 backdrop-blur-xl border-b border-white/8">
+        <div className="container px-4 md:px-6 max-w-3xl mx-auto py-3 flex items-center justify-between gap-4">
+          <span className="text-[#F4EFE6]/30 text-xs uppercase tracking-wider hidden sm:block">View report in:</span>
+          <LanguageSelector />
+          {isTranslating && (
+            <div className="flex items-center gap-2 text-[#BFA14A]/60 text-xs ml-auto shrink-0">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Translating…</span>
+            </div>
+          )}
+        </div>
+        {translationError && (
+          <div className="container px-4 md:px-6 max-w-3xl mx-auto pb-2">
+            <p className="text-amber-400/60 text-xs">{translationError}</p>
+          </div>
+        )}
+      </div>
 
       {/* Report body */}
       <section className="py-16">
@@ -66,11 +180,14 @@ export default function SampleReport() {
             </motion.div>
 
             {/* Opening paragraph */}
-            <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
+            <motion.div
+              initial="hidden" animate="visible" variants={fadeInUp}
+              key={`opening-${language}`}
+            >
               <div className="bg-[#0F5C5E]/12 border border-[#0F5C5E]/30 rounded-2xl px-7 py-7 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-[#BFA14A]/4 blur-[60px] rounded-full pointer-events-none"></div>
                 <p className="text-[#F4EFE6]/80 text-[15px] leading-[1.85] font-serif italic">
-                  "Jane, as I went through your scan, a few clear patterns began to stand out. What your body is showing isn't random — it's actually communicating a very connected story between your digestion, stress response, and energy levels. This is something I see quite often, and the good news is that once we understand the pattern, we can begin supporting it in a much more targeted and gentle way."
+                  "{content.openingParagraph}"
                 </p>
                 <p className="text-[#BFA14A]/60 text-xs mt-4 font-sans not-italic">— Kathy Owens, BioHarmony Solutions</p>
               </div>
@@ -84,28 +201,33 @@ export default function SampleReport() {
             </div>
 
             {/* Digestive section */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-              <SectionHeader label="Digestive System Support" />
-              <InsightCard>
-                Your scan is showing that your digestive system may be working harder than it should right now. This can sometimes show up as bloating, slower digestion, or feeling tired after meals. What's interesting is that this is often connected to stress patterns as well — when the body is in a more stressed state, digestion naturally slows down.
-              </InsightCard>
+            <motion.div
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+              key={`digestive-${language}`}
+            >
+              <SectionHeader label={content.digestiveTitle} />
+              <InsightCard>{content.digestiveText}</InsightCard>
             </motion.div>
 
             {/* Connected insight callout */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+            <motion.div
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+              key={`insight-${language}`}
+            >
               <div className="border-l-2 border-[#BFA14A]/50 pl-6 py-1">
                 <p className="text-[#F4EFE6]/65 text-[14px] leading-[1.8] italic font-serif">
-                  "This is where things connect — your digestive patterns are not isolated. They're closely tied to your nervous system and emotional stress levels. When those are supported together, the body often responds much more quickly."
+                  "{content.connectedInsight}"
                 </p>
               </div>
             </motion.div>
 
             {/* Emotional section */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-              <SectionHeader label="Emotional & Energetic Patterns" />
-              <InsightCard>
-                Your Inner Voice scan suggests a tendency toward internal pressure — feeling like you need to hold things together or push through even when your body is asking for rest. This can quietly impact both your energy and digestion over time.
-              </InsightCard>
+            <motion.div
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+              key={`emotional-${language}`}
+            >
+              <SectionHeader label={content.emotionalTitle} />
+              <InsightCard>{content.emotionalText}</InsightCard>
             </motion.div>
 
             {/* Divider */}
@@ -116,16 +238,13 @@ export default function SampleReport() {
             </div>
 
             {/* Recommendations */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-              <SectionHeader label="Gentle Wellness Recommendations" />
+            <motion.div
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
+              key={`recs-${language}`}
+            >
+              <SectionHeader label={language === "en" ? "Gentle Wellness Recommendations" : content.recommendations[0]?.title ? "Gentle Wellness Recommendations" : "Gentle Wellness Recommendations"} />
               <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { title: "Focus on Hydration", desc: "Consistent daily water intake supports cellular communication and gentle detox." },
-                  { title: "Digestive Support", desc: "Prioritize warm, easy-to-digest foods and consider probiotic support." },
-                  { title: "Stress Regulation", desc: "Short breathing practices or meditation to calm the nervous system response." },
-                  { title: "Light Daily Movement", desc: "Gentle walks or stretching to encourage lymphatic flow and energy." },
-                  { title: "Frequency Support (SEFI)", desc: "Targeted frequency support sessions aligned with your scan patterns." },
-                ].map((rec, i) => (
+                {content.recommendations.map((rec, i) => (
                   <motion.div
                     key={i}
                     variants={fadeInUp}
@@ -155,10 +274,8 @@ export default function SampleReport() {
       <section className="py-20 border-t border-white/8 bg-gradient-to-b from-transparent to-[#040A0A]">
         <div className="container px-4 md:px-6 max-w-2xl mx-auto text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
-            <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6]">Ready to understand your own results?</h2>
-            <p className="text-[#F4EFE6]/50 leading-relaxed">
-              Upload your AO Scan export and receive your own personalized BioHarmony interpretation.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6]">{content.ctaHeadline}</h2>
+            <p className="text-[#F4EFE6]/50 leading-relaxed">{content.ctaSubtext}</p>
             <Button
               asChild
               size="lg"
