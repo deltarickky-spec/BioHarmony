@@ -201,82 +201,201 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NEW SECTION C: "Before vs After" comparison */}
-      <section className="bg-gradient-to-b from-[#0A1818] to-[#091515] py-24">
+      {/* BEFORE / AFTER COMPARISON */}
+      <section className="bg-gradient-to-b from-[#0A1818] to-[#060D0D] py-24">
         <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16 max-w-3xl mx-auto space-y-4">
-            <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">The BioHarmony Difference</h2>
-            <p className="text-[#F4EFE6]/60 text-lg">From raw data to client-ready clarity.</p>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16 max-w-3xl mx-auto space-y-5">
+            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">The BioHarmony Difference</p>
+            <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6] leading-tight">
+              Most People Don't Need More Data.<br className="hidden md:block" /> They Need Someone to Make Sense of It.
+            </h2>
+            <p className="text-[#F4EFE6]/55 text-lg leading-relaxed">
+              AO Scan reports can be incredibly powerful, but without interpretation they often leave people feeling confused instead of supported. BioHarmony translates raw scan data into clear, client-friendly insight.
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* Left Panel - BEFORE */}
-            <motion.div 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 max-w-6xl mx-auto">
+            {/* Left Panel — BEFORE */}
+            <motion.div
               initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
               className="space-y-3"
             >
-              <div className="text-red-400/80 text-sm font-bold tracking-wider px-2">BEFORE</div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 h-full flex flex-col">
-                <div className="font-mono text-green-400/70 text-sm mb-6 pb-4 border-b border-white/10">scan_export_2024.xlsx</div>
-                <div className="space-y-3 flex-grow font-mono text-xs md:text-sm text-[#F4EFE6]/40">
-                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
-                    <span>Frequency: 432.8 Hz</span>
-                    <span>Status: 0.0043</span>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
-                    <span>Meridian: LV-3</span>
-                    <span>Delta: -0.0021</span>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
-                    <span>System: Endocrine</span>
-                    <span>Value: 1.2944</span>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
-                    <span>Organ: Thyroid</span>
-                    <span>Dev: 0.0019</span>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
-                    <span>Marker: X-44</span>
-                    <span>Var: 8.441</span>
-                  </div>
-                </div>
-                <p className="text-[#F4EFE6]/40 italic text-sm mt-6 text-center">Hundreds of raw frequency values. No context.</p>
+              <div className="flex items-center gap-2 px-1">
+                <div className="w-2 h-2 rounded-full bg-red-400/60"></div>
+                <span className="text-red-400/70 text-xs font-bold tracking-[0.15em] uppercase">Before: Raw AO Scan Data</span>
               </div>
-            </motion.div>
-
-            {/* Right Panel - AFTER */}
-            <motion.div 
-              initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
-              className="space-y-3"
-            >
-              <div className="text-[#BFA14A] text-sm font-bold tracking-wider px-2">AFTER</div>
-              <div className="bg-[#0F5C5E]/20 border border-[#BFA14A]/30 rounded-2xl p-6 md:p-8 h-full flex flex-col shadow-[0_0_30px_rgba(191,161,74,0.15)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#BFA14A]/5 blur-[50px] rounded-full"></div>
-                <h3 className="font-serif text-2xl text-[#BFA14A] mb-6 pb-4 border-b border-[#BFA14A]/20">Wellness Insight Summary</h3>
-                <div className="space-y-5 flex-grow z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#BFA14A] shrink-0"></div>
-                    <span className="text-[#F4EFE6]/90">Emotional Stress Patterns — Elevated</span>
+              <div className="bg-white/4 border border-white/8 rounded-2xl p-6 md:p-8 flex flex-col h-full">
+                {/* Fake report header */}
+                <div className="flex items-center gap-2 mb-5 pb-4 border-b border-white/8">
+                  <div className="font-mono text-green-400/50 text-xs">scan_export_solex_2024.xlsx</div>
+                  <div className="ml-auto text-[10px] text-red-400/40 border border-red-400/20 rounded px-1.5 py-0.5">UNINTERPRETED</div>
+                </div>
+                {/* Fake data sections */}
+                <div className="space-y-4 flex-grow">
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Blood Markers</div>
+                    {[["RBC", "4.21 M/uL", "L"], ["WBC", "7.8 K/uL", "N"], ["Ferritin", "11 ng/mL", "L"]].map(([k, v, s], i) => (
+                      <div key={i} className="flex justify-between font-mono text-[11px] text-[#F4EFE6]/30 bg-black/15 px-3 py-1.5 rounded">
+                        <span>{k}</span><span>{v}</span>
+                        <span className={s === "L" ? "text-red-400/50" : "text-[#F4EFE6]/20"}>{s}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#BFA14A] shrink-0"></div>
-                    <span className="text-[#F4EFE6]/90">Digestive System — Moderate Imbalance Noted</span>
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Chakra Frequencies</div>
+                    {[["Root", "194.18 Hz", "−0.003"], ["Sacral", "210.42 Hz", "+0.011"], ["Solar", "126.22 Hz", "−0.007"]].map(([k, v, d], i) => (
+                      <div key={i} className="flex justify-between font-mono text-[11px] text-[#F4EFE6]/30 bg-black/15 px-3 py-1.5 rounded">
+                        <span>{k}</span><span>{v}</span><span>{d}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#BFA14A] shrink-0"></div>
-                    <span className="text-[#F4EFE6]/90">Energy & Vitality — Within Balanced Range</span>
-                  </div>
-                  
-                  <div className="pt-6 mt-6 border-t border-[#BFA14A]/20">
-                    <p className="text-[#F4EFE6]/70 text-sm mb-3">Recommended Focus:</p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="bg-[#BFA14A]/15 text-[#BFA14A] border border-[#BFA14A]/30 rounded-full px-3 py-1 text-xs font-medium">Stress Support</span>
-                      <span className="bg-[#BFA14A]/15 text-[#BFA14A] border border-[#BFA14A]/30 rounded-full px-3 py-1 text-xs font-medium">Digestive Balance</span>
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Food Sensitivity Grid</div>
+                    <div className="grid grid-cols-4 gap-1">
+                      {["Gluten", "Dairy", "Soy", "Corn", "Eggs", "Nuts", "Sugar", "Yeast"].map((f, i) => (
+                        <div key={i} className={`text-[10px] text-center py-1 rounded font-mono ${i % 3 === 0 ? "bg-red-900/30 text-red-400/50" : "bg-black/20 text-[#F4EFE6]/25"}`}>{f}</div>
+                      ))}
                     </div>
                   </div>
                 </div>
-                <p className="text-[#BFA14A]/70 italic text-sm mt-6 text-center z-10">Clear, prioritized insights your client actually understands.</p>
+                <p className="text-[#F4EFE6]/30 italic text-xs mt-5 text-center pt-4 border-t border-white/5">
+                  "Hundreds of readings. Technical language. Color codes. Charts. No clear explanation of what it means or where to begin."
+                </p>
+                <ul className="mt-4 space-y-1.5">
+                  {["Difficult to understand", "Hard to explain to clients", "Too much raw data", "No clear priority or story"].map((b, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-[#F4EFE6]/30">
+                      <div className="w-1 h-1 rounded-full bg-red-400/40 shrink-0"></div>{b}
+                    </li>
+                  ))}
+                </ul>
               </div>
+            </motion.div>
+
+            {/* Right Panel — AFTER */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
+              className="space-y-3"
+            >
+              <div className="flex items-center gap-2 px-1">
+                <div className="w-2 h-2 rounded-full bg-[#BFA14A]"></div>
+                <span className="text-[#BFA14A] text-xs font-bold tracking-[0.15em] uppercase">After: BioHarmony Interpretation</span>
+              </div>
+              <div className="bg-[#0F5C5E]/15 border border-[#BFA14A]/35 rounded-2xl p-6 md:p-8 flex flex-col h-full shadow-[0_0_50px_rgba(191,161,74,0.12)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#BFA14A]/5 blur-[60px] rounded-full pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#0F5C5E]/20 blur-[50px] rounded-full pointer-events-none"></div>
+                {/* Mock report header */}
+                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#BFA14A]/15 z-10">
+                  <div className="font-serif text-[#BFA14A] text-base">Wellness Insight Report</div>
+                  <div className="ml-auto text-[10px] text-[#BFA14A]/60 border border-[#BFA14A]/20 rounded px-1.5 py-0.5">CLIENT-READY</div>
+                </div>
+                <div className="space-y-5 flex-grow z-10">
+                  {/* Insight rows */}
+                  <div className="space-y-3">
+                    {[
+                      { label: "Emotional Stress Patterns", status: "Elevated", color: "text-amber-400/80" },
+                      { label: "Digestive System Balance", status: "Needs Attention", color: "text-orange-400/70" },
+                      { label: "Energy & Vitality", status: "Within Range", color: "text-emerald-400/70" },
+                      { label: "Hormonal Frequency Patterns", status: "Mild Imbalance", color: "text-amber-400/70" },
+                    ].map((row, i) => (
+                      <div key={i} className="flex items-center justify-between bg-white/4 rounded-xl px-4 py-3 border border-white/6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#BFA14A] shrink-0"></div>
+                          <span className="text-[#F4EFE6]/85 text-sm">{row.label}</span>
+                        </div>
+                        <span className={`text-xs font-medium ${row.color}`}>{row.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 border-t border-[#BFA14A]/15">
+                    <p className="text-[#F4EFE6]/50 text-xs mb-3 uppercase tracking-wider">Wellness Focus Areas</p>
+                    <div className="flex flex-wrap gap-2">
+                      {["Stress Support", "Digestive Balance", "Hormonal Harmony", "Emotional Clarity"].map((tag, i) => (
+                        <span key={i} className="bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/25 rounded-full px-3 py-1 text-xs">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white/4 rounded-xl p-4 border border-white/6">
+                    <p className="text-[#F4EFE6]/55 text-xs leading-relaxed italic">
+                      "Your scan shows some elevated stress patterns that may be contributing to the digestive sensitivity you've noticed. This is a very common combination — your body is communicating clearly. Here's where we'd suggest focusing first…"
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[#BFA14A]/60 italic text-xs mt-5 text-center pt-4 border-t border-[#BFA14A]/10 z-10">
+                  "BioHarmony turns the same scan data into a clear, warm, story-style report your client can actually understand."
+                </p>
+                <ul className="mt-4 space-y-1.5 z-10">
+                  {["Clear plain-English explanation", "Connected body-system patterns", "Emotional and energetic insight", "Gentle wellness focus areas", "Client-ready PDF format"].map((b, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-[#F4EFE6]/55">
+                      <div className="w-1 h-1 rounded-full bg-[#BFA14A] shrink-0"></div>{b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Center transformation line + CTA */}
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+            className="text-center mt-14 space-y-6"
+          >
+            <p className="text-[#F4EFE6]/35 text-sm tracking-widest font-mono">
+              Raw data &nbsp;→&nbsp; Connected insight &nbsp;→&nbsp; Client-ready report
+            </p>
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-8 py-6 h-auto shadow-[0_0_20px_rgba(191,161,74,0.3)] hover:shadow-[0_0_35px_rgba(191,161,74,0.55)] transition-all duration-300"
+              data-testid="before-after-upload-cta"
+            >
+              <Link href="/upload-scan">Upload Your Scan for Interpretation</Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* PRACTITIONER SECTION — Stop Sending Confusing Reports */}
+      <section className="bg-[#060D0D] py-24 border-t border-white/6">
+        <div className="container px-4 md:px-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
+              <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">For AO Scan Practitioners</p>
+              <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6] leading-tight">
+                Stop Sending Confusing Reports to Your Clients
+              </h2>
+              <p className="text-[#F4EFE6]/60 text-lg leading-relaxed">
+                If you already use an AO Scanner or Solex system, BioHarmony helps you turn your scan exports into client-ready explanations.
+              </p>
+              <Button
+                asChild
+                className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/20 px-8 py-5 h-auto shadow-[0_0_15px_rgba(191,161,74,0.2)] hover:shadow-[0_0_30px_rgba(191,161,74,0.4)] transition-all duration-300"
+                data-testid="home-stop-confusing-practitioner-cta"
+              >
+                <Link href="/for-practitioners">View Practitioner Plans</Link>
+              </Button>
+              <p className="text-[#F4EFE6]/25 text-xs italic">
+                For wellness education and informational purposes only. Not intended to diagnose, treat, cure, or prevent any disease.
+              </p>
+            </motion.div>
+            <motion.div
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
+              className="space-y-3"
+            >
+              {[
+                "Upload XLSX or PDF reports from your AO Scanner",
+                "Receive a clear, plain-English interpretation",
+                "Use the report to support your client conversation",
+                "Optional white-label formatting available",
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  variants={fadeInUp}
+                  className="flex items-start gap-4 bg-white/4 border border-white/8 rounded-xl px-5 py-4 hover:border-[#BFA14A]/20 transition-colors duration-200"
+                >
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#BFA14A] shrink-0"></div>
+                  <span className="text-[#F4EFE6]/75 text-sm leading-relaxed">{item}</span>
+                </motion.div>
+              ))}
             </motion.div>
           </div>
         </div>
@@ -540,17 +659,19 @@ export default function Home() {
       </section>
 
       {/* Teaser A - Practitioner Section */}
-      <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-[#091515] to-[#0F2A2A] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(191,161,74,0.06)_0%,_transparent_60%)] pointer-events-none"></div>
         <div className="container relative z-10 px-4 md:px-6">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-              <h2 className="text-3xl md:text-5xl font-serif">Are You an AO Scan Practitioner?</h2>
-              <p className="text-lg text-primary-foreground/80 mt-4 leading-relaxed font-light">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
+              <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">For AO Scan Practitioners</p>
+              <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">Are You an AO Scan Practitioner?</h2>
+              <p className="text-lg text-[#F4EFE6]/65 leading-relaxed font-light">
                 BioHarmony helps Solex users turn scan data into client-ready reports.
               </p>
-              <h3 className="text-2xl font-serif mt-8 text-secondary italic">You scan. We interpret.</h3>
-              <div className="pt-8">
-                <Button asChild variant="outline" className="rounded-full border-primary-foreground/30 text-foreground hover:bg-primary-foreground hover:text-primary transition-colors" data-testid="home-practitioner-cta">
+              <h3 className="text-2xl font-serif text-[#BFA14A] italic mt-2">You scan. We interpret.</h3>
+              <div className="pt-4">
+                <Button asChild className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/20 px-8 py-5 h-auto shadow-[0_0_15px_rgba(191,161,74,0.2)] hover:shadow-[0_0_30px_rgba(191,161,74,0.45)] transition-all duration-300" data-testid="home-practitioner-cta">
                   <Link href="/for-practitioners">See Practitioner Plans</Link>
                 </Button>
               </div>
@@ -560,22 +681,23 @@ export default function Home() {
       </section>
 
       {/* Teaser B - Pet Scans */}
-      <section className="py-24 bg-[#F8F6F0]">
+      <section className="py-24 bg-[#060D0D] border-t border-white/6">
         <div className="container px-4 md:px-6">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-              <h2 className="text-3xl md:text-5xl font-serif text-primary">Wellness Scans for Pets Too</h2>
-              <p className="text-lg text-muted-foreground mt-4 leading-relaxed">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
+              <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">Species-Specific Wellness</p>
+              <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">Wellness Scans for Pets Too</h2>
+              <p className="text-lg text-[#F4EFE6]/60 leading-relaxed">
                 Dogs, cats, and horses can benefit from frequency-based wellness support.
               </p>
-              <p className="text-xl font-serif text-secondary italic mt-6">
+              <p className="text-xl font-serif text-[#BFA14A] italic">
                 "When your pet isn't acting like themselves, there's always a reason."
               </p>
-              <div className="mt-8 mb-8 p-6 bg-card border border-border/50 rounded-xl inline-block shadow-sm">
-                <p className="font-semibold text-foreground">Pet Wellness Scan — <span className="text-primary">$55 USD</span></p>
+              <div className="mt-4 mb-4 inline-block bg-white/5 border border-[#BFA14A]/20 rounded-2xl px-8 py-4 shadow-[0_0_20px_rgba(191,161,74,0.08)]">
+                <p className="text-[#F4EFE6]/80 font-medium">Pet Wellness Scan — <span className="text-[#BFA14A]">$55 USD</span></p>
               </div>
               <div className="pt-2">
-                <Button asChild className="rounded-full" data-testid="home-pets-cta">
+                <Button asChild className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/20 px-8 py-5 h-auto shadow-[0_0_15px_rgba(191,161,74,0.2)] hover:shadow-[0_0_30px_rgba(191,161,74,0.4)] transition-all duration-300" data-testid="home-pets-cta">
                   <Link href="/pet-scans">Explore Pet Scans</Link>
                 </Button>
               </div>

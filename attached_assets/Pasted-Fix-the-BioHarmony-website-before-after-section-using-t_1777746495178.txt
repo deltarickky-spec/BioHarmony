@@ -1,0 +1,110 @@
+Fix the BioHarmony website before/after section using the real Solex report examples.
+
+Do NOT rebuild the site.
+Do NOT change the overall layout.
+Keep the premium dark BioHarmony / Bio-Frequency Analytics style.
+
+Problem:
+The site still feels inconsistent in places and the before/after section does not clearly show the transformation from confusing raw AO/Solex reports into clear BioHarmony client-ready interpretation.
+
+Use this positioning:
+
+Headline:
+“Most People Don’t Need More Data. They Need Someone to Make Sense of It.”
+
+Subheading:
+“AO Scan reports can be incredibly powerful, but without interpretation they often leave people feeling confused instead of supported. BioHarmony translates raw scan data into clear, client-friendly insight.”
+
+Create a strong BEFORE / AFTER comparison section.
+
+LEFT SIDE — BEFORE:
+Title:
+“Before: Raw AO Scan Data”
+
+Use visual examples inspired by the uploaded Solex-style reports:
+- blood marker table
+- chakra chart
+- food sensitivity grid
+- digestive findings list
+- emotional/vitals page
+
+Design:
+- dark glass card
+- slightly dimmed/overwhelming look
+- raw spreadsheet/report feel
+- small labels and dense data
+
+Copy:
+“Hundreds of readings. Technical language. Color codes. Charts. No clear explanation of what it means or where to begin.”
+
+Bullets:
+- Difficult to understand
+- Hard to explain to clients
+- Too much raw data
+- No clear priority or story
+
+RIGHT SIDE — AFTER:
+Title:
+“After: BioHarmony Interpretation”
+
+Use a premium mock report card in BioHarmony style.
+
+Design:
+- brighter glass card
+- gold glow border
+- calm, organized report preview
+- client-friendly explanation
+
+Copy:
+“BioHarmony turns the same scan data into a clear, warm, story-style report your client can actually understand.”
+
+Bullets:
+- Clear plain-English explanation
+- Connected body-system patterns
+- Emotional and energetic insight
+- Gentle wellness focus areas
+- Client-ready PDF format
+
+Add a center transformation line:
+“Raw data → Connected insight → Client-ready report”
+
+Add a CTA under the section:
+“Upload Your Scan for Interpretation”
+
+Link CTA to:
+/upload-scan
+
+IMPORTANT STYLE RULES:
+- No white cards
+- No light beige sections
+- No generic SaaS upload boxes
+- Use only dark teal/black gradients
+- Use gold accents #BFA14A
+- Use ivory/soft white text
+- Use glassmorphism cards
+- Keep the luxury analytics platform feel
+
+Also update practitioner messaging:
+
+Add a practitioner-focused section near the before/after comparison:
+
+Headline:
+“Stop Sending Confusing Reports to Your Clients”
+
+Subheading:
+“If you already use an AO Scanner or Solex system, BioHarmony helps you turn your scan exports into client-ready explanations.”
+
+Bullets:
+- Upload XLSX or PDF reports
+- Receive a clear interpretation
+- Use the report to support your client conversation
+- Optional white-label formatting available
+
+CTA:
+“View Practitioner Plans”
+
+Link CTA to:
+/for-practitioners
+
+Keep all compliance language:
+This is for wellness education and informational purposes only. Do not claim diagnosis, treatment, cure, or prevention of disease.
