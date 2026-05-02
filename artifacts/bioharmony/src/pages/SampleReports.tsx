@@ -6,6 +6,8 @@ import { Sparkles } from "lucide-react";
 import { DownloadReportButton } from "@/components/DownloadReportButton";
 import { REPORT_DATA } from "@/lib/reportData";
 import { RequestReportModal } from "@/components/RequestReportModal";
+import { ReportAudioPlayer } from "@/components/ReportAudioPlayer";
+import { buildNarrationScript } from "@/lib/narrationScript";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -215,6 +217,11 @@ function JaneDoeReport({ onOpen }: { onOpen: () => void }) {
       ]} />
 
       <GoldDivider />
+      <ReportAudioPlayer
+        cacheKey="jane-en"
+        scriptText={buildNarrationScript(REPORT_DATA.jane)}
+        clientName="Jane Doe"
+      />
       <ComplianceNote />
       <ReportCTA onOpen={onOpen} />
     </div>
@@ -320,6 +327,11 @@ function MariaThompsonReport({ onOpen }: { onOpen: () => void }) {
       </div>
 
       <GoldDivider />
+      <ReportAudioPlayer
+        cacheKey="maria-en"
+        scriptText={buildNarrationScript(REPORT_DATA.maria)}
+        clientName="Maria Thompson"
+      />
       <ComplianceNote />
       <ReportCTA onOpen={onOpen} />
     </div>
@@ -400,6 +412,11 @@ function BellaReport({ onOpen }: { onOpen: () => void }) {
       </div>
 
       <GoldDivider />
+      <ReportAudioPlayer
+        cacheKey="bella-en"
+        scriptText={buildNarrationScript(REPORT_DATA.bella)}
+        clientName="Bella"
+      />
       <ComplianceNote pet />
       <ReportCTA onOpen={onOpen} />
     </div>
