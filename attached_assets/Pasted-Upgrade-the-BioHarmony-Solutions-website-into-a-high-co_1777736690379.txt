@@ -1,0 +1,150 @@
+Upgrade the BioHarmony Solutions website into a high-converting, premium wellness brand site.
+
+DO NOT rebuild from scratch.
+Refine and enhance what is already built.
+
+----------------------------------
+1. HERO SECTION (conversion upgrade)
+----------------------------------
+
+Add small emotional hook above headline:
+“Feeling off but not getting clear answers?”
+
+Keep main headline:
+“Decode Your Body’s Wellness Signals”
+
+Update subheading to:
+“Discover personalized wellness insights through AO Scan voice analysis, PEMF therapy, and easy-to-understand reports that help you finally make sense of what your body is telling you.”
+
+Update CTA:
+Primary button:
+“Start Your Personalized Scan”
+
+Add subtext under CTA:
+“Takes 2 minutes • No guesswork • Delivered in 24–48 hours”
+
+----------------------------------
+2. ADD “WHO THIS IS FOR”
+----------------------------------
+
+Create section:
+“This is for you if…”
+
+- You feel off but can’t pinpoint why
+- You’ve tried supplements without clear results
+- You want a more personalized wellness approach
+- You’re open to frequency-based wellness tools
+
+----------------------------------
+3. SIMPLIFY “HOW IT WORKS”
+----------------------------------
+
+Step 1: Choose your scan  
+Step 2: Submit a 15-second voice sample  
+Step 3: We analyze your energetic patterns  
+Step 4: Receive a clear, personalized report  
+
+----------------------------------
+4. ADD PRICING SECTION (CRITICAL)
+----------------------------------
+
+Create clean pricing cards:
+
+Inner Voice Scan — $55  
+Food Sensitivity — $44  
+Comprehensive Scan — $99  
+Ultimate Experience — $133  
+
+Each card CTA:
+“Select & Continue”
+
+----------------------------------
+5. ADD TRUST SECTION
+----------------------------------
+
+Title:
+“Kathy Owens — BioHarmony Solutions”
+
+Short bio:
+“With over 3 decades in holistic wellness, Kathy blends PEMF therapy, bioresonance tools, and intuitive insight to help clients better understand their body’s signals.”
+
+----------------------------------
+6. ADD TESTIMONIALS (PLACEHOLDER)
+----------------------------------
+
+Create 3 realistic testimonials:
+
+- “I finally understood what my body was trying to tell me…”
+- “The report made everything make sense…”
+- “This gave me clarity I haven’t found anywhere else…”
+
+----------------------------------
+7. ADD STRONG FINAL CTA
+----------------------------------
+
+“Ready to understand your body on a deeper level?”
+
+Button:
+“Start Your Scan Now”
+
+----------------------------------
+8. ADD WELLNESS EDUCATION / BLOG SECTION
+----------------------------------
+
+Create a section called:
+“Wellness Library”
+
+Include:
+- AO Scan basics
+- PEMF therapy education
+- Frequency wellness explanations
+
+Add 3 placeholder articles:
+- “What Is an AO Scan?”
+- “How PEMF Supports the Body”
+- “Understanding Frequency-Based Wellness”
+
+Keep this section secondary, not dominant.
+
+----------------------------------
+9. LOGO CREATION (IMPORTANT)
+----------------------------------
+
+Generate 3 logo concepts for BioHarmony Solutions:
+
+Style:
+- Clean, minimal, premium wellness
+- Teal (#0F5C5E), muted gold (#BFA14A), white
+- Incorporate subtle:
+  - energy wave
+  - leaf
+  - frequency lines
+  - or geometric harmony symbol
+
+Provide:
+- 3 distinct logo options
+- Light and dark versions
+- Use in navbar immediately
+
+----------------------------------
+10. KEEP COMPLIANCE LANGUAGE
+----------------------------------
+
+Do NOT add medical claims.
+
+Keep disclaimer:
+“This service is for wellness and educational purposes only and is not intended to diagnose, treat, cure, or prevent any disease.”
+
+----------------------------------
+11. DESIGN RULES
+----------------------------------
+
+- Keep clean, modern, premium clinic feel
+- Do NOT clutter layout
+- Maintain strong spacing and typography
+- Keep mobile-first design
+
+----------------------------------
+
+Goal:
+Turn this into a high-converting, premium wellness funnel that builds trust and drives bookings.

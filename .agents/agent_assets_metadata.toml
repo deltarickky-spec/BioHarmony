@@ -12,6 +12,24 @@ uri = "file://artifacts/bioharmony/src/assets/pemf-visual.png"
 type = "image"
 title = "Abstract PEMF therapy visual"
 
+[[generated]]
+id = "xYgCbukWOsyJidZMb27Ye"
+uri = "file://artifacts/bioharmony/src/assets/logo-concept-1.png"
+type = "image"
+title = "minimal geometric teal logo"
+
+[[generated]]
+id = "X6-83iKXW1H8rl1a6A5Uv"
+uri = "file://artifacts/bioharmony/src/assets/logo-concept-2.png"
+type = "image"
+title = "circular frequency rings logo"
+
+[[generated]]
+id = "5kXOB_9mL5Rh--Z_NwiQw"
+uri = "file://artifacts/bioharmony/src/assets/logo-concept-3.png"
+type = "image"
+title = "abstract arcs wave logo"
+
 [[outputs]]
 id = "VXhwycBVOUzAZ2ghNaoU7"
 uri = "file://artifacts/bioharmony/src/assets/kathy-owens.jpg"

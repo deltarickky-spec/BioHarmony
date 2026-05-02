@@ -1,0 +1,101 @@
+Upgrade this into a high-converting funnel for BioHarmony Solutions.
+
+1. HERO SECTION (critical)
+Keep headline but add emotional hook above it:
+
+Add small text above headline:
+“Feeling off but not getting clear answers?”
+
+Keep main headline:
+“Decode Your Body’s Wellness Signals”
+
+Update subheading to:
+“Discover personalized wellness insights through AO Scan voice analysis, PEMF therapy, and easy-to-understand reports that help you finally make sense of what your body is telling you.”
+
+2. CTA (make stronger)
+Replace:
+“Book an AO Scan”
+
+With:
+“Start Your Personalized Scan”
+
+Add subtext under button:
+“Takes 2 minutes • No guesswork • Delivered in 24–48 hours”
+
+---
+
+3. ADD “WHO THIS IS FOR” SECTION
+
+Add section:
+
+“This is for you if…”
+- You feel off but can’t pinpoint why
+- You’ve tried supplements without clear results
+- You want a more personalized approach
+- You’re open to frequency-based wellness tools
+
+---
+
+4. ADD “HOW IT WORKS” (simplified)
+
+Replace with:
+
+Step 1: Choose your scan  
+Step 2: Submit a 15-second voice sample  
+Step 3: We analyze your energetic patterns  
+Step 4: Receive a clear, personalized report  
+
+---
+
+5. ADD PRICING (VERY IMPORTANT)
+
+Add cards:
+
+Inner Voice Scan — $55  
+Food Sensitivity — $44  
+Comprehensive Scan — $99  
+Ultimate Experience — $133  
+
+CTA under each:
+“Select & Continue”
+
+---
+
+6. ADD TRUST SECTION
+
+Add:
+
+“Kathy Owens — BioHarmony Solutions”
+
+Short bio:
+“With over 3 decades in holistic wellness, Kathy blends PEMF therapy, bioresonance tools, and intuitive insight to help clients better understand their body’s signals.”
+
+---
+
+7. ADD TESTIMONIALS (placeholder)
+
+Create 3:
+
+“I finally understood what my body was trying to tell me…”  
+“The report made everything make sense…”  
+“This was the clarity I’ve been looking for…”
+
+---
+
+8. ADD URGENCY CTA AT BOTTOM
+
+“Ready to understand your body on a deeper level?”
+
+Button:
+“Start Your Scan Now”
+
+---
+
+9. KEEP COMPLIANCE
+
+Keep disclaimer exactly as is.
+
+---
+
+10. DO NOT change design style
+Only improve copy and structure
