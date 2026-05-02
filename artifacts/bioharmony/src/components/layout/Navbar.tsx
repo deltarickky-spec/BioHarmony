@@ -9,9 +9,19 @@ export function Navbar() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  const links = [
-    { href: "/", label: "Home" },
+  const desktopLinks = [
+    { href: "/", label: "For You" },
+    { href: "/for-practitioners", label: "For Practitioners" },
+    { href: "/upload-scan", label: "Upload Scan" },
+    { href: "/membership", label: "Membership" },
+    { href: "/pet-scans", label: "Pet Scans" },
+  ];
+
+  const mobileLinks = [
+    { href: "/", label: "For You" },
     { href: "/ao-scan", label: "AO Scan" },
+    { href: "/pemf-therapy", label: "PEMF Therapy" },
+    { href: "/bioharmony-analytics", label: "BioHarmony Analytics" },
     { href: "/upload-scan", label: "Upload Scan" },
     { href: "/membership", label: "Membership" },
     { href: "/pet-scans", label: "Pet Scans" },
@@ -33,7 +43,7 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-4 xl:gap-6">
             <div className="flex gap-3 xl:gap-5">
-              {links.map((link) => (
+              {desktopLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -68,7 +78,7 @@ export function Navbar() {
       {isOpen && (
         <div className="lg:hidden border-t border-border bg-card animate-in slide-in-from-top-4">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            {links.map((link) => (
+            {mobileLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

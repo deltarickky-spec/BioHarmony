@@ -18,18 +18,19 @@ const staggerContainer = {
 
 export default function ForPractitioners() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#0A1818]">
       {/* Hero Section */}
-      <section className="relative py-24 bg-primary text-primary-foreground overflow-hidden">
+      <section className="relative py-24 bg-gradient-to-br from-[#091515] via-[#0F2A2A] to-[#091515] text-[#F4EFE6] overflow-hidden">
         <div className="container relative z-10 px-4 md:px-6">
           <motion.div 
             initial="hidden" animate="visible" variants={fadeInUp}
             className="max-w-3xl mx-auto text-center space-y-6"
           >
+            <p className="text-[#BFA14A] text-sm font-bold tracking-widest uppercase">For Professionals</p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif leading-tight">
               For AO Scan Practitioners & Solex Users
             </h1>
-            <p className="text-lg md:text-xl text-primary-foreground/80 leading-relaxed font-light">
+            <p className="text-lg md:text-xl text-[#F4EFE6]/70 leading-relaxed font-light">
               If you already use an AO Scanner but don't fully understand the reports, BioHarmony translates your scan data into clear, client-friendly insights you can confidently share.
             </p>
           </motion.div>
@@ -37,75 +38,80 @@ export default function ForPractitioners() {
       </section>
 
       {/* Positioning Block */}
-      <section className="py-24 bg-background">
-        <div className="container px-4 md:px-6">
+      <section className="py-24 bg-[#0A1818]">
+        <div className="container px-4 md:px-6 relative">
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
-            className="text-center"
+            className="text-center relative flex items-center justify-center"
           >
-            <h2 className="text-4xl md:text-6xl font-serif text-secondary italic">
+            <div className="hidden md:block w-1/4 h-px bg-gradient-to-r from-transparent to-[#BFA14A]/30"></div>
+            <h2 className="text-5xl md:text-6xl font-serif text-[#BFA14A] italic px-8">
               You scan. We interpret.
             </h2>
+            <div className="hidden md:block w-1/4 h-px bg-gradient-to-l from-transparent to-[#BFA14A]/30"></div>
           </motion.div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24 bg-card border-y border-border">
+      <section className="py-24 bg-[#0A1818] border-y border-white/5">
         <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif text-primary">Practitioner Plans</h2>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16 space-y-4">
+            <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6]">Practitioner Plans</h2>
+            <p className="text-[#F4EFE6]/60 text-lg">Choose a plan that fits your practice volume.</p>
           </motion.div>
           
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto"
           >
             {[
               { 
-                name: "Practitioner Access", price: "$29", period: "/month", badge: "Entry Plan", 
-                includes: ["Upload portal access (XLSX & PDF)", "Dashboard access", "Submit reports for interpretation", "Discounted report pricing"],
-                note: "This plan provides access only. Reports are purchased separately or in bundles.",
-                cta: "Get Started", popular: false 
+                name: "Starter", price: "$29", period: "/month",
+                includes: ["5 reports per month", "Upload portal access", "Client-ready formatting", "Priority support"],
+                cta: "Choose Starter", popular: false 
               },
               { 
-                name: "Single Report", price: "$49", period: "/report", badge: "Pay As You Go", 
-                includes: ["One full report interpretation", "Client-ready formatting", "Delivered in 24–48 hours"],
-                cta: "Order a Report", popular: false 
+                name: "Growth", price: "$49", period: "/month",
+                includes: ["10 reports per month", "Upload portal access", "Client-ready formatting", "Priority support"],
+                cta: "Choose Growth", popular: true 
               },
               { 
-                name: "Starter Bundle", price: "$145", period: "/month", badge: "Best Value", 
-                includes: ["Up to 5 reports per month (~$29/report effective)", "All features of Practitioner Access"],
-                cta: "Choose Starter", popular: true 
-              },
-              { 
-                name: "Growth Bundle", price: "$270", period: "/month", badge: "For Active Practitioners", 
-                includes: ["Up to 10 reports per month (~$27/report effective)", "All features of Practitioner Access"],
-                cta: "Choose Growth", popular: false 
+                name: "Unlimited + White Label", price: "$97", period: "/month",
+                includes: ["Unlimited reports", "Your branding on reports", "Custom portal setup", "Dedicated account manager"],
+                cta: "Choose Unlimited", popular: false 
               }
             ].map((plan, i) => (
-              <motion.div key={i} variants={fadeInUp}>
-                <Card className={`h-full flex flex-col transition-all duration-300 ${plan.popular ? 'border-secondary shadow-md ring-1 ring-secondary/20 relative' : 'border-border/50 hover:shadow-sm'}`}>
-                  {plan.badge && (
-                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${plan.popular ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                      {plan.badge}
-                    </div>
-                  )}
+              <motion.div key={i} variants={fadeInUp} whileHover={{ scale: 1.02 }}>
+                <Card className={`h-full flex flex-col bg-transparent text-[#F4EFE6] transition-all duration-300 
+                  ${plan.popular 
+                    ? 'bg-[#0F5C5E]/20 backdrop-blur-md border-[#BFA14A]/50 shadow-[0_0_40px_rgba(191,161,74,0.2)]' 
+                    : 'bg-white/5 backdrop-blur-xl border-white/10 hover:border-white/20'
+                  } rounded-2xl`}>
                   <CardHeader className="text-center pb-4 pt-8">
-                    <CardTitle className="font-serif text-xl text-primary">{plan.name}</CardTitle>
+                    <CardTitle className="font-serif text-2xl text-[#F4EFE6]">{plan.name}</CardTitle>
                   </CardHeader>
-                  <CardContent className="flex-grow flex flex-col text-center pt-0">
-                    <div className="text-4xl font-bold text-foreground mb-1">{plan.price}<span className="text-lg text-muted-foreground font-normal">{plan.period}</span></div>
-                    <ul className="text-sm text-muted-foreground flex-grow mb-6 mt-6 space-y-3 text-left">
+                  <CardContent className="flex-grow flex flex-col text-center pt-0 px-8 pb-8">
+                    <div className="text-5xl font-bold text-[#BFA14A] mb-1">
+                      {plan.price}
+                      <span className="text-xl text-[#F4EFE6]/50 font-normal">{plan.period}</span>
+                    </div>
+                    <ul className="text-sm text-[#F4EFE6]/70 flex-grow mb-8 mt-8 space-y-4 text-left">
                       {plan.includes.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <div className="mt-1 w-1.5 h-1.5 rounded-full bg-secondary shrink-0"></div>
+                        <li key={idx} className="flex items-center gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#BFA14A] shrink-0"></div>
                           <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
-                    {plan.note && <p className="text-xs text-muted-foreground mb-6 italic">{plan.note}</p>}
-                    <Button asChild className="w-full rounded-full mt-auto" variant={plan.popular ? "default" : "outline"} data-testid={`practitioner-plan-${plan.name.replace(/\s+/g, '-').toLowerCase()}`}>
+                    <Button asChild className={`w-full rounded-full transition-all border-none mt-auto ${
+                        plan.popular 
+                          ? "bg-[#0F5C5E] text-white shadow-[0_0_20px_rgba(191,161,74,0.4)] hover:shadow-[0_0_30px_rgba(191,161,74,0.6)]" 
+                          : "bg-transparent border border-white/20 text-[#F4EFE6] hover:bg-white/10"
+                      }`}
+                      variant="outline"
+                      data-testid={`practitioner-plan-${plan.name.replace(/\s+/g, '-').toLowerCase()}`}
+                    >
                       <Link href="/contact">{plan.cta}</Link>
                     </Button>
                   </CardContent>
@@ -113,38 +119,35 @@ export default function ForPractitioners() {
               </motion.div>
             ))}
           </motion.div>
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground">Bundles offer discounted pricing for active practitioners. All pricing in USD.</p>
+          <div className="mt-12 text-center">
+            <p className="text-sm text-[#F4EFE6]/50">Bundles offer discounted pricing for active practitioners. All pricing in USD.</p>
           </div>
         </div>
       </section>
 
-      {/* White Label Add-on */}
-      <section className="py-12 bg-background">
+      {/* White Label Add-on Banner */}
+      <section className="py-12 bg-[#0A1818]">
         <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="max-w-2xl mx-auto">
-            <Card className="border-secondary/30 bg-secondary/5 shadow-sm">
-              <CardContent className="p-8 text-center flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="text-left space-y-2">
-                  <h3 className="font-serif text-2xl text-primary">White Label Add-On — $97/month</h3>
-                  <p className="text-muted-foreground">Includes: Your branding on reports, Client-ready PDF formatting, Professional presentation</p>
-                </div>
-                <Button asChild className="rounded-full shrink-0" data-testid="add-white-label">
-                  <Link href="/contact">Add White Label</Link>
-                </Button>
-              </CardContent>
-            </Card>
-            <p className="text-center text-xs text-muted-foreground italic mt-6">To ensure quality and fair use, all plans include monthly report limits.</p>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="max-w-3xl mx-auto">
+            <div className="bg-white/5 backdrop-blur-md border-l-4 border-[#BFA14A] border-y border-r border-white/10 rounded-r-2xl p-6 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-left space-y-2">
+                <h3 className="font-serif text-xl text-[#BFA14A]">Looking for White Label Only?</h3>
+                <p className="text-[#F4EFE6]/70 text-sm">Add white label branding to any Starter or Growth plan for $49/mo.</p>
+              </div>
+              <Button asChild className="rounded-full shrink-0 bg-transparent border border-[#BFA14A]/50 text-[#BFA14A] hover:bg-[#BFA14A]/10" data-testid="add-white-label">
+                <Link href="/contact">Learn More</Link>
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* CTA Footer */}
-      <section className="py-24 bg-card border-t border-border">
+      <section className="py-24 bg-[#0A1818]">
         <div className="container px-4 md:px-6 text-center">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
-            <h2 className="text-3xl md:text-4xl font-serif text-primary">Ready to grow your practice?</h2>
-            <Button asChild size="lg" className="rounded-full px-8 py-6 h-auto shadow-md" data-testid="start-practitioner-plan">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-8">
+            <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">Ready to grow your practice?</h2>
+            <Button asChild size="lg" className="rounded-full px-10 py-7 h-auto text-lg border-none bg-[#0F5C5E] text-white shadow-[0_0_20px_rgba(191,161,74,0.4)] hover:shadow-[0_0_30px_rgba(191,161,74,0.6)] transition-all" data-testid="start-practitioner-plan">
               <Link href="/contact">Start Your Practitioner Plan</Link>
             </Button>
           </motion.div>

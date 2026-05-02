@@ -145,6 +145,143 @@ export default function Home() {
         </div>
       </section>
 
+      {/* NEW SECTION A: "For Practitioners" dark glass teaser */}
+      <section className="bg-gradient-to-br from-[#091515] to-[#0F2A2A] py-24">
+        <div className="container px-4 md:px-6 max-w-4xl mx-auto">
+          <motion.div 
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} whileHover={{ scale: 1.01 }}
+            className="bg-white/5 backdrop-blur-xl border border-[#BFA14A]/20 rounded-3xl p-8 md:p-12 shadow-[0_0_60px_rgba(15,92,94,0.2)] text-center space-y-8"
+          >
+            <div className="space-y-4">
+              <p className="text-[#BFA14A] text-sm font-bold tracking-widest uppercase">For AO Scan Practitioners</p>
+              <h2 className="text-4xl md:text-5xl font-serif text-[#F4EFE6]">Already Own an AO Scanner?</h2>
+              <p className="text-[#F4EFE6]/70 text-lg md:text-xl font-light">We turn your confusing reports into client-ready insights</p>
+            </div>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 py-4">
+              <div className="bg-white/5 border border-[#BFA14A]/30 rounded-full px-5 py-2 text-[#F4EFE6] text-sm">1. Upload</div>
+              <div className="text-[#BFA14A] hidden md:block">→</div>
+              <div className="text-[#BFA14A] block md:hidden">↓</div>
+              <div className="bg-white/5 border border-[#BFA14A]/30 rounded-full px-5 py-2 text-[#F4EFE6] text-sm">2. Interpret</div>
+              <div className="text-[#BFA14A] hidden md:block">→</div>
+              <div className="text-[#BFA14A] block md:hidden">↓</div>
+              <div className="bg-white/5 border border-[#BFA14A]/30 rounded-full px-5 py-2 text-[#F4EFE6] text-sm">3. Deliver</div>
+            </div>
+
+            <Button asChild size="lg" className="bg-[#0F5C5E] text-white hover:bg-[#0F5C5E]/90 rounded-full px-8 py-6 h-auto shadow-[0_0_20px_rgba(191,161,74,0.4)] hover:shadow-[0_0_35px_rgba(191,161,74,0.65)] transition-all border-none">
+              <Link href="/upload-scan">Upload Your Scan</Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* NEW SECTION B: "Why AO Scan Reports Are Confusing" */}
+      <section className="bg-[#0A1818] py-24">
+        <div className="container px-4 md:px-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16 max-w-3xl mx-auto space-y-4">
+            <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">Why AO Scan Reports Are Confusing</h2>
+            <p className="text-[#F4EFE6]/60 text-lg">Most practitioners receive raw data without a clear interpretation layer.</p>
+          </motion.div>
+          
+          <motion.div 
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto"
+          >
+            {[
+              { title: "Overwhelming Data Volume", desc: "AO Scan exports contain hundreds of frequency markers across dozens of body systems — with no plain-language summary." },
+              { title: "Technical Jargon", desc: "The reports use bioresonance terminology that even trained practitioners struggle to translate for clients." },
+              { title: "No Prioritization", desc: "Without interpretation, clients can't tell which insights are most relevant to their current wellness goals." }
+            ].map((item, i) => (
+              <motion.div key={i} variants={fadeInUp} className="bg-white/5 backdrop-blur-md border-l-2 border-[#BFA14A] rounded-r-2xl p-8 shadow-lg">
+                <h3 className="text-xl font-serif text-[#BFA14A] mb-3">{item.title}</h3>
+                <p className="text-[#F4EFE6]/70 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* NEW SECTION C: "Before vs After" comparison */}
+      <section className="bg-gradient-to-b from-[#0A1818] to-[#091515] py-24">
+        <div className="container px-4 md:px-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16 max-w-3xl mx-auto space-y-4">
+            <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">The BioHarmony Difference</h2>
+            <p className="text-[#F4EFE6]/60 text-lg">From raw data to client-ready clarity.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {/* Left Panel - BEFORE */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
+              className="space-y-3"
+            >
+              <div className="text-red-400/80 text-sm font-bold tracking-wider px-2">BEFORE</div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 h-full flex flex-col">
+                <div className="font-mono text-green-400/70 text-sm mb-6 pb-4 border-b border-white/10">scan_export_2024.xlsx</div>
+                <div className="space-y-3 flex-grow font-mono text-xs md:text-sm text-[#F4EFE6]/40">
+                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
+                    <span>Frequency: 432.8 Hz</span>
+                    <span>Status: 0.0043</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
+                    <span>Meridian: LV-3</span>
+                    <span>Delta: -0.0021</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
+                    <span>System: Endocrine</span>
+                    <span>Value: 1.2944</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
+                    <span>Organ: Thyroid</span>
+                    <span>Dev: 0.0019</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between p-2 bg-black/20 rounded">
+                    <span>Marker: X-44</span>
+                    <span>Var: 8.441</span>
+                  </div>
+                </div>
+                <p className="text-[#F4EFE6]/40 italic text-sm mt-6 text-center">Hundreds of raw frequency values. No context.</p>
+              </div>
+            </motion.div>
+
+            {/* Right Panel - AFTER */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
+              className="space-y-3"
+            >
+              <div className="text-[#BFA14A] text-sm font-bold tracking-wider px-2">AFTER</div>
+              <div className="bg-[#0F5C5E]/20 border border-[#BFA14A]/30 rounded-2xl p-6 md:p-8 h-full flex flex-col shadow-[0_0_30px_rgba(191,161,74,0.15)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#BFA14A]/5 blur-[50px] rounded-full"></div>
+                <h3 className="font-serif text-2xl text-[#BFA14A] mb-6 pb-4 border-b border-[#BFA14A]/20">Wellness Insight Summary</h3>
+                <div className="space-y-5 flex-grow z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-[#BFA14A] shrink-0"></div>
+                    <span className="text-[#F4EFE6]/90">Emotional Stress Patterns — Elevated</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-[#BFA14A] shrink-0"></div>
+                    <span className="text-[#F4EFE6]/90">Digestive System — Moderate Imbalance Noted</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-[#BFA14A] shrink-0"></div>
+                    <span className="text-[#F4EFE6]/90">Energy & Vitality — Within Balanced Range</span>
+                  </div>
+                  
+                  <div className="pt-6 mt-6 border-t border-[#BFA14A]/20">
+                    <p className="text-[#F4EFE6]/70 text-sm mb-3">Recommended Focus:</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="bg-[#BFA14A]/15 text-[#BFA14A] border border-[#BFA14A]/30 rounded-full px-3 py-1 text-xs font-medium">Stress Support</span>
+                      <span className="bg-[#BFA14A]/15 text-[#BFA14A] border border-[#BFA14A]/30 rounded-full px-3 py-1 text-xs font-medium">Digestive Balance</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[#BFA14A]/70 italic text-sm mt-6 text-center z-10">Clear, prioritized insights your client actually understands.</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* AO Scan Deep Dive */}
       <section className="py-24 bg-card border-y border-border">
         <div className="container px-4 md:px-6">
