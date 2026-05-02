@@ -355,14 +355,25 @@ export default function Home() {
             <p className="text-[#F4EFE6]/35 text-sm tracking-widest font-mono">
               Raw data &nbsp;→&nbsp; Connected insight &nbsp;→&nbsp; Client-ready report
             </p>
-            <Button
-              asChild
-              size="lg"
-              className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-8 py-6 h-auto shadow-[0_0_20px_rgba(191,161,74,0.3)] hover:shadow-[0_0_35px_rgba(191,161,74,0.55)] transition-all duration-300"
-              data-testid="before-after-upload-cta"
-            >
-              <Link href="/upload-scan">Upload Your Scan for Interpretation</Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-8 py-6 h-auto shadow-[0_0_20px_rgba(191,161,74,0.3)] hover:shadow-[0_0_35px_rgba(191,161,74,0.55)] transition-all duration-300"
+                data-testid="before-after-upload-cta"
+              >
+                <Link href="/upload-scan">Upload Your Scan for Interpretation</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="rounded-full border-[#BFA14A]/30 text-[#F4EFE6]/75 px-8 py-6 h-auto hover:border-[#BFA14A]/60 hover:text-[#BFA14A] bg-transparent transition-all duration-300"
+                data-testid="before-after-sample-report-cta"
+              >
+                <Link href="/sample-report">View Sample Report</Link>
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>

@@ -1,0 +1,92 @@
+Create a "Sample Report" experience for BioHarmony Solutions.
+
+-----------------------------------
+1. BUTTON (HOMEPAGE)
+-----------------------------------
+
+Add CTA button:
+
+"View Sample Report"
+
+Link to:
+ /sample-report
+
+-----------------------------------
+2. SAMPLE REPORT PAGE
+-----------------------------------
+
+Page title:
+"Sample BioHarmony Interpretation Report"
+
+Subtext:
+"See how we turn complex scan data into clear, personalized insights you can actually understand."
+
+-----------------------------------
+3. CLIENT HEADER
+-----------------------------------
+
+Client Name: Jane Doe  
+Report Type: Comprehensive AO Scan  
+Date: [Mock Date]
+
+-----------------------------------
+4. OPENING PARAGRAPH (IMPORTANT)
+-----------------------------------
+
+Write in warm, story-style tone:
+
+"Jane, as I went through your scan, a few clear patterns began to stand out. What your body is showing isn’t random — it’s actually communicating a very connected story between your digestion, stress response, and energy levels. This is something I see quite often, and the good news is that once we understand the pattern, we can begin supporting it in a much more targeted and gentle way."
+
+-----------------------------------
+5. SECTION EXAMPLE (DIGESTION)
+-----------------------------------
+
+Title:
+Digestive System Support
+
+Write in plain English:
+
+"Your scan is showing that your digestive system may be working harder than it should right now. This can sometimes show up as bloating, slower digestion, or feeling tired after meals. What’s interesting is that this is often connected to stress patterns as well — when the body is in a more stressed state, digestion naturally slows down."
+
+-----------------------------------
+6. CONNECTED INSIGHT (KEY DIFFERENTIATOR)
+-----------------------------------
+
+"This is where things connect — your digestive patterns are not isolated. They’re closely tied to your nervous system and emotional stress levels. When those are supported together, the body often responds much more quickly."
+
+-----------------------------------
+7. EMOTIONAL SECTION
+-----------------------------------
+
+Title:
+Emotional & Energetic Patterns
+
+"Your Inner Voice scan suggests a tendency toward internal pressure — feeling like you need to hold things together or push through even when your body is asking for rest. This can quietly impact both your energy and digestion over time."
+
+-----------------------------------
+8. RECOMMENDATIONS (SIMPLE)
+-----------------------------------
+
+- Focus on hydration
+- Gentle digestive support
+- Stress regulation practices
+- Light daily movement
+- Targeted frequency support (SEFI)
+
+-----------------------------------
+9. CTA AT BOTTOM
+-----------------------------------
+
+"Ready to understand your own results?"
+
+Button:
+"Upload Your Scan"
+
+-----------------------------------
+10. DESIGN
+-----------------------------------
+
+- Match dark premium BioHarmony style
+- Gold accents for section headers
+- Clean spacing, no clutter
+- Make it feel calm and readable
