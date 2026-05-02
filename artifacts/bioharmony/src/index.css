@@ -50,93 +50,86 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* 
-Brand Colors:
-- Deep teal: #0F5C5E (primary brand color)
-- Muted gold: #BFA14A (accent)
-- Ivory: #F4EFE6 (warm background)
-- Charcoal: #1F2933 (text)
-- Soft white: #FAFAF8 (card/section backgrounds)
-
-Converted to HSL:
-#0F5C5E -> 182 72% 21%
-#BFA14A -> 45 47% 52%
-#F4EFE6 -> 39 33% 93%
-#1F2933 -> 210 24% 16%
-#FAFAF8 -> 60 20% 98%
+/*
+Brand Colors — Dark Premium Theme:
+- Deep dark teal: #060D0D (page background)
+- Dark card: #0C1919 (card surfaces)
+- Bright teal: #1F8888 (primary — readable on dark)
+- Muted gold: #BFA14A (secondary/accent)
+- Ivory: #F4EFE6 (foreground text)
+- Soft muted: warm ivory/grey (muted text)
 */
 
 :root {
-  --background: 39 33% 93%; /* Ivory */
-  --foreground: 210 24% 16%; /* Charcoal */
-  --border: 45 10% 85%;
-  --input: 45 10% 85%;
-  --ring: 182 72% 21%;
+  --background: 182 42% 5%;
+  --foreground: 39 33% 93%;
+  --border: 182 22% 14%;
+  --input: 182 22% 14%;
+  --ring: 45 47% 52%;
 
-  --card: 60 20% 98%; /* Soft white */
-  --card-foreground: 210 24% 16%;
-  --card-border: 45 10% 90%;
+  --card: 182 35% 8%;
+  --card-foreground: 39 33% 93%;
+  --card-border: 182 22% 16%;
 
-  --popover: 60 20% 98%;
-  --popover-foreground: 210 24% 16%;
-  --popover-border: 45 10% 90%;
+  --popover: 182 35% 10%;
+  --popover-foreground: 39 33% 93%;
+  --popover-border: 182 22% 18%;
 
-  --primary: 182 72% 21%; /* Deep teal */
-  --primary-foreground: 60 20% 98%;
+  --primary: 182 65% 35%;
+  --primary-foreground: 39 33% 93%;
 
-  --secondary: 45 47% 52%; /* Muted gold */
-  --secondary-foreground: 60 20% 98%;
+  --secondary: 45 47% 52%;
+  --secondary-foreground: 210 24% 10%;
 
-  --muted: 39 20% 88%;
-  --muted-foreground: 210 10% 40%;
+  --muted: 182 25% 11%;
+  --muted-foreground: 39 20% 58%;
 
-  --accent: 39 20% 88%;
-  --accent-foreground: 210 24% 16%;
+  --accent: 182 25% 13%;
+  --accent-foreground: 39 33% 93%;
 
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 60 20% 98%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 39 33% 93%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: 'Playfair Display', serif;
   --app-font-mono: monospace;
-  --radius: 0.75rem; 
+  --radius: 0.75rem;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.3);
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -1px rgba(0,0,0,0.2);
+  --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2);
+  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.4), 0 10px 10px -5px rgba(0,0,0,0.2);
 }
 
 .dark {
-  /* Enforce light mode mostly, but add basic dark mode fallbacks */
-  --background: 210 24% 12%; 
-  --foreground: 60 20% 98%;
-  --border: 210 20% 20%;
-  --input: 210 20% 20%;
-  --ring: 182 72% 31%;
+  --background: 182 42% 5%;
+  --foreground: 39 33% 93%;
+  --border: 182 22% 14%;
+  --input: 182 22% 14%;
+  --ring: 45 47% 52%;
 
-  --card: 210 24% 16%; 
-  --card-foreground: 60 20% 98%;
-  --card-border: 210 20% 25%;
+  --card: 182 35% 8%;
+  --card-foreground: 39 33% 93%;
+  --card-border: 182 22% 16%;
 
-  --popover: 210 24% 16%;
-  --popover-foreground: 60 20% 98%;
-  --popover-border: 210 20% 25%;
+  --popover: 182 35% 10%;
+  --popover-foreground: 39 33% 93%;
+  --popover-border: 182 22% 18%;
 
-  --primary: 182 72% 31%; 
-  --primary-foreground: 60 20% 98%;
+  --primary: 182 65% 35%;
+  --primary-foreground: 39 33% 93%;
 
-  --secondary: 45 47% 62%; 
-  --secondary-foreground: 60 20% 98%;
+  --secondary: 45 47% 52%;
+  --secondary-foreground: 210 24% 10%;
 
-  --muted: 210 20% 20%;
-  --muted-foreground: 210 10% 70%;
+  --muted: 182 25% 11%;
+  --muted-foreground: 39 20% 58%;
 
-  --accent: 210 20% 20%;
-  --accent-foreground: 60 20% 98%;
+  --accent: 182 25% 13%;
+  --accent-foreground: 39 33% 93%;
 
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 60 20% 98%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 39 33% 93%;
 }
 
 @layer base {
