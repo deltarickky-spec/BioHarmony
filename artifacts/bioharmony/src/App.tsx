@@ -18,6 +18,7 @@ import PetScans from "@/pages/PetScans";
 import Membership from "@/pages/Membership";
 import SampleReport from "@/pages/SampleReport";
 import SampleReports from "@/pages/SampleReports";
+import AdminLeads from "@/pages/AdminLeads";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +54,10 @@ function App() {
       <TooltipProvider>
         <LanguageProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <Switch>
+              <Route path="/admin/leads" component={AdminLeads} />
+              <Route component={Router} />
+            </Switch>
           </WouterRouter>
           <Toaster />
         </LanguageProvider>
