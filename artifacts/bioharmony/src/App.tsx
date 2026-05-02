@@ -11,6 +11,10 @@ import PEMFTherapy from "@/pages/PEMFTherapy";
 import BioHarmonyAnalytics from "@/pages/BioHarmonyAnalytics";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
+import ForPractitioners from "@/pages/ForPractitioners";
+import UploadScan from "@/pages/UploadScan";
+import PetScans from "@/pages/PetScans";
+import Membership from "@/pages/Membership";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +30,10 @@ function Router() {
           <Route path="/bioharmony-analytics" component={BioHarmonyAnalytics} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
+          <Route path="/for-practitioners" component={ForPractitioners} />
+          <Route path="/upload-scan" component={UploadScan} />
+          <Route path="/pet-scans" component={PetScans} />
+          <Route path="/membership" component={Membership} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -24,8 +24,10 @@ export function Footer() {
             <ul className="space-y-3">
               <li><Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
               <li><Link href="/ao-scan" className="text-sm text-muted-foreground hover:text-primary transition-colors">AO Scan</Link></li>
-              <li><Link href="/pemf-therapy" className="text-sm text-muted-foreground hover:text-primary transition-colors">PEMF Therapy</Link></li>
-              <li><Link href="/bioharmony-analytics" className="text-sm text-muted-foreground hover:text-primary transition-colors">BioHarmony Analytics</Link></li>
+              <li><Link href="/upload-scan" className="text-sm text-muted-foreground hover:text-primary transition-colors">Upload Scan</Link></li>
+              <li><Link href="/membership" className="text-sm text-muted-foreground hover:text-primary transition-colors">Membership</Link></li>
+              <li><Link href="/pet-scans" className="text-sm text-muted-foreground hover:text-primary transition-colors">Pet Scans</Link></li>
+              <li><Link href="/for-practitioners" className="text-sm text-muted-foreground hover:text-primary transition-colors">For Practitioners</Link></li>
               <li><Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">About Kathy</Link></li>
               <li><Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
             </ul>

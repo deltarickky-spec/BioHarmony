@@ -12,8 +12,10 @@ export function Navbar() {
   const links = [
     { href: "/", label: "Home" },
     { href: "/ao-scan", label: "AO Scan" },
-    { href: "/pemf-therapy", label: "PEMF Therapy" },
-    { href: "/bioharmony-analytics", label: "BioHarmony Analytics" },
+    { href: "/upload-scan", label: "Upload Scan" },
+    { href: "/membership", label: "Membership" },
+    { href: "/pet-scans", label: "Pet Scans" },
+    { href: "/for-practitioners", label: "For Practitioners" },
     { href: "/about", label: "About Kathy" },
   ];
 
@@ -23,20 +25,20 @@ export function Navbar() {
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3">
             <img src={logoSrc} alt="BioHarmony Solutions Logo" className="h-10 w-auto" />
-            <span className="font-serif text-2xl font-semibold text-primary tracking-tight" data-testid="logo-text">
+            <span className="font-serif text-xl md:text-2xl font-semibold text-primary tracking-tight" data-testid="logo-text">
               BioHarmony Solutions
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            <div className="flex gap-6">
+          <div className="hidden lg:flex items-center gap-4 xl:gap-6">
+            <div className="flex gap-3 xl:gap-5">
               {links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
+                    "text-xs xl:text-sm font-medium transition-colors hover:text-primary",
                     location === link.href ? "text-primary" : "text-muted-foreground"
                   )}
                   data-testid={`nav-link-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
@@ -45,7 +47,7 @@ export function Navbar() {
                 </Link>
               ))}
             </div>
-            <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6" data-testid="nav-book-now">
+            <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-5" data-testid="nav-book-now">
               <Link href="/contact">Book Now</Link>
             </Button>
           </div>

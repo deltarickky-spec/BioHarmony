@@ -275,6 +275,7 @@ export default function Home() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif text-primary">Simple, Transparent Pricing</h2>
             <p className="text-muted-foreground mt-4 text-lg">Choose the wellness assessment that's right for you.</p>
+            <p className="text-muted-foreground text-sm mt-2">All pricing listed in USD.</p>
           </motion.div>
           
           <motion.div 
@@ -397,6 +398,77 @@ export default function Home() {
                 </Card>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Teaser A - Practitioner Section */}
+      <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
+        <div className="container relative z-10 px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+              <h2 className="text-3xl md:text-5xl font-serif">Are You an AO Scan Practitioner?</h2>
+              <p className="text-lg text-primary-foreground/80 mt-4 leading-relaxed font-light">
+                BioHarmony helps Solex users turn scan data into client-ready reports.
+              </p>
+              <h3 className="text-2xl font-serif mt-8 text-secondary italic">You scan. We interpret.</h3>
+              <div className="pt-8">
+                <Button asChild variant="outline" className="rounded-full border-primary-foreground/30 text-foreground hover:bg-primary-foreground hover:text-primary transition-colors" data-testid="home-practitioner-cta">
+                  <Link href="/for-practitioners">See Practitioner Plans</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Teaser B - Pet Scans */}
+      <section className="py-24 bg-[#F8F6F0]">
+        <div className="container px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+              <h2 className="text-3xl md:text-5xl font-serif text-primary">Wellness Scans for Pets Too</h2>
+              <p className="text-lg text-muted-foreground mt-4 leading-relaxed">
+                Dogs, cats, and horses can benefit from frequency-based wellness support.
+              </p>
+              <p className="text-xl font-serif text-secondary italic mt-6">
+                "When your pet isn't acting like themselves, there's always a reason."
+              </p>
+              <div className="mt-8 mb-8 p-6 bg-card border border-border/50 rounded-xl inline-block shadow-sm">
+                <p className="font-semibold text-foreground">Pet Wellness Scan — <span className="text-primary">$55 USD</span></p>
+              </div>
+              <div className="pt-2">
+                <Button asChild className="rounded-full" data-testid="home-pets-cta">
+                  <Link href="/pet-scans">Explore Pet Scans</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Teaser C - Memberships */}
+      <section className="py-24 bg-card border-t border-border">
+        <div className="container px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
+              <h2 className="text-3xl md:text-5xl font-serif text-primary">Ongoing Wellness Support</h2>
+              <p className="text-lg text-muted-foreground mt-4 leading-relaxed">
+                Subscribe for consistent, month-after-month wellness insights.
+              </p>
+              <div className="flex flex-wrap justify-center items-center gap-4 mt-8 mb-8 text-foreground font-medium">
+                <span>Basic $97/mo</span>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-primary">Pro $197/mo</span>
+                <span className="text-muted-foreground">•</span>
+                <span>Elite $297/mo</span>
+              </div>
+              <div className="pt-2">
+                <Button asChild variant="outline" className="rounded-full border-primary/20 hover:bg-primary/5" data-testid="home-membership-cta">
+                  <Link href="/membership">View Membership Plans</Link>
+                </Button>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>

@@ -1,0 +1,225 @@
+Upgrade the BioHarmony Solutions website pricing and service structure into a complete, scalable AO Scan platform.
+
+DO NOT remove existing sections.
+REFINE and ADD the following.
+
+----------------------------------
+GLOBAL RULE
+----------------------------------
+
+All pricing must be displayed in USD.
+
+Add small site-wide note:
+“All pricing is listed in USD.”
+
+----------------------------------
+1. PRACTITIONER / SOLEX USER SECTION (CORE BUSINESS)
+----------------------------------
+
+Create a new section:
+
+Title:
+“For AO Scan Practitioners & Solex Users”
+
+Description:
+“If you already use an AO Scanner but don’t fully understand the reports, BioHarmony translates your scan data into clear, client-friendly insights you can confidently share.”
+
+Explain positioning:
+“You scan. We interpret.”
+
+----------------------------------
+ENTRY PLAN
+----------------------------------
+
+Plan Name:
+Practitioner Access
+
+Price:
+$29/month
+
+Includes:
+- Upload portal access (XLSX & PDF)
+- Dashboard access
+- Ability to submit reports for interpretation
+- Discounted report pricing
+
+Add note:
+“This plan provides access only. Reports are purchased separately or in bundles.”
+
+----------------------------------
+REPORT PRICING
+----------------------------------
+
+Single Report:
+$49/report
+
+----------------------------------
+BUNDLES (PRIMARY REVENUE DRIVER)
+----------------------------------
+
+Starter Bundle:
+$145/month
+- Up to 5 reports
+(~$29/report effective)
+
+Growth Bundle:
+$270/month
+- Up to 10 reports
+(~$27/report effective)
+
+Add note:
+“Bundles offer discounted pricing for active practitioners.”
+
+----------------------------------
+WHITE LABEL ADD-ON
+----------------------------------
+
+Add optional upgrade:
+
+White Label — $97/month
+
+Includes:
+- Your branding on reports
+- Client-ready PDF formatting
+- Professional presentation
+
+----------------------------------
+USAGE CONTROL
+----------------------------------
+
+Add small note:
+“To ensure quality and fair use, all plans include monthly report limits.”
+
+----------------------------------
+2. FILE UPLOAD SERVICE (CRITICAL FEATURE)
+----------------------------------
+
+Create section:
+
+Title:
+“Upload Your Existing Scan”
+
+Description:
+“Already have an AO Scan? Upload your results and receive a clear, easy-to-understand interpretation.”
+
+Add uploader:
+- Accept XLSX and PDF
+- Drag-and-drop interface
+
+Flow:
+1. Upload file
+2. Enter name + email
+3. Select report type:
+   - Inner Voice
+   - Vitals
+   - Comprehensive
+   - Body Systems
+4. Submit
+
+Confirmation message:
+“Your report is being prepared. Delivery in 24–48 hours.”
+
+----------------------------------
+3. CORE CONSUMER PRICING (KEEP SIMPLE)
+----------------------------------
+
+Keep existing services:
+
+Inner Voice Scan — $55  
+Food Sensitivity — $44  
+Comprehensive Scan — $99  
+Ultimate Experience — $133  
+
+----------------------------------
+4. PET SCANS (EXPAND THIS)
+----------------------------------
+
+Create stronger section:
+
+Title:
+“Pet Wellness Scans”
+
+Description:
+“Dogs, cats, and horses experience energetic imbalances just like humans. Our scans help identify stress patterns and sensitivities.”
+
+Add emotional hook:
+“When your pet isn’t acting like themselves, there’s always a reason.”
+
+Pricing:
+Pet Scan — $55
+
+Add icons:
+Dog / Cat / Horse
+
+CTA:
+“Scan Your Pet”
+
+----------------------------------
+5. MONTHLY CLIENT MEMBERSHIPS (B2C)
+----------------------------------
+
+Create section:
+
+Title:
+“Ongoing Wellness Support”
+
+Plans:
+
+Basic — $97/month
+- 1 scan per month
+
+Pro — $197/month
+- 2 scans per month
+- Priority processing
+
+Elite — $297/month
+- Weekly scans
+- Full support
+
+----------------------------------
+6. EDUCATION SECTION (AUTHORITY)
+----------------------------------
+
+Keep and enhance:
+
+Title:
+“How AO Scan Works”
+
+Explain simply:
+- Voice carries frequency information
+- Patterns are analyzed
+- Reports highlight imbalances
+- Helps guide wellness decisions
+
+Keep non-medical language.
+
+----------------------------------
+7. NAVIGATION UPDATE
+----------------------------------
+
+Add menu items:
+
+- AO Scan
+- Upload Scan
+- Membership
+- Pet Scans
+- For Practitioners
+
+----------------------------------
+8. DESIGN RULES
+----------------------------------
+
+- Keep layout clean and premium
+- Do NOT clutter
+- Maintain teal, gold, white palette
+- Mobile-first design
+
+----------------------------------
+
+Goal:
+Position BioHarmony Solutions as the #1 destination for:
+- New scan clients
+- Existing AO Scan users
+- Practitioners needing interpretation
+- Pet owners
+- Ongoing wellness clients
