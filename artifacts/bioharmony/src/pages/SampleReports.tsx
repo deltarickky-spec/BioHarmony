@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles } from "lucide-react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -33,12 +34,6 @@ function SectionLabel({ text }: { text: string }) {
   );
 }
 
-function BodyText({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[#F4EFE6]/65 text-[15px] leading-[1.85]">{children}</p>
-  );
-}
-
 function InsightBlock({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-white/[0.03] border border-white/8 rounded-2xl px-6 py-5 text-[#F4EFE6]/65 text-[15px] leading-[1.85]">
@@ -51,6 +46,37 @@ function Callout({ children }: { children: React.ReactNode }) {
   return (
     <div className="border-l-2 border-[#BFA14A]/45 pl-5 py-0.5">
       <p className="text-[#F4EFE6]/60 text-[14px] italic font-serif leading-relaxed">"{children}"</p>
+    </div>
+  );
+}
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-2 mt-3">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-3 text-[#F4EFE6]/60 text-[14px] leading-relaxed">
+          <span className="mt-[7px] w-1 h-1 rounded-full bg-[#BFA14A]/60 shrink-0" />
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PriorityList({ items }: { items: Array<{ num: string; title: string; desc: string }> }) {
+  return (
+    <div className="space-y-3">
+      {items.map((item, i) => (
+        <div key={i} className="flex gap-4 bg-white/[0.03] border border-white/8 rounded-xl px-5 py-4">
+          <div className="w-7 h-7 rounded-full border border-[#BFA14A]/40 text-[#BFA14A] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+            {item.num}
+          </div>
+          <div>
+            <p className="text-[#BFA14A] text-sm font-medium mb-0.5">{item.title}</p>
+            <p className="text-[#F4EFE6]/45 text-xs leading-relaxed">{item.desc}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -68,11 +94,24 @@ function RecommendationGrid({ items }: { items: Array<{ title: string; desc: str
   );
 }
 
-function ComplianceNote() {
+function SampleBadge() {
+  return (
+    <div className="flex items-center gap-2 bg-[#BFA14A]/6 border border-[#BFA14A]/18 rounded-xl px-4 py-3 mb-2">
+      <Sparkles className="w-3.5 h-3.5 text-[#BFA14A]/50 shrink-0" />
+      <p className="text-[#F4EFE6]/45 text-xs">
+        This is a sample. Your report will be fully personalized to you.
+      </p>
+    </div>
+  );
+}
+
+function ComplianceNote({ pet = false }: { pet?: boolean }) {
   return (
     <div className="bg-white/[0.025] border border-white/6 rounded-xl px-6 py-4">
       <p className="text-[#F4EFE6]/28 text-xs leading-relaxed text-center">
-        This report is for wellness education and informational purposes only. It is not intended to diagnose, treat, cure, or prevent any disease or medical condition. Please consult a qualified healthcare professional for any medical concerns.
+        {pet
+          ? "This pet wellness report is for informational purposes only and does not constitute veterinary advice. Please consult a licensed veterinarian for any health concerns about your animal."
+          : "This report is for wellness education and informational purposes only. It is not intended to diagnose, treat, cure, or prevent any disease or medical condition. Please consult a qualified healthcare professional for any medical concerns."}
       </p>
     </div>
   );
@@ -85,7 +124,7 @@ function ReportCTA() {
       <Button
         asChild
         size="lg"
-        className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-10 h-13 text-base shadow-[0_0_20px_rgba(191,161,74,0.28)] hover:shadow-[0_0_35px_rgba(191,161,74,0.5)] transition-all duration-300"
+        className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-10 h-14 text-base shadow-[0_0_20px_rgba(191,161,74,0.28)] hover:shadow-[0_0_35px_rgba(191,161,74,0.5)] transition-all duration-300"
       >
         <Link href="/upload-scan">Get Your Personalized Report</Link>
       </Button>
@@ -94,15 +133,9 @@ function ReportCTA() {
 }
 
 function ClientCard({
-  name,
-  scanType,
-  date,
-  badge,
+  name, scanType, date, badge,
 }: {
-  name: string;
-  scanType: string;
-  date: string;
-  badge?: string;
+  name: string; scanType: string; date: string; badge?: string;
 }) {
   return (
     <div className="bg-white/[0.045] border border-[#BFA14A]/18 rounded-2xl px-7 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_0_40px_rgba(191,161,74,0.06)]">
@@ -125,14 +158,14 @@ function ClientCard({
 
 function JaneDoeReport() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
+      <SampleBadge />
       <ClientCard
         name="Jane Doe"
         scanType="Inner Voice + Basic Vitals"
         date="January 15, 2025"
       />
 
-      {/* Opening narrative */}
       <div className="bg-[#0F5C5E]/10 border border-[#0F5C5E]/25 rounded-2xl px-7 py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-[#BFA14A]/3 blur-[70px] rounded-full pointer-events-none" />
         <p className="text-[#F4EFE6]/80 text-[15px] leading-[1.9] font-serif italic">
@@ -143,7 +176,6 @@ function JaneDoeReport() {
 
       <GoldDivider />
 
-      {/* Vitals overview */}
       <div>
         <SectionLabel text="Vitals Overview" />
         <InsightBlock>
@@ -151,7 +183,6 @@ function JaneDoeReport() {
         </InsightBlock>
       </div>
 
-      {/* Energy & stress */}
       <div>
         <SectionLabel text="Energy & Stress Patterns" />
         <InsightBlock>
@@ -163,7 +194,6 @@ function JaneDoeReport() {
         These stress and vitals patterns are closely connected. When we support the nervous system, the energy levels often follow naturally.
       </Callout>
 
-      {/* Digestive connection */}
       <div>
         <SectionLabel text="Digestive Connection" />
         <InsightBlock>
@@ -190,7 +220,8 @@ function JaneDoeReport() {
 
 function MariaThompsonReport() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
+      <SampleBadge />
       <ClientCard
         name="Maria Thompson"
         scanType="Comprehensive AO Scan"
@@ -198,64 +229,92 @@ function MariaThompsonReport() {
         badge="Advanced Case"
       />
 
-      {/* Opening narrative */}
       <div className="bg-[#0F5C5E]/10 border border-[#0F5C5E]/25 rounded-2xl px-7 py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-[#BFA14A]/3 blur-[70px] rounded-full pointer-events-none" />
         <p className="text-[#F4EFE6]/80 text-[15px] leading-[1.9] font-serif italic">
-          "Maria, your comprehensive scan paints a rich picture — one I find genuinely fascinating. There are several systems in your body that are clearly in conversation with each other, and the patterns I'm seeing suggest that your body has been trying very hard to keep things balanced under pressure. The encouraging part? Everything I'm seeing is workable. Let me walk you through it."
+          "Hi Maria, as I reviewed your scan, your body revealed a deeper pattern that has likely been building over time. This isn't just one isolated area — it's a layered response, where your system has been adapting to ongoing stress, inflammation, and internal imbalance. What stood out most is that your body is not overwhelmed — it's actually working very hard to keep things functioning, but it's now asking for more consistent support."
         </p>
         <p className="text-[#BFA14A]/55 text-xs mt-4 font-sans not-italic">— Kathy Owens, BioHarmony Solutions</p>
       </div>
 
       <GoldDivider />
 
-      {/* Digestive */}
       <div>
-        <SectionLabel text="Digestive & Absorption Patterns" />
+        <SectionLabel text="Emotional & Nervous System Patterns" />
         <InsightBlock>
-          Your scan is showing moderate disruption in digestive enzyme activity and nutrient absorption — particularly in the small intestine region. This can manifest as inconsistent energy after meals, occasional bloating, and a sense that even when you eat well, your body isn't fully utilizing what you're giving it. The liver markers are also slightly elevated in terms of workload, suggesting your detox pathways would benefit from gentle support.
+          <p className="mb-4">There is a strong connection here between your emotional state and physical symptoms. Your scan reflects patterns often associated with:</p>
+          <BulletList items={[
+            "Internal pressure or emotional holding",
+            "Difficulty fully switching off mentally",
+            "A constant \"background stress\" in the body",
+          ]} />
+          <p className="mt-4">Even if you're managing well on the outside, your nervous system is staying more activated than it should long-term. Over time, this begins to affect digestion, inflammation levels, and energy production.</p>
         </InsightBlock>
       </div>
 
-      {/* Hormonal */}
       <div>
-        <SectionLabel text="Hormonal Balance Indicators" />
+        <SectionLabel text="What Your Body Is Showing" />
         <InsightBlock>
-          Your hormonal markers — particularly around the thyroid and adrenal axis — show a pattern I see frequently in high-functioning women who carry significant daily load. The thyroid scan isn't flagging anything acute, but it does suggest your thyroid is working at the lower edge of its optimal range. Combined with the adrenal indicators, this creates the classic pattern of "tired but wired" — difficulty truly resting even when exhausted.
+          <p className="mb-3">Several systems are working harder than usual, particularly:</p>
+          <BulletList items={[
+            "Digestive processing",
+            "Inflammatory response",
+            "Energy regulation",
+          ]} />
+          <p className="mt-4 mb-3">You may notice:</p>
+          <BulletList items={[
+            "Periods of low energy or burnout",
+            "Sensitivity to foods that didn't bother you before",
+            "Brain fog or difficulty focusing at times",
+          ]} />
+          <p className="mt-4 text-[#F4EFE6]/50 italic text-sm">This is not failure — it's your body adapting under load.</p>
         </InsightBlock>
       </div>
 
       <Callout>
-        The adrenal-thyroid-digestive triangle is one of the most common patterns I see. Supporting one tends to create positive momentum across all three.
+        What's important here is the combination effect. When stress remains elevated, digestion slows, nutrient absorption drops, inflammation increases, and energy decreases — it creates a loop. Your scan reflects that loop clearly, but also shows that it's very workable.
       </Callout>
 
-      {/* Emotional */}
       <div>
-        <SectionLabel text="Emotional Stress Profile" />
+        <SectionLabel text="The Deeper Pattern" />
         <InsightBlock>
-          Your Inner Voice data is particularly interesting. The dominant emotional frequencies your voice is reflecting are consistent with unresolved perfectionism, the need to be needed, and difficulty delegating or letting go of control. This isn't a criticism — it's actually a deeply compassionate pattern that comes from caring deeply. But your body is asking you to let it rest more than it has been.
-        </InsightBlock>
-      </div>
-
-      {/* Nervous system */}
-      <div>
-        <SectionLabel text="Nervous System & Sleep Quality" />
-        <InsightBlock>
-          Your nervous system scan is showing a consistent lean toward sympathetic dominance — your fight-or-flight response is more activated than it should be at baseline. This affects everything from sleep quality to immune response to how well your gut moves. The good news is that this is highly responsive to frequency support, breathwork, and targeted lifestyle adjustments.
+          <p className="mb-4">When stress remains elevated, a cascade follows:</p>
+          <div className="space-y-2">
+            {[
+              "Digestion slows",
+              "Nutrient absorption drops",
+              "Inflammation increases",
+              "Energy decreases",
+            ].map((step, i, arr) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="flex flex-col items-center shrink-0">
+                  <div className="w-2 h-2 rounded-full bg-[#BFA14A]/60" />
+                  {i < arr.length - 1 && <div className="w-px h-4 bg-[#BFA14A]/20 mt-1" />}
+                </div>
+                <p className="text-[#F4EFE6]/60 text-sm">{step}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5">Your scan reflects this loop clearly — but also shows that it's very workable. The fact that your body is communicating this now is a genuinely positive sign. It means your system is signalling early enough to shift things before deeper fatigue sets in.</p>
         </InsightBlock>
       </div>
 
       <GoldDivider />
 
-      <SectionLabel text="Wellness Recommendations" />
-      <RecommendationGrid items={[
-        { title: "Liver & Detox Support", desc: "Milk thistle, dandelion root tea, and reducing processed foods for 30 days to ease hepatic load." },
-        { title: "Thyroid Nourishment", desc: "Selenium-rich foods (Brazil nuts), iodine support, and minimizing fluoride exposure where possible." },
-        { title: "Adrenal Recovery Protocol", desc: "Adaptogenic herbs (ashwagandha or rhodiola), no caffeine before 10am, and consistent sleep/wake times." },
-        { title: "Gut Microbiome Restoration", desc: "Rotating fermented foods, prebiotic fiber, and a quality multi-strain probiotic with meals." },
-        { title: "Nervous System Reset", desc: "Daily parasympathetic practices: gentle yoga, cold-warm shower contrast, or Yoga Nidra before sleep." },
-        { title: "SEFI Comprehensive Sessions", desc: "Multi-system frequency support series targeting adrenal, thyroid, and digestive markers from your scan." },
+      <SectionLabel text="Support Strategy — Priority Order" />
+      <PriorityList items={[
+        { num: "1", title: "Calm the nervous system first", desc: "This is the foundation. Without this, nothing else holds." },
+        { num: "2", title: "Support digestion gently", desc: "Not aggressive — just helping your body process more efficiently." },
+        { num: "3", title: "Reduce internal load", desc: "This includes food sensitivities and environmental stressors." },
+        { num: "4", title: "Rebuild energy gradually", desc: "Not pushing harder — supporting smarter." },
       ]} />
+
+      <div className="bg-[#0F5C5E]/8 border border-[#0F5C5E]/20 rounded-2xl px-6 py-5">
+        <p className="text-[#F4EFE6]/65 text-[15px] leading-[1.85] font-serif italic">
+          "Maria, this is a very common modern pattern — and the fact that your body is showing it now is actually a positive sign. It means your system is communicating early enough to shift things before deeper fatigue sets in. With the right approach, this kind of pattern responds very well."
+        </p>
+        <p className="text-[#BFA14A]/50 text-xs mt-3 font-sans not-italic">— Kathy Owens</p>
+      </div>
 
       <GoldDivider />
       <ComplianceNote />
@@ -266,7 +325,8 @@ function MariaThompsonReport() {
 
 function BellaReport() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
+      <SampleBadge />
       <ClientCard
         name="Bella"
         scanType="AO Scan — Canine Wellness"
@@ -274,63 +334,70 @@ function BellaReport() {
         badge="Pet Report"
       />
 
-      {/* Opening narrative */}
       <div className="bg-[#0F5C5E]/10 border border-[#0F5C5E]/25 rounded-2xl px-7 py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-[#BFA14A]/3 blur-[70px] rounded-full pointer-events-none" />
         <p className="text-[#F4EFE6]/80 text-[15px] leading-[1.9] font-serif italic">
-          "Bella's scan gave us a beautiful window into how her body is functioning right now. At 5 years old, she's in a great stage of life — energetic, emotionally connected, and generally thriving. That said, her scan did reveal a few patterns worth addressing gently. Here's what I found, and what I'd suggest to keep her feeling her absolute best."
+          "As I reviewed Bella's scan, she presents as a loving, sensitive dog who is very tuned into her environment and the people around her. What stood out most is that her system is overall stable — but there are a few areas where her body is working a little harder than it should. Here's what I found, and what I'd suggest to keep her balanced, happy, and thriving."
         </p>
         <p className="text-[#BFA14A]/55 text-xs mt-4 font-sans not-italic">— Kathy Owens, BioHarmony Solutions</p>
       </div>
 
       <GoldDivider />
 
-      {/* Digestive & nutritional */}
       <div>
-        <SectionLabel text="Digestive & Nutritional Patterns" />
+        <SectionLabel text="Emotional & Behavioral Signals" />
         <InsightBlock>
-          Bella's digestive scan is showing moderate enzyme activity — her gut is functional and healthy overall, but there are markers suggesting she may not be absorbing certain nutrients as efficiently as possible. This is common in dogs who eat primarily dry kibble, as the highly processed nature of commercial pet food can over time reduce the natural enzymatic activity in the digestive tract. Adding digestive enzymes or rotating in some whole food additions could make a noticeable difference.
+          <p className="mb-4">Bella shows patterns linked to:</p>
+          <BulletList items={[
+            "Sensitivity to surroundings and environmental changes",
+            "Strong emotional connection to her owners",
+            "Mild stress responses when routines change",
+          ]} />
+          <p className="mt-4">Dogs like Bella often pick up on emotional energy very easily — her sensitivity is actually a sign of her deep bond, but it means her nervous system can carry more than it lets on.</p>
         </InsightBlock>
       </div>
 
-      {/* Energetic vitality */}
       <div>
-        <SectionLabel text="Energetic Vitality Markers" />
+        <SectionLabel text="Physical Observations" />
         <InsightBlock>
-          Bella's vitality markers are reading well — she has strong life-force energy and her cellular communication looks vibrant. There is one area worth noting: her joint tissue markers show the very early signs of wear that are normal for a 5-year-old active dog, but which are worth supporting now before they become more pronounced. Proactive joint support now can make a significant difference in her comfort and mobility at 8–10 years old.
+          <p className="mb-3">Her scan suggests focus areas around:</p>
+          <BulletList items={[
+            "Digestive sensitivity",
+            "Mild inflammation patterns",
+            "Energy fluctuations",
+          ]} />
+          <p className="mt-4 mb-3">You might notice:</p>
+          <BulletList items={[
+            "Occasional stomach upset or loose stools",
+            "Changes in appetite or eating pace",
+            "Slight differences in energy levels day to day",
+          ]} />
         </InsightBlock>
       </div>
 
       <Callout>
-        Bella's energy and emotional connection scores are among the highest I've seen. She is deeply bonded to her family and that shows clearly in her scan.
+        Bella is doing well overall — these are just small areas to support so she can stay balanced, happy, and thriving. Her emotional connection scores are among the highest I've seen.
       </Callout>
 
-      {/* Stress & emotional */}
-      <div>
-        <SectionLabel text="Stress & Emotional Balance" />
-        <InsightBlock>
-          Her emotional frequency markers are showing a gentle but consistent undercurrent of environmental stress — likely related to household changes, separation patterns, or noise sensitivity. This is very common in highly bonded dogs. Her nervous system is coping well, but providing more consistent daily rhythm and some targeted calming support could help her feel even more settled and secure.
-        </InsightBlock>
-      </div>
-
       <GoldDivider />
 
-      <SectionLabel text="Wellness Recommendations" />
+      <SectionLabel text="Support for Bella" />
       <RecommendationGrid items={[
-        { title: "Digestive Enzyme Support", desc: "Add a canine-specific digestive enzyme supplement to her meals to improve nutrient absorption." },
-        { title: "Joint & Mobility Care", desc: "Introduce omega-3 fish oil and a quality glucosamine/chondroitin supplement proactively." },
-        { title: "Calming Routine Support", desc: "Consistent daily schedule, a calming herbal supplement (valerian or chamomile blend for dogs), and a safe den space." },
-        { title: "SEFI Pet Frequency Sessions", desc: "Gentle pet-adapted frequency support targeting her digestive and stress markers from the scan." },
+        { title: "Keep Routines Consistent", desc: "Predictable feeding, walk, and sleep schedules help regulate her sensitive nervous system." },
+        { title: "Support Gut Health Gently", desc: "A canine-specific probiotic or digestive enzyme with meals to reduce digestive sensitivity." },
+        { title: "Ensure Hydration", desc: "Fresh, filtered water throughout the day — especially after walks and active play." },
+        { title: "Provide Calm Environments", desc: "A designated quiet space and reduced noise exposure when Bella seems unsettled." },
       ]} />
 
-      <GoldDivider />
-
-      <div className="bg-white/[0.025] border border-white/6 rounded-xl px-6 py-4">
-        <p className="text-[#F4EFE6]/28 text-xs leading-relaxed text-center">
-          This pet wellness report is for informational purposes only and does not constitute veterinary advice. Please consult a licensed veterinarian for any health concerns about your animal.
+      <div className="bg-[#0F5C5E]/8 border border-[#0F5C5E]/20 rounded-2xl px-6 py-5">
+        <p className="text-[#F4EFE6]/65 text-[15px] leading-[1.85] font-serif italic">
+          "Bella is doing well overall — these are just small areas to support so she can stay balanced, happy, and thriving. The love she has for her family shows very clearly in her scan."
         </p>
+        <p className="text-[#BFA14A]/50 text-xs mt-3 font-sans not-italic">— Kathy Owens</p>
       </div>
 
+      <GoldDivider />
+      <ComplianceNote pet />
       <ReportCTA />
     </div>
   );
@@ -350,24 +417,21 @@ export default function SampleReports() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#060D0D] to-[#091515]">
 
-      {/* Page header */}
       <section className="py-20 border-b border-white/8">
         <div className="container px-4 md:px-6 max-w-3xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="space-y-5">
             <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em]">Sample Reports</p>
             <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6]">See BioHarmony Interpretations in Action</h1>
             <p className="text-lg text-[#F4EFE6]/50 leading-relaxed max-w-xl mx-auto">
-              Three real-world examples of how we translate complex AO Scan data into warm, clear, and actionable personal insights.
+              These are real examples of how we translate complex scan data into clear, personalized insight.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Tabs + Content */}
       <section className="py-16 flex-1">
         <div className="container px-4 md:px-6 max-w-3xl mx-auto">
 
-          {/* Tab switcher */}
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="mb-10">
             <div className="inline-flex w-full bg-white/[0.03] border border-white/8 rounded-2xl p-1.5 gap-1">
               {TABS.map((tab) => (
@@ -393,7 +457,6 @@ export default function SampleReports() {
             </div>
           </motion.div>
 
-          {/* Report content */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
