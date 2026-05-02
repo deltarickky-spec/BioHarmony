@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { DownloadReportButton } from "@/components/DownloadReportButton";
 import { REPORT_DATA } from "@/lib/reportData";
+import { RequestReportModal } from "@/components/RequestReportModal";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -119,16 +120,16 @@ function ComplianceNote({ pet = false }: { pet?: boolean }) {
   );
 }
 
-function ReportCTA() {
+function ReportCTA({ onOpen }: { onOpen: () => void }) {
   return (
     <div className="pt-4 pb-2 flex flex-col items-center gap-4 text-center">
       <p className="text-[#F4EFE6]/40 text-sm">Ready to see your own results interpreted like this?</p>
       <Button
-        asChild
         size="lg"
-        className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-10 h-14 text-base shadow-[0_0_20px_rgba(191,161,74,0.28)] hover:shadow-[0_0_35px_rgba(191,161,74,0.5)] transition-all duration-300"
+        onClick={onOpen}
+        className="cursor-pointer rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-10 h-14 text-base shadow-[0_0_20px_rgba(191,161,74,0.28)] hover:shadow-[0_0_35px_rgba(191,161,74,0.5)] transition-all duration-300"
       >
-        <Link href="/upload-scan">Get Your Personalized Report</Link>
+        Get Your Personalized Report
       </Button>
     </div>
   );
@@ -158,7 +159,7 @@ function ClientCard({
   );
 }
 
-function JaneDoeReport() {
+function JaneDoeReport({ onOpen }: { onOpen: () => void }) {
   return (
     <div className="space-y-7">
       <SampleBadge />
@@ -215,12 +216,12 @@ function JaneDoeReport() {
 
       <GoldDivider />
       <ComplianceNote />
-      <ReportCTA />
+      <ReportCTA onOpen={onOpen} />
     </div>
   );
 }
 
-function MariaThompsonReport() {
+function MariaThompsonReport({ onOpen }: { onOpen: () => void }) {
   return (
     <div className="space-y-7">
       <SampleBadge />
@@ -320,12 +321,12 @@ function MariaThompsonReport() {
 
       <GoldDivider />
       <ComplianceNote />
-      <ReportCTA />
+      <ReportCTA onOpen={onOpen} />
     </div>
   );
 }
 
-function BellaReport() {
+function BellaReport({ onOpen }: { onOpen: () => void }) {
   return (
     <div className="space-y-7">
       <SampleBadge />
@@ -400,7 +401,7 @@ function BellaReport() {
 
       <GoldDivider />
       <ComplianceNote pet />
-      <ReportCTA />
+      <ReportCTA onOpen={onOpen} />
     </div>
   );
 }
@@ -415,6 +416,8 @@ type TabId = typeof TABS[number]["id"];
 
 export default function SampleReports() {
   const [activeTab, setActiveTab] = useState<TabId>("jane");
+  const [modalOpen, setModalOpen] = useState(false);
+  const openModal = () => setModalOpen(true);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#060D0D] to-[#091515]">
@@ -482,15 +485,20 @@ export default function SampleReports() {
               variants={tabFade}
               className="bg-white/[0.025] border border-white/8 rounded-3xl p-6 md:p-10 shadow-[0_0_60px_rgba(0,0,0,0.4)]"
             >
-              {activeTab === "jane" && <JaneDoeReport />}
-              {activeTab === "maria" && <MariaThompsonReport />}
-              {activeTab === "bella" && <BellaReport />}
+              {activeTab === "jane" && <JaneDoeReport onOpen={openModal} />}
+              {activeTab === "maria" && <MariaThompsonReport onOpen={openModal} />}
+              {activeTab === "bella" && <BellaReport onOpen={openModal} />}
             </motion.div>
           </AnimatePresence>
 
         </div>
       </section>
 
+      <RequestReportModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        reportType={REPORT_DATA[activeTab].reportType}
+      />
     </div>
   );
 }
