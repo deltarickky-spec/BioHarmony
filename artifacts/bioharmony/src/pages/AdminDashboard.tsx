@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
-  Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity
+  Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -427,27 +427,106 @@ function PipelinePanel({
         </div>
       </div>
 
-      {/* Payment override */}
-      <div className="border-t border-white/8 pt-3">
-        <h4 className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Payment Override</h4>
-        <div className="flex gap-1.5 flex-wrap">
-          {PAYMENT_STATUSES.map((ps) => (
-            <button
-              key={ps}
-              disabled={busy || request.paymentStatus === ps}
-              onClick={() => patchRequest({ paymentStatus: ps })}
-              className={cn(
-                "flex-1 min-w-[60px] py-1.5 px-2 rounded-lg text-[10px] font-medium border transition-all capitalize",
-                request.paymentStatus === ps
-                  ? PAYMENT_STYLES[ps]
-                  : "border-white/8 text-[#F4EFE6]/30 hover:border-white/18 hover:text-[#F4EFE6]/60 disabled:cursor-default"
-              )}
-            >
-              {ps}
-            </button>
-          ))}
-        </div>
+    </section>
+  );
+}
+
+// ── Payment Section ────────────────────────────────────────────────────────────
+
+function PaymentSection({
+  request, token, onUpdate,
+}: {
+  request: UnifiedRequest;
+  token: string;
+  onUpdate: (id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [confirmed, setConfirmed] = useState<PaymentStatus | null>(null);
+
+  const current = request.paymentStatus ?? "pending";
+
+  async function setPayment(ps: PaymentStatus) {
+    if (busy || current === ps) return;
+    setBusy(true);
+    onUpdate(request.id, request.source, { paymentStatus: ps });
+    try {
+      await fetch(`${BASE}/api/admin/requests/${request.source}/${request.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ paymentStatus: ps }),
+      });
+      setConfirmed(ps);
+      setTimeout(() => setConfirmed(null), 3000);
+    } catch { /* optimistic update already applied */ }
+    setBusy(false);
+  }
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] font-medium">Payment</h3>
+        <PaymentBadge status={current} />
       </div>
+
+      {confirmed && (
+        <p className="text-xs text-green-300/80 bg-green-900/15 border border-green-700/25 rounded-lg px-3 py-2 mb-3 flex items-center gap-2">
+          <CheckCircle className="w-3 h-3 shrink-0" />
+          Payment status updated to <span className="font-semibold capitalize">{confirmed}</span>
+        </p>
+      )}
+
+      <div className="grid grid-cols-3 gap-2">
+        {/* Confirm Paid */}
+        <button
+          disabled={busy || current === "paid"}
+          onClick={() => setPayment("paid")}
+          className={cn(
+            "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all",
+            current === "paid"
+              ? "bg-green-900/25 text-green-300 border-green-700/35 cursor-default"
+              : "border-green-700/20 text-green-400/55 hover:bg-green-900/15 hover:border-green-700/40 hover:text-green-300 disabled:opacity-40"
+          )}
+        >
+          <DollarSign className="w-4 h-4" />
+          <span>Confirm Paid</span>
+        </button>
+
+        {/* Waive — Complimentary */}
+        <button
+          disabled={busy || current === "waived"}
+          onClick={() => setPayment("waived")}
+          className={cn(
+            "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all",
+            current === "waived"
+              ? "bg-purple-900/25 text-purple-300 border-purple-700/35 cursor-default"
+              : "border-purple-700/20 text-purple-400/55 hover:bg-purple-900/15 hover:border-purple-700/40 hover:text-purple-300 disabled:opacity-40"
+          )}
+        >
+          <Gift className="w-4 h-4" />
+          <span>Waive</span>
+        </button>
+
+        {/* Mark Failed */}
+        <button
+          disabled={busy || current === "failed"}
+          onClick={() => setPayment("failed")}
+          className={cn(
+            "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all",
+            current === "failed"
+              ? "bg-red-900/25 text-red-400 border-red-700/35 cursor-default"
+              : "border-red-700/15 text-red-400/40 hover:bg-red-900/12 hover:border-red-700/30 hover:text-red-400/80 disabled:opacity-40"
+          )}
+        >
+          <Ban className="w-4 h-4" />
+          <span>Failed</span>
+        </button>
+      </div>
+
+      {current === "pending" && (
+        <p className="text-[10px] text-[#F4EFE6]/28 mt-2 leading-relaxed">
+          Pipeline starts automatically when payment is confirmed. Use <span className="text-purple-300/70">Waive</span> for complimentary reports.
+        </p>
+      )}
     </section>
   );
 }
@@ -632,9 +711,12 @@ function DetailPanel({
             </div>
           )}
           {autoStatus === "waiting" && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#BFA14A]/8 border border-[#BFA14A]/20">
-              <CreditCard className="w-4 h-4 text-[#BFA14A] shrink-0" />
-              <p className="text-xs text-[#BFA14A]/80">Waiting for payment before pipeline starts.</p>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-[#BFA14A]/8 border border-[#BFA14A]/20">
+              <CreditCard className="w-4 h-4 text-[#BFA14A] shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-[#BFA14A]/90 font-medium mb-1">Awaiting Payment</p>
+                <p className="text-xs text-[#BFA14A]/60 leading-relaxed">Pipeline starts automatically once payment is confirmed. For complimentary reports, waive the payment below.</p>
+              </div>
             </div>
           )}
 
@@ -668,6 +750,11 @@ function DetailPanel({
               <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Client Notes</h3>
               <p className="text-sm text-[#F4EFE6]/65 bg-white/5 rounded-xl p-3 border border-white/8 leading-relaxed">{request.note}</p>
             </section>
+          )}
+
+          {/* Payment (scan only) */}
+          {request.source === "scan" && (
+            <PaymentSection request={request} token={token} onUpdate={onUpdate} />
           )}
 
           {/* Pipeline control (scan only) */}
@@ -844,6 +931,18 @@ export default function AdminDashboard() {
     setTogglingGlobal(false);
   }
 
+  async function quickSetPayment(req: UnifiedRequest, ps: PaymentStatus) {
+    if (!token) return;
+    handleUpdate(req.id, req.source, { paymentStatus: ps });
+    try {
+      await fetch(`${BASE}/api/admin/requests/${req.source}/${req.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ paymentStatus: ps }),
+      });
+    } catch { /* optimistic update already applied */ }
+  }
+
   function handleUpdate(id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) {
     setRequests((prev) => prev.map((r) => r.id === id && r.source === source ? { ...r, ...patch } : r));
     if (selected?.id === id && selected?.source === source) {
@@ -1016,7 +1115,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="rounded-xl border border-white/8 overflow-hidden">
-            <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 px-5 py-3 bg-white/4 border-b border-white/8 text-[10px] uppercase tracking-wider text-[#F4EFE6]/30 font-medium">
+            <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_1fr_0.8fr_auto] gap-3 px-5 py-3 bg-white/4 border-b border-white/8 text-[10px] uppercase tracking-wider text-[#F4EFE6]/30 font-medium">
               <span>Client</span>
               <span>Email</span>
               <span>Report Type</span>
@@ -1036,7 +1135,7 @@ export default function AdminDashboard() {
                     className="w-full text-left px-5 py-4 hover:bg-white/[0.03] transition-colors group"
                   >
                     {/* Desktop */}
-                    <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 items-center">
+                    <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_1fr_0.8fr_auto] gap-3 items-center">
                       <div>
                         <div className="flex items-center gap-1.5">
                           <AutoStatusDot autoStatus={autoStatus} />
@@ -1050,7 +1149,28 @@ export default function AdminDashboard() {
                         <PipelineBadge stage={req.pipelineStage} />
                         <AutoStatusLabel autoStatus={autoStatus} />
                       </div>
-                      <PaymentBadge status={req.paymentStatus} />
+                      {/* Payment cell — shows badge + quick actions for pending */}
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <PaymentBadge status={req.paymentStatus} />
+                        {req.paymentStatus === "pending" && (
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              title="Confirm Paid"
+                              onClick={(e) => { e.stopPropagation(); quickSetPayment(req, "paid"); }}
+                              className="flex items-center gap-1 text-[10px] px-1.5 py-1 rounded border border-green-700/30 text-green-400/60 hover:bg-green-900/20 hover:text-green-300 hover:border-green-700/50 transition"
+                            >
+                              <DollarSign className="w-2.5 h-2.5" />Paid
+                            </button>
+                            <button
+                              title="Waive (Complimentary)"
+                              onClick={(e) => { e.stopPropagation(); quickSetPayment(req, "waived"); }}
+                              className="flex items-center gap-1 text-[10px] px-1.5 py-1 rounded border border-purple-700/30 text-purple-400/60 hover:bg-purple-900/20 hover:text-purple-300 hover:border-purple-700/50 transition"
+                            >
+                              <Gift className="w-2.5 h-2.5" />Waive
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <span className="text-xs text-[#F4EFE6]/35">{formatDate(req.createdAt)}</span>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={req.status} />
