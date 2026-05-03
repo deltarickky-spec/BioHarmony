@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UploadCloud, CheckCircle, Mic, MicOff, Square, Play,
-  ChevronRight, ChevronLeft, Lock, Users, Info, Globe, MessageCircle
+  ChevronRight, ChevronLeft, Lock, Users, Info, Globe, MessageCircle, Camera
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -311,6 +311,7 @@ export default function UploadScan() {
   const [requestId, setRequestId] = useState<string | null>(null);
 
   const isVoice = REPORTS_TYPE_IS_VOICE(reportType);
+  const isPetScan = reportType === "pet_scan";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -330,6 +331,17 @@ export default function UploadScan() {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".pdf,.xlsx,.xls,.csv";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) setSelectedFile({ name: file.name });
+    };
+    input.click();
+  };
+
+  const handlePetPhotoClick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) setSelectedFile({ name: file.name });
@@ -522,12 +534,14 @@ export default function UploadScan() {
                 {step === 2 && (
                   <div>
                     <h2 className="font-serif text-2xl text-[#F4EFE6] mb-2">
-                      {isVoice ? "Record your voice sample" : "Upload your scan file"}
+                      {isVoice ? "Record your voice sample" : isPetScan ? "Upload a photo of your pet" : "Upload your scan file"}
                     </h2>
                     <p className="text-[#F4EFE6]/40 text-sm mb-7">
                       {isVoice
                         ? "Say your name and speak naturally for 15 seconds"
-                        : "Upload your AO Scan export — PDF or XLSX accepted"}
+                        : isPetScan
+                          ? "A clear, recent photo helps Kathy personalize your pet's wellness report"
+                          : "Upload your AO Scan export — PDF or XLSX accepted"}
                     </p>
 
                     {isVoice ? (
@@ -535,6 +549,39 @@ export default function UploadScan() {
                         if (name) setSelectedFile({ name, blob: blob ?? undefined });
                         else setSelectedFile(null);
                       }} />
+                    ) : isPetScan ? (
+                      /* ── Pet photo upload zone ── */
+                      <div className="space-y-4">
+                        <div
+                          onClick={handlePetPhotoClick}
+                          className={cn(
+                            "border-2 border-dashed rounded-2xl p-12 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300",
+                            selectedFile
+                              ? "border-[#0F5C5E]/60 bg-[#0F5C5E]/5 shadow-[0_0_30px_rgba(15,92,94,0.2)]"
+                              : "border-[#BFA14A]/25 hover:border-[#BFA14A]/50 hover:shadow-[0_0_24px_rgba(191,161,74,0.12)]"
+                          )}
+                        >
+                          {selectedFile ? (
+                            <>
+                              <CheckCircle className="w-10 h-10 text-[#0F5C5E] mb-4" />
+                              <p className="text-[#BFA14A] font-medium mb-1">{selectedFile.name}</p>
+                              <p className="text-xs text-[#F4EFE6]/40">Click to change photo</p>
+                            </>
+                          ) : (
+                            <>
+                              <Camera className="w-10 h-10 text-[#BFA14A]/70 mb-4" />
+                              <p className="text-[#F4EFE6]/70 font-medium mb-1">Click to upload a photo of your pet</p>
+                              <p className="text-xs text-[#BFA14A]/50 uppercase tracking-widest mt-2">JPG · PNG · HEIC · WEBP</p>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/8">
+                          <span className="text-lg shrink-0">🐾</span>
+                          <p className="text-xs text-[#F4EFE6]/45 leading-relaxed">
+                            A clear, recent photo of your pet's face is ideal. The photo is used by Kathy to help personalize the report — it is never shared or used for AI image analysis.
+                          </p>
+                        </div>
+                      </div>
                     ) : (
                       <div
                         onClick={handleFileClick}

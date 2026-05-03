@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
   Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign,
-  TrendingUp
+  TrendingUp, Mail, MailCheck
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -1253,6 +1253,16 @@ export default function AdminDashboard() {
                       <span className="text-xs text-[#F4EFE6]/35">{formatDate(req.createdAt)}</span>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={req.status} />
+                        {/* Email delivery indicator — scan delivered rows only */}
+                        {req.source === "scan" && req.pipelineStage === "delivered" && (
+                          req.deliveredEmailSentAt
+                            ? <span title={`Delivery email sent ${formatDate(req.deliveredEmailSentAt)}`} className="shrink-0">
+                                <MailCheck className="w-3.5 h-3.5 text-green-400/70" />
+                              </span>
+                            : <span title="Delivered — delivery email not yet sent" className="shrink-0">
+                                <Mail className="w-3.5 h-3.5 text-[#BFA14A]/50 animate-pulse" />
+                              </span>
+                        )}
                         <ChevronRight className="w-3.5 h-3.5 text-[#F4EFE6]/20 group-hover:text-[#F4EFE6]/50 transition-colors" />
                       </div>
                     </div>
