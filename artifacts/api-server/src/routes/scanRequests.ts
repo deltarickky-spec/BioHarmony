@@ -178,6 +178,9 @@ router.post("/scan-requests", async (req, res) => {
       fileName: data.fileName,
       whatsapp: data.whatsapp,
       note: data.note,
+      plan: data.plan,
+      promoCode: data.promoCode ?? undefined,
+      discountAmount: data.discountAmount ?? undefined,
     });
 
     await Promise.all([

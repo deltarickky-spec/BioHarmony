@@ -167,6 +167,9 @@ export interface ClientConfirmationData {
   language?: string;
   whatsapp?: boolean;
   note?: string;
+  promoCode?: string;
+  discountAmount?: number;
+  plan?: string;
 }
 
 // ── Delivered notification ─────────────────────────────────────────────────────
@@ -178,6 +181,8 @@ export interface DeliveredEmailData {
   plan: string;       // "basic" | "advanced" | "premium"
   whatsapp: boolean;
   reportType: string;
+  promoCode?: string;
+  discountAmount?: number;
 }
 
 /**
@@ -248,6 +253,22 @@ export function buildDeliveredEmail(data: DeliveredEmailData): EmailPayload {
                       opacity:0.82;line-height:1.8;">
               Your BioHarmony report is ready. You can view and download your report by visiting the link below:
             </p>
+
+            ${data.promoCode && data.discountAmount != null ? `
+            <!-- Promo savings note -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr>
+                <td style="background:#0f2020;border-left:3px solid #BFA14A;
+                           padding:12px 18px;border-radius:0 8px 8px 0;">
+                  <p style="margin:0;color:#F4EFE6;font-size:13px;opacity:0.8;
+                             font-family:Arial,sans-serif;line-height:1.5;">
+                    🏷️ You saved <strong style="color:#BFA14A;">$${data.discountAmount}</strong> with promo code
+                    <span style="font-family:monospace;color:#BFA14A;font-weight:600;">${data.promoCode}</span>.
+                  </p>
+                </td>
+              </tr>
+            </table>
+            ` : ""}
 
             <!-- CTA -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -360,6 +381,9 @@ export function buildDeliveredEmail(data: DeliveredEmailData): EmailPayload {
     trackUrl,
     `Request ID: ${data.requestId}`,
     ``,
+    data.promoCode && data.discountAmount != null
+      ? `🏷️ You saved $${data.discountAmount} with promo code ${data.promoCode}.`
+      : "",
     data.whatsapp ? `WhatsApp delivery will be sent to your registered number shortly.` : "",
     isPremium ? `Your audio narration will appear on your report page when available.` : "",
     ``,
@@ -382,6 +406,9 @@ export interface PaymentReminderData {
   requestId: string;
   paymentUrl: string;
   whatsapp: boolean;
+  promoCode?: string;
+  discountAmount?: number;
+  plan?: string;
 }
 
 /**
@@ -428,11 +455,33 @@ export function buildPaymentReminderEmail(data: PaymentReminderData): EmailPaylo
         <tr>
           <td style="background:#0c1919;padding:36px 40px;border-radius:0 0 12px 12px;">
 
-            <p style="margin:0 0 28px;color:#F4EFE6;font-size:15px;font-family:Georgia,serif;
+            <p style="margin:0 0 ${data.promoCode ? "16px" : "28px"};color:#F4EFE6;font-size:15px;font-family:Georgia,serif;
                       opacity:0.82;line-height:1.8;">
               Your report is ready to begin — we're just waiting for your payment to start processing.
               Once your payment is confirmed, your report will immediately enter the AI processing queue.
             </p>
+
+            ${data.promoCode && data.discountAmount != null ? `
+            <!-- Promo discount banner -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#0f2020;border:1px solid rgba(191,161,74,0.3);
+                           border-radius:10px;padding:14px 20px;">
+                  <p style="margin:0 0 4px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.18em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    Your promo discount
+                  </p>
+                  <p style="margin:0;color:#F4EFE6;font-size:14px;
+                             font-family:Georgia,serif;line-height:1.5;opacity:0.9;">
+                    Code <strong style="color:#BFA14A;font-family:monospace;">${data.promoCode}</strong>
+                    saves you <strong style="color:#BFA14A;">$${data.discountAmount}</strong>
+                    ${data.plan ? `— your price is <strong style="color:#F4EFE6;">$${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}</strong>` : ""}.
+                    This discount is already applied to your order.
+                  </p>
+                </td>
+              </tr>
+            </table>
+            ` : ""}
 
             <!-- CTA -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -538,6 +587,9 @@ export function buildPaymentReminderEmail(data: PaymentReminderData): EmailPaylo
     ``,
     `Your report is ready to begin — we're just waiting for your payment to start processing.`,
     ``,
+    data.promoCode && data.discountAmount != null
+      ? `Promo code ${data.promoCode} saves you $${data.discountAmount}${data.plan ? ` — your price is $${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}` : ""}.`
+      : "",
     `Complete your request here:`,
     data.paymentUrl,
     `Reference: ${data.requestId}`,
@@ -617,7 +669,7 @@ export function buildClientConfirmationEmail(data: ClientConfirmationData): Emai
             </table>
 
             <!-- Summary pills -->
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:${data.promoCode ? "16px" : "28px"};">
               <tr>
                 <td>
                   ${summaryPill("Report Type", data.reportType)}
@@ -627,6 +679,36 @@ export function buildClientConfirmationEmail(data: ClientConfirmationData): Emai
                 </td>
               </tr>
             </table>
+
+            ${data.promoCode && data.discountAmount != null ? `
+            <!-- Promo savings banner -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:linear-gradient(135deg,#1a2e10,#162810);
+                           border:1px solid rgba(191,161,74,0.35);border-radius:10px;padding:14px 20px;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td>
+                        <p style="margin:0 0 3px;color:#BFA14A;font-size:11px;
+                                   letter-spacing:0.18em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                          Promo code applied
+                        </p>
+                        <p style="margin:0;color:#F4EFE6;font-size:14px;
+                                   font-family:Georgia,serif;line-height:1.5;">
+                          Code <strong style="color:#BFA14A;font-family:monospace;">${data.promoCode}</strong>
+                          — you saved <strong style="color:#BFA14A;">$${data.discountAmount}</strong>
+                          ${data.plan ? `· Your price: <strong style="color:#F4EFE6;">$${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}</strong>` : ""}
+                        </p>
+                      </td>
+                      <td style="width:36px;text-align:right;vertical-align:middle;">
+                        <span style="font-size:22px;">🏷️</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            ` : ""}
 
             ${data.note ? `
             <!-- Note -->
@@ -716,6 +798,9 @@ export function buildClientConfirmationEmail(data: ClientConfirmationData): Emai
     langLabel ? `Language: ${langLabel}` : "",
     data.fileName ? `File: ${data.fileName}` : "",
     data.whatsapp ? `Delivery: WhatsApp` : "",
+    data.promoCode && data.discountAmount != null
+      ? `Promo Code: ${data.promoCode} (you saved $${data.discountAmount}${data.plan ? ` — price: $${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}` : ""})`
+      : "",
     data.note ? `\nYour note: "${data.note}"` : "",
     ``,
     `--- What happens next ---`,

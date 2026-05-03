@@ -179,7 +179,7 @@ async function tick(): Promise<void> {
         nextStage === "delivered" &&
         !row.deliveredEmailSentAt
       ) {
-        await sendDeliveryEmail(row.id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType);
+        await sendDeliveryEmail(row.id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
       }
     }
   } catch (err) {
@@ -202,11 +202,19 @@ export async function sendPaymentReminderEmail(
   name: string,
   email: string,
   whatsapp: boolean,
+  promoCode?: string | null,
+  discountAmount?: number | null,
+  plan?: string | null,
 ): Promise<void> {
   const requestId = `BH-${id.toString().padStart(4, "0")}`;
   const paymentUrl = `${SITE_URL_SCHEDULER}/upload?resume=${encodeURIComponent(requestId)}`;
   try {
-    const payload = buildPaymentReminderEmail({ name, email, requestId, paymentUrl, whatsapp });
+    const payload = buildPaymentReminderEmail({
+      name, email, requestId, paymentUrl, whatsapp,
+      promoCode: promoCode ?? undefined,
+      discountAmount: discountAmount ?? undefined,
+      plan: plan ?? undefined,
+    });
     await sendEmail(payload);
     await db
       .update(scanRequestsTable)
@@ -251,7 +259,10 @@ async function paymentReminderTick(): Promise<void> {
     logger.info({ count: rows.length }, "Payment reminder tick: found overdue pending requests");
 
     for (const row of rows) {
-      await sendPaymentReminderEmail(row.id, row.name, row.email, row.whatsapp ?? false);
+      await sendPaymentReminderEmail(
+        row.id, row.name, row.email, row.whatsapp ?? false,
+        row.promoCode, row.discountAmount, row.plan,
+      );
     }
   } catch (err) {
     logger.error({ err }, "Payment reminder tick failed");
@@ -271,6 +282,8 @@ export async function sendDeliveryEmail(
   plan: string | null,
   whatsapp: boolean,
   reportType: string,
+  promoCode?: string | null,
+  discountAmount?: number | null,
 ): Promise<void> {
   const requestId = `BH-${id.toString().padStart(4, "0")}`;
   try {
@@ -281,6 +294,8 @@ export async function sendDeliveryEmail(
       plan: plan ?? "basic",
       whatsapp,
       reportType,
+      promoCode: promoCode ?? undefined,
+      discountAmount: discountAmount ?? undefined,
     });
     await sendEmail(payload);
     // Mark email as sent only after confirmed delivery attempt

@@ -147,7 +147,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
         const row = rows[0];
         if (row && !row.deliveredEmailSentAt &&
             (row.paymentStatus === "paid" || row.paymentStatus === "waived")) {
-          await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType);
+          await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
         }
       }
     }
@@ -198,7 +198,7 @@ router.post("/admin/requests/scan/:id/resend-payment-reminder", async (req, res)
       .set({ paymentReminderSentAt: null })
       .where(eq(scanRequestsTable.id, id));
 
-    await sendPaymentReminderEmail(id, row.name, row.email, row.whatsapp ?? false);
+    await sendPaymentReminderEmail(id, row.name, row.email, row.whatsapp ?? false, row.promoCode, row.discountAmount, row.plan);
 
     req.log.info({ id, email: row.email }, "Payment reminder resent by admin");
     res.json({ success: true });
@@ -246,7 +246,7 @@ router.post("/admin/requests/scan/:id/resend-delivery-email", async (req, res) =
       .set({ deliveredEmailSentAt: null })
       .where(eq(scanRequestsTable.id, id));
 
-    await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType);
+    await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
 
     req.log.info({ id, email: row.email }, "Delivery email resent by admin");
     res.json({ success: true });
