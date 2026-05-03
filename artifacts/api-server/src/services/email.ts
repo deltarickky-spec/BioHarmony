@@ -1006,6 +1006,272 @@ export function buildReferralRewardEmail(data: ReferralRewardData): EmailPayload
   return { to: data.referrerEmail, subject, html, text };
 }
 
+// ── Practitioner commission notification ───────────────────────────────────────
+
+export interface PractitionerCommissionData {
+  practitionerName: string;
+  practitionerEmail: string;
+  referralCode: string;
+  commissionRate: number;
+  reportType: string;
+  plan: string;
+  reportValue: number;
+  commissionEarned: number;
+  totalEarned: number;
+  totalReferrals: number;
+  completedReports: number;
+  pendingPayout: number;
+  dashboardUrl: string;
+}
+
+export function buildPractitionerCommissionEmail(data: PractitionerCommissionData): EmailPayload {
+  const subject = `Commission Earned — BioHarmony Report Delivered (+$${data.commissionEarned})`;
+  const firstName = data.practitionerName.split(" ")[0] ?? data.practitionerName;
+  const planLabel = data.plan === "premium" ? "Premium" : data.plan === "advanced" ? "Advanced" : "Basic";
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#060D0D;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060D0D;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0c1919,#0f2020);
+                     border-radius:12px 12px 0 0;padding:44px 40px 36px;
+                     border-top:3px solid #BFA14A;text-align:center;">
+            <p style="margin:0 0 14px;color:#BFA14A;font-size:11px;
+                      letter-spacing:0.3em;text-transform:uppercase;font-family:Arial,sans-serif;">
+              BioHarmony Solutions — Affiliate Notification
+            </p>
+            <div style="display:inline-block;width:54px;height:54px;border-radius:50%;
+                        background:#0f2b2b;border:2px solid #BFA14A;line-height:54px;
+                        text-align:center;font-size:26px;margin-bottom:18px;">💰</div>
+            <h1 style="margin:0 0 8px;color:#F4EFE6;font-size:26px;
+                       font-family:Georgia,serif;font-weight:400;line-height:1.3;">
+              Commission Earned
+            </h1>
+            <p style="margin:0;color:#BFA14A;font-size:32px;font-family:Georgia,serif;
+                      font-weight:700;letter-spacing:0.02em;">
+              +$${data.commissionEarned}
+            </p>
+            <p style="margin:8px 0 0;color:#F4EFE6;font-size:14px;
+                      font-family:Georgia,serif;font-style:italic;opacity:0.6;">
+              Hi ${firstName}, a referred client's report was just delivered.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#0c1919;padding:36px 40px;border-radius:0 0 12px 12px;">
+
+            <!-- This delivery -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#0f2020;border:1px solid rgba(191,161,74,0.25);
+                           border-radius:10px;padding:20px 24px;">
+                  <p style="margin:0 0 14px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.2em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    This Delivery
+                  </p>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="color:#F4EFE6;font-size:13px;opacity:0.55;font-family:Arial,sans-serif;padding-bottom:8px;">Report Type</td>
+                      <td style="color:#F4EFE6;font-size:13px;font-weight:600;font-family:Arial,sans-serif;text-align:right;padding-bottom:8px;">${data.reportType}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#F4EFE6;font-size:13px;opacity:0.55;font-family:Arial,sans-serif;padding-bottom:8px;">Plan</td>
+                      <td style="color:#F4EFE6;font-size:13px;font-weight:600;font-family:Arial,sans-serif;text-align:right;padding-bottom:8px;">${planLabel}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#F4EFE6;font-size:13px;opacity:0.55;font-family:Arial,sans-serif;padding-bottom:8px;">Report Value</td>
+                      <td style="color:#F4EFE6;font-size:13px;font-weight:600;font-family:Arial,sans-serif;text-align:right;padding-bottom:8px;">$${data.reportValue}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#F4EFE6;font-size:13px;opacity:0.55;font-family:Arial,sans-serif;
+                                 border-top:1px solid #1a3535;padding-top:10px;">
+                        Your Commission (${data.commissionRate}%)
+                      </td>
+                      <td style="color:#BFA14A;font-size:16px;font-weight:700;font-family:Georgia,serif;
+                                 text-align:right;border-top:1px solid #1a3535;padding-top:10px;">
+                        +$${data.commissionEarned}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Lifetime stats -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="padding:0 0 12px;">
+                  <p style="margin:0;color:#F4EFE6;font-size:11px;
+                             letter-spacing:0.2em;text-transform:uppercase;
+                             opacity:0.4;font-family:Arial,sans-serif;">
+                    Your Lifetime Stats
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td width="33%" style="text-align:center;padding:14px 8px;
+                                             background:#0f2020;border-radius:8px 0 0 8px;
+                                             border:1px solid #1a3535;">
+                        <p style="margin:0 0 4px;color:#F4EFE6;font-size:10px;opacity:0.4;
+                                   text-transform:uppercase;letter-spacing:0.15em;font-family:Arial,sans-serif;">
+                          Referrals
+                        </p>
+                        <p style="margin:0;color:#F4EFE6;font-size:22px;font-weight:700;
+                                   font-family:Georgia,serif;opacity:0.85;">
+                          ${data.totalReferrals}
+                        </p>
+                      </td>
+                      <td width="33%" style="text-align:center;padding:14px 8px;
+                                             background:#0f2020;border:1px solid #1a3535;
+                                             border-left:none;">
+                        <p style="margin:0 0 4px;color:#F4EFE6;font-size:10px;opacity:0.4;
+                                   text-transform:uppercase;letter-spacing:0.15em;font-family:Arial,sans-serif;">
+                          Total Earned
+                        </p>
+                        <p style="margin:0;color:#BFA14A;font-size:22px;font-weight:700;
+                                   font-family:Georgia,serif;">
+                          $${data.totalEarned}
+                        </p>
+                      </td>
+                      <td width="33%" style="text-align:center;padding:14px 8px;
+                                             background:#0f2020;border-radius:0 8px 8px 0;
+                                             border:1px solid #1a3535;border-left:none;">
+                        <p style="margin:0 0 4px;color:#F4EFE6;font-size:10px;opacity:0.4;
+                                   text-transform:uppercase;letter-spacing:0.15em;font-family:Arial,sans-serif;">
+                          Pending Payout
+                        </p>
+                        <p style="margin:0;color:${data.pendingPayout > 0 ? "#f6ad55" : "#68d391"};font-size:22px;font-weight:700;
+                                   font-family:Georgia,serif;">
+                          ${data.pendingPayout > 0 ? `$${data.pendingPayout}` : "—"}
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="text-align:center;padding:8px 0;">
+                  <a href="${data.dashboardUrl}"
+                     style="display:inline-block;padding:13px 32px;
+                            background:linear-gradient(135deg,#0F5C5E,#0a4a4c);
+                            color:#F4EFE6;font-size:14px;font-weight:600;
+                            text-decoration:none;border-radius:8px;
+                            font-family:Arial,sans-serif;
+                            border:1px solid rgba(191,161,74,0.3);">
+                    View Your Affiliate Dashboard →
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td style="text-align:center;padding-top:8px;">
+                  <p style="margin:0;color:#F4EFE6;font-size:11px;opacity:0.28;font-family:Arial,sans-serif;">
+                    Your referral code: <span style="font-family:monospace;color:#BFA14A;opacity:1;">${data.referralCode}</span>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Note on payouts -->
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#0f2020;border-radius:10px;border:1px solid #1a3535;">
+              <tr>
+                <td style="padding:18px 22px;">
+                  <p style="margin:0 0 6px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.15em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    About Payouts
+                  </p>
+                  <p style="margin:0;color:#F4EFE6;font-size:13px;opacity:0.65;
+                             font-family:Arial,sans-serif;line-height:1.6;">
+                    Commissions are tracked automatically. Kathy will process your pending payout periodically — 
+                    typically monthly. Questions? Reply to this email or contact
+                    <a href="mailto:info@bioharmonysolutions.ca"
+                       style="color:#4ecdc4;text-decoration:none;">info@bioharmonysolutions.ca</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Signature -->
+        <tr>
+          <td style="padding:28px 0 8px;text-align:center;">
+            <p style="margin:0 0 4px;color:#F4EFE6;font-size:14px;
+                      font-family:Georgia,serif;font-style:italic;opacity:0.5;">Warmly,</p>
+            <p style="margin:0 0 2px;color:#BFA14A;font-size:14px;
+                      font-family:Georgia,serif;font-weight:600;opacity:0.85;">Kathy Owens</p>
+            <p style="margin:0;color:#F4EFE6;font-size:12px;opacity:0.28;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:8px 0 20px;text-align:center;border-top:1px solid #1a3535;">
+            <p style="margin:8px 0 0;color:#F4EFE6;font-size:10px;opacity:0.18;font-family:Arial,sans-serif;">
+              You received this because you are a registered affiliate partner of BioHarmony Solutions.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = [
+    `Commission Earned — BioHarmony Solutions`,
+    `=========================================`,
+    ``,
+    `Hi ${firstName},`,
+    ``,
+    `A referred client's report was just delivered. Here's your commission breakdown:`,
+    ``,
+    `  Report Type:     ${data.reportType}`,
+    `  Plan:            ${planLabel}`,
+    `  Report Value:    $${data.reportValue}`,
+    `  Your Commission: +$${data.commissionEarned} (${data.commissionRate}%)`,
+    ``,
+    `Lifetime Stats`,
+    `--------------`,
+    `  Total Referrals:  ${data.totalReferrals}`,
+    `  Delivered Reports: ${data.completedReports}`,
+    `  Total Earned:     $${data.totalEarned}`,
+    `  Pending Payout:   ${data.pendingPayout > 0 ? `$${data.pendingPayout}` : "Nil"}`,
+    ``,
+    `View your affiliate dashboard:`,
+    data.dashboardUrl,
+    `Your referral code: ${data.referralCode}`,
+    ``,
+    `Commissions are tracked automatically and paid out periodically.`,
+    `Questions? Contact info@bioharmonysolutions.ca`,
+    ``,
+    `Warmly,`,
+    `Kathy Owens`,
+    `BioHarmony Solutions`,
+  ].join("\n");
+
+  return { to: data.practitionerEmail, subject, html, text };
+}
+
 export async function sendEmail(payload: EmailPayload): Promise<void> {
   const apiKey = process.env["RESEND_API_KEY"];
 

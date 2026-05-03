@@ -9,6 +9,7 @@ import {
   resumeGlobal,
   sendDeliveryEmail,
   sendPaymentReminderEmail,
+  sendPractitionerCommissionEmail,
 } from "../services/pipelineScheduler";
 
 const router = Router();
@@ -137,7 +138,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
         await db.update(scanRequestsTable).set(updateSet).where(eq(scanRequestsTable.id, id));
       }
 
-      // If manually advancing to delivered, send delivery email (if not already sent)
+      // If manually advancing to delivered, send delivery + commission emails
       if (data.pipelineStage === "delivered") {
         const rows = await db
           .select()
@@ -148,6 +149,9 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
         if (row && !row.deliveredEmailSentAt &&
             (row.paymentStatus === "paid" || row.paymentStatus === "waived")) {
           await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
+          if (row.practitionerCode) {
+            await sendPractitionerCommissionEmail(id, row.practitionerCode, row.reportType, row.plan);
+          }
         }
       }
     }

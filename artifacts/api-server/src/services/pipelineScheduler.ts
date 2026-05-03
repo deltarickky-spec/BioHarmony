@@ -15,10 +15,10 @@
  */
 
 import { db } from "@workspace/db";
-import { scanRequestsTable } from "@workspace/db/schema";
-import { and, eq, inArray, isNull, lt } from "drizzle-orm";
+import { scanRequestsTable, practitionersTable } from "@workspace/db/schema";
+import { and, eq, inArray, ilike, isNull, lt } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { buildDeliveredEmail, buildPaymentReminderEmail, sendEmail } from "./email";
+import { buildDeliveredEmail, buildPaymentReminderEmail, buildPractitionerCommissionEmail, sendEmail } from "./email";
 
 type PipelineStage =
   | "queued"
@@ -175,11 +175,12 @@ async function tick(): Promise<void> {
 
       // Send "Your report is ready" email when advancing to delivered
       // Only if email hasn't been sent yet (deliveredEmailSentAt is null)
-      if (
-        nextStage === "delivered" &&
-        !row.deliveredEmailSentAt
-      ) {
+      if (nextStage === "delivered" && !row.deliveredEmailSentAt) {
         await sendDeliveryEmail(row.id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
+        // Notify the referring practitioner (if any) of their earned commission
+        if (row.practitionerCode) {
+          await sendPractitionerCommissionEmail(row.id, row.practitionerCode, row.reportType, row.plan);
+        }
       }
     }
   } catch (err) {
@@ -266,6 +267,78 @@ async function paymentReminderTick(): Promise<void> {
     }
   } catch (err) {
     logger.error({ err }, "Payment reminder tick failed");
+  }
+}
+
+// ── Practitioner commission email ──────────────────────────────────────────────
+
+const PLAN_PRICES_SCHEDULER: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
+
+/**
+ * When a referred client's report is delivered, notify the referring practitioner
+ * with their commission breakdown and updated lifetime stats.
+ * Only fires if the scan has a practitionerCode and that practitioner is active.
+ */
+export async function sendPractitionerCommissionEmail(
+  scanId: number,
+  practitionerCode: string,
+  reportType: string,
+  plan: string | null,
+): Promise<void> {
+  const code = practitionerCode.toUpperCase();
+  const siteUrl = process.env["SITE_URL"] ?? "https://bioharmonysolutions.ca";
+
+  try {
+    const [practitioner] = await db
+      .select()
+      .from(practitionersTable)
+      .where(eq(practitionersTable.referralCode, code))
+      .limit(1);
+
+    if (!practitioner || !practitioner.active) return;
+
+    // Compute lifetime stats from all delivered scan requests with this code
+    const allScans = await db
+      .select()
+      .from(scanRequestsTable)
+      .where(ilike(scanRequestsTable.practitionerCode, code));
+
+    const totalReferrals = allScans.length;
+    const delivered = allScans.filter((s) => s.pipelineStage === "delivered");
+    const completedReports = delivered.length;
+    const revenueGenerated = delivered.reduce(
+      (sum, s) => sum + (PLAN_PRICES_SCHEDULER[s.plan ?? "basic"] ?? 55),
+      0,
+    );
+    const totalEarned = Math.floor((revenueGenerated * practitioner.commissionRate) / 100);
+    const pendingPayout = Math.max(0, totalEarned - practitioner.totalPaid);
+
+    const reportValue = PLAN_PRICES_SCHEDULER[plan ?? "basic"] ?? 55;
+    const commissionEarned = Math.floor((reportValue * practitioner.commissionRate) / 100);
+
+    const payload = buildPractitionerCommissionEmail({
+      practitionerName: practitioner.name,
+      practitionerEmail: practitioner.email,
+      referralCode: practitioner.referralCode,
+      commissionRate: practitioner.commissionRate,
+      reportType,
+      plan: plan ?? "basic",
+      reportValue,
+      commissionEarned,
+      totalEarned,
+      totalReferrals,
+      completedReports,
+      pendingPayout,
+      dashboardUrl: `${siteUrl}/practitioner-portal`,
+    });
+
+    await sendEmail(payload);
+    logger.info(
+      { scanId, practitionerCode: code, commissionEarned, totalEarned },
+      "Practitioner commission email sent",
+    );
+  } catch (err) {
+    logger.error({ err, scanId, practitionerCode: code }, "Failed to send practitioner commission email");
   }
 }
 
