@@ -19,6 +19,7 @@ import Membership from "@/pages/Membership";
 import SampleReport from "@/pages/SampleReport";
 import SampleReports from "@/pages/SampleReports";
 import AdminLeads from "@/pages/AdminLeads";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ function App() {
         <LanguageProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Switch>
+              <Route path="/admin" component={AdminDashboard} />
               <Route path="/admin/leads" component={AdminLeads} />
               <Route component={Router} />
             </Switch>

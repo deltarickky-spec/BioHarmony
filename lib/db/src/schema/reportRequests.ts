@@ -8,6 +8,7 @@ export const reportRequestsTable = pgTable("report_requests", {
   email: varchar("email", { length: 255 }).notNull(),
   reportType: varchar("report_type", { length: 50 }).notNull(),
   note: text("note"),
+  status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

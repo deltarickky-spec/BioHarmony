@@ -10,5 +10,6 @@ export const scanRequestsTable = pgTable("scan_requests", {
   fileName: varchar("file_name", { length: 255 }),
   whatsapp: boolean("whatsapp").default(false),
   note: text("note"),
+  status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
