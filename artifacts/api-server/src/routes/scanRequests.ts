@@ -120,6 +120,7 @@ router.get("/scan-requests/track", async (req, res) => {
       deliveredEmailSentAt: row.deliveredEmailSentAt ?? null,
       bioharmonyScore: row.bioharmonyScore ?? null,
       scoreBreakdown: row.scoreBreakdown ?? null,
+      tags: row.tags ?? [],
       createdAt: row.createdAt,
     });
   } catch (err) {
