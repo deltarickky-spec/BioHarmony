@@ -1,0 +1,116 @@
+Re-architect BioHarmony as an AI-run SaaS workflow, not a manual service workflow.
+
+Goal:
+The entire customer/practitioner journey should be automated from landing page to delivery.
+
+End-to-end workflow:
+
+1. Visitor chooses service
+- Consumer scan
+- Upload existing AO/Solex report
+- Pet scan
+- Practitioner interpretation
+
+2. User submits required input
+- Voice recording
+- PDF/XLSX upload
+- Pet details if pet scan
+- Language selection
+- Delivery preference: email / WhatsApp
+
+3. User pays BEFORE processing
+Use Stripe checkout/payment links.
+Plans:
+- Basic — $55
+- Advanced — $99
+- Premium — $149
+- Practitioner single report — $49
+- Practitioner bundles:
+  - $29/month starter access
+  - $145/month 5 reports
+  - $270/month 10 reports
+  - $97/month white-label add-on
+
+4. After successful payment
+Automatically create report request with:
+- request_id
+- client details
+- uploaded files/audio
+- selected plan
+- language
+- payment_status = paid
+- report_status = queued
+
+5. AI processing pipeline
+Create backend-ready status stages:
+- Queued
+- Extracting Data
+- AI Interpreting
+- Generating Report
+- Quality Check
+- PDF Created
+- Audio Created
+- Delivered
+
+6. AI report generation
+Prepare backend hooks for:
+- Sage/OpenClaw report generation
+- Hermes formatting/export
+- BioHarmony Master Template
+- BioHarmony Intelligence Score
+- PDF generation
+- Optional audio narration
+- Optional translation
+
+For now, if Sage/Hermes is not connected, use mock AI output but structure code so real API/webhook integration can replace it later.
+
+7. Delivery automation
+After report is generated:
+- Email client/practitioner with report link
+- If WhatsApp selected, create WhatsApp delivery message/link
+- Update tracking page status to Delivered
+
+8. Admin dashboard
+Admin should monitor, not manually run everything.
+
+Show:
+- Requests
+- Payment status
+- AI pipeline stage
+- Errors
+- Delivered reports
+- Retry processing button
+- Manual override button
+- Quality review toggle
+
+9. Customer tracking page
+Show real pipeline status:
+- Payment received
+- Data extraction
+- AI interpretation
+- Report generation
+- Quality check
+- Delivery
+
+10. Practitioner dashboard
+Add practitioner portal structure:
+- Upload reports
+- See remaining monthly credits
+- View completed reports
+- Download PDFs
+- White-label status
+- Subscription tier
+
+11. Important positioning
+This is an AI-powered BioHarmony report platform.
+Kathy/BioHarmony provides the report framework, wellness interpretation style, and quality standards.
+AI automates intake, generation, formatting, translation, audio, and delivery.
+
+12. Important compliance
+Keep all language non-diagnostic.
+Do not claim to diagnose, treat, cure, or prevent disease.
+Use wellness insight / educational purposes language.
+
+Design:
+Keep premium dark BioHarmony style.
+Do not make it look like a generic SaaS dashboard.

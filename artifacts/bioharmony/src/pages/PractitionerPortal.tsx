@@ -1,0 +1,531 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "wouter";
+import {
+  Upload, FileText, Download, Star, Zap, Users, Crown,
+  ChevronRight, Lock, CheckCircle, Clock, BarChart3
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const PRACTITIONER_KEY = "bh_practitioner_token";
+const PRACTITIONER_PASSWORD = "practitioner2025";
+
+const TIERS = [
+  {
+    id: "starter",
+    label: "Starter",
+    price: "$29",
+    interval: "/mo",
+    credits: 3,
+    color: "teal",
+    badge: "",
+    features: [
+      "3 reports per month",
+      "Consumer + Pet scan reports",
+      "Email delivery to clients",
+      "BioHarmony branded PDF",
+      "Standard 48-hour turnaround",
+    ],
+    highlight: false,
+  },
+  {
+    id: "professional",
+    label: "Professional",
+    price: "$145",
+    interval: "/mo",
+    credits: 5,
+    color: "gold",
+    badge: "Most Popular",
+    features: [
+      "5 reports per month",
+      "All report types",
+      "WhatsApp + Email delivery",
+      "BioHarmony Score included",
+      "Priority 24-hour turnaround",
+      "Monthly client analytics",
+    ],
+    highlight: true,
+  },
+  {
+    id: "enterprise",
+    label: "Enterprise",
+    price: "$270",
+    interval: "/mo",
+    credits: 10,
+    color: "purple",
+    badge: "",
+    features: [
+      "10 reports per month",
+      "All report types + Audio",
+      "Multi-language delivery",
+      "Full BioHarmony Score",
+      "Same-day rush turnaround",
+      "Dedicated account support",
+    ],
+    highlight: false,
+  },
+  {
+    id: "whitelabel",
+    label: "White-Label Add-on",
+    price: "$97",
+    interval: "/mo",
+    credits: 0,
+    color: "indigo",
+    badge: "Add-on",
+    features: [
+      "Your practice branding on reports",
+      "Custom logo + color scheme",
+      "Remove BioHarmony branding",
+      "Client sees your brand",
+      "Requires a base subscription",
+    ],
+    highlight: false,
+  },
+] as const;
+
+const MOCK_COMPLETED = [
+  { id: "BH-0031", name: "Sarah J.", type: "Inner Voice", plan: "Professional", stage: "Delivered", date: "Apr 29, 2026" },
+  { id: "BH-0028", name: "Michael T.", type: "Vitals Report", plan: "Professional", stage: "Delivered", date: "Apr 25, 2026" },
+  { id: "BH-0019", name: "Bella (Pet)", type: "Pet Scan", plan: "Starter", stage: "Delivered", date: "Apr 18, 2026" },
+] as const;
+
+function AuthGate({ onAuth }: { onAuth: () => void }) {
+  const [pw, setPw] = useState("");
+  const [error, setError] = useState("");
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (pw.trim() === PRACTITIONER_PASSWORD) {
+      sessionStorage.setItem(PRACTITIONER_KEY, "1");
+      onAuth();
+    } else {
+      setError("Incorrect password. Please try again or contact support.");
+      setPw("");
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-[#060D0D] flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-sm"
+      >
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-[#BFA14A]/12 border border-[#BFA14A]/25 flex items-center justify-center mx-auto mb-5">
+            <Lock className="w-6 h-6 text-[#BFA14A]" />
+          </div>
+          <p className="text-[#BFA14A] text-xs uppercase tracking-[0.25em] mb-2">BioHarmony Solutions</p>
+          <h1 className="text-2xl font-serif text-[#F4EFE6]">Practitioner Portal</h1>
+          <p className="text-[#F4EFE6]/40 text-sm mt-2">For licensed wellness practitioners only</p>
+        </div>
+        <form onSubmit={submit} className="bg-[#0C1919] border border-white/10 rounded-2xl p-8 space-y-5">
+          <div className="h-[2px] -mt-8 -mx-8 mb-8 rounded-t-2xl bg-gradient-to-r from-transparent via-[#BFA14A]/35 to-transparent" />
+          <div>
+            <label className="block text-xs text-[#F4EFE6]/45 mb-2 uppercase tracking-wider">Access Code</label>
+            <input
+              type="password"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/60 transition"
+              placeholder="Enter your practitioner code"
+              autoFocus
+            />
+          </div>
+          {error && <p className="text-red-400/80 text-sm">{error}</p>}
+          <button type="submit" className="w-full py-3.5 rounded-xl bg-[#BFA14A] text-[#060D0D] font-semibold hover:bg-[#d4b456] transition text-sm">
+            Enter Portal
+          </button>
+          <p className="text-center text-xs text-[#F4EFE6]/25">
+            Need access?{" "}
+            <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A]/55 hover:text-[#BFA14A] transition">
+              Contact us
+            </a>
+          </p>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+function CreditMeter({ used, total, tier }: { used: number; total: number; tier: string }) {
+  const remaining = total - used;
+  const pct = total > 0 ? (remaining / total) * 100 : 0;
+  return (
+    <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.2em] mb-1">Monthly Credits</p>
+          <p className="text-3xl font-bold text-[#F4EFE6]">{remaining}<span className="text-[#F4EFE6]/30 text-lg font-normal"> / {total}</span></p>
+        </div>
+        <div className="w-12 h-12 rounded-full bg-[#0F5C5E]/20 border border-[#0F5C5E]/30 flex items-center justify-center">
+          <Zap className="w-5 h-5 text-[#4ecdc4]" />
+        </div>
+      </div>
+      <div className="w-full h-2 bg-white/8 rounded-full overflow-hidden mb-2">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className={cn(
+            "h-full rounded-full",
+            pct > 60 ? "bg-gradient-to-r from-[#0F5C5E] to-[#4ecdc4]"
+              : pct > 25 ? "bg-gradient-to-r from-[#BFA14A] to-[#d4b456]"
+                : "bg-gradient-to-r from-red-700 to-red-500"
+          )}
+        />
+      </div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[#F4EFE6]/35">{used} used this month</p>
+        <span className="text-xs text-[#BFA14A]/60 capitalize">{tier} plan</span>
+      </div>
+    </div>
+  );
+}
+
+export default function PractitionerPortal() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem(PRACTITIONER_KEY) === "1");
+  const [activeTab, setActiveTab] = useState<"overview" | "reports" | "plans">("overview");
+
+  if (!authed) return <AuthGate onAuth={() => setAuthed(true)} />;
+
+  return (
+    <div className="min-h-screen bg-[#060D0D]">
+
+      {/* Header */}
+      <div className="bg-[#060D0D]/96 backdrop-blur-md border-b border-white/8 sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[#BFA14A] text-xs uppercase tracking-[0.25em] font-medium">BioHarmony</span>
+            <span className="text-white/15">·</span>
+            <span className="text-[#F4EFE6]/50 text-xs">Practitioner Studio</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#BFA14A] shadow-[0_0_8px_rgba(191,161,74,0.6)]" />
+            <span className="text-xs text-[#F4EFE6]/40">Professional Plan</span>
+            <button
+              onClick={() => { sessionStorage.removeItem(PRACTITIONER_KEY); setAuthed(false); }}
+              className="text-xs text-[#F4EFE6]/25 hover:text-[#F4EFE6]/55 ml-3 transition"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <section className="py-10 border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.25em] mb-2">Welcome Back</p>
+            <h1 className="font-serif text-3xl md:text-4xl text-[#F4EFE6] mb-2">Practitioner Studio</h1>
+            <p className="text-[#F4EFE6]/45 text-base">
+              Submit reports, track your pipeline, and manage your practice — all from one place.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Tabs */}
+      <div className="border-b border-white/8">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex gap-0">
+            {([
+              { id: "overview", label: "Overview", icon: BarChart3 },
+              { id: "reports", label: "My Reports", icon: FileText },
+              { id: "plans", label: "Plans & Billing", icon: Crown },
+            ] as const).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-4 text-sm border-b-2 transition-all",
+                  activeTab === tab.id
+                    ? "border-[#BFA14A] text-[#BFA14A]"
+                    : "border-transparent text-[#F4EFE6]/40 hover:text-[#F4EFE6]/65"
+                )}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-6xl mx-auto px-6 py-10">
+        <AnimatePresence mode="wait">
+
+          {/* ─── OVERVIEW TAB ─── */}
+          {activeTab === "overview" && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <CreditMeter used={2} total={5} tier="Professional" />
+
+                {/* Quick stats */}
+                <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-6 space-y-4">
+                  <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.2em]">This Month</p>
+                  {[
+                    { label: "Reports Submitted", value: "2", icon: FileText, color: "text-[#4ecdc4]" },
+                    { label: "Reports Delivered", value: "2", icon: CheckCircle, color: "text-green-300" },
+                    { label: "Avg. Turnaround", value: "18 hrs", icon: Clock, color: "text-[#BFA14A]" },
+                  ].map((s) => (
+                    <div key={s.label} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <s.icon className={cn("w-4 h-4", s.color)} />
+                        <span className="text-sm text-[#F4EFE6]/55">{s.label}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-[#F4EFE6]/85">{s.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Plan status */}
+                <div className="bg-[#0C1919] border border-[#BFA14A]/20 rounded-2xl p-6">
+                  <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.2em] mb-3">Your Plan</p>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-2xl font-bold text-[#F4EFE6]">$145</span>
+                    <span className="text-[#F4EFE6]/35 text-sm">/month</span>
+                  </div>
+                  <p className="text-[#BFA14A] font-semibold mb-4">Professional</p>
+                  <div className="space-y-2 mb-5">
+                    {["5 reports/month", "Priority turnaround", "BioHarmony Score", "WhatsApp delivery"].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <CheckCircle className="w-3 h-3 text-[#0F5C5E] shrink-0" />
+                        <span className="text-xs text-[#F4EFE6]/55">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("plans")}
+                    className="w-full text-center text-xs text-[#BFA14A]/55 hover:text-[#BFA14A] transition underline underline-offset-2"
+                  >
+                    View upgrade options
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit CTA */}
+              <div className="bg-gradient-to-r from-[#0F5C5E]/20 to-[#BFA14A]/8 border border-[#BFA14A]/20 rounded-2xl p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+                <div>
+                  <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] mb-2">Ready to submit?</p>
+                  <h3 className="font-serif text-xl text-[#F4EFE6] mb-1">Upload a new client scan</h3>
+                  <p className="text-[#F4EFE6]/45 text-sm">
+                    You have <span className="text-[#BFA14A] font-medium">3 credits remaining</span> this month.
+                    Our AI pipeline processes reports within 24 hours.
+                  </p>
+                </div>
+                <Link
+                  href="/upload-scan"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#0F5C5E] border border-[#BFA14A]/20 text-[#F4EFE6] text-sm font-semibold shadow-[0_0_20px_rgba(191,161,74,0.2)] hover:shadow-[0_0_32px_rgba(191,161,74,0.4)] transition-all whitespace-nowrap"
+                >
+                  <Upload className="w-4 h-4" /> Submit Report
+                </Link>
+              </div>
+
+              {/* Recent reports */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-[#F4EFE6]/70 uppercase tracking-wider text-xs">Recent Deliveries</h3>
+                  <button onClick={() => setActiveTab("reports")} className="text-xs text-[#BFA14A]/50 hover:text-[#BFA14A] transition flex items-center gap-1">
+                    View all <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {MOCK_COMPLETED.slice(0, 2).map((r) => (
+                    <div key={r.id} className="flex items-center justify-between px-4 py-3.5 bg-[#0C1919] border border-white/8 rounded-xl">
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-lg bg-green-900/20 border border-green-700/25 flex items-center justify-center shrink-0">
+                          <CheckCircle className="w-4 h-4 text-green-300" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-[#F4EFE6]/80 font-medium">{r.name}</p>
+                          <p className="text-xs text-[#F4EFE6]/35">{r.type} · {r.id}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-[#F4EFE6]/30 hidden sm:block">{r.date}</span>
+                        <button className="flex items-center gap-1.5 text-xs text-[#4ecdc4]/60 hover:text-[#4ecdc4] transition">
+                          <Download className="w-3.5 h-3.5" /> PDF
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─── REPORTS TAB ─── */}
+          {activeTab === "reports" && (
+            <motion.div
+              key="reports"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-5"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="font-serif text-2xl text-[#F4EFE6]">My Reports</h2>
+                <Link
+                  href="/upload-scan"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0F5C5E] text-[#F4EFE6] text-sm font-medium border border-[#BFA14A]/20 hover:shadow-[0_0_20px_rgba(191,161,74,0.25)] transition-all"
+                >
+                  <Upload className="w-3.5 h-3.5" /> Submit New
+                </Link>
+              </div>
+
+              <div className="rounded-xl border border-white/8 overflow-hidden">
+                <div className="hidden md:grid grid-cols-[0.5fr_1fr_1fr_0.8fr_1fr_0.6fr_auto] gap-3 px-5 py-3 bg-white/4 border-b border-white/8 text-[10px] uppercase tracking-wider text-[#F4EFE6]/30 font-medium">
+                  <span>ID</span>
+                  <span>Client</span>
+                  <span>Type</span>
+                  <span>Plan</span>
+                  <span>Date</span>
+                  <span>Stage</span>
+                  <span>PDF</span>
+                </div>
+                {MOCK_COMPLETED.map((r) => (
+                  <div key={r.id} className="flex md:grid md:grid-cols-[0.5fr_1fr_1fr_0.8fr_1fr_0.6fr_auto] gap-3 items-center px-5 py-4 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                    <span className="font-mono text-xs text-[#BFA14A]/60">{r.id}</span>
+                    <span className="text-sm text-[#F4EFE6]/80">{r.name}</span>
+                    <span className="text-sm text-[#F4EFE6]/55">{r.type}</span>
+                    <span className="text-xs text-[#F4EFE6]/45">{r.plan}</span>
+                    <span className="text-xs text-[#F4EFE6]/35">{r.date}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-900/20 text-green-300 border border-green-700/20 w-fit">{r.stage}</span>
+                    <button className="flex items-center gap-1 text-xs text-[#4ecdc4]/60 hover:text-[#4ecdc4] transition">
+                      <Download className="w-3.5 h-3.5" /> PDF
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center pt-8 pb-4">
+                <p className="text-xs text-[#F4EFE6]/20">PDF downloads will be enabled once your report is fully delivered.</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─── PLANS TAB ─── */}
+          {activeTab === "plans" && (
+            <motion.div
+              key="plans"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
+            >
+              <div>
+                <h2 className="font-serif text-2xl text-[#F4EFE6] mb-2">Plans &amp; Billing</h2>
+                <p className="text-[#F4EFE6]/40 text-sm">All plans include personalized BioHarmony reports, client delivery, and practitioner support.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {TIERS.map((tier) => (
+                  <div
+                    key={tier.id}
+                    className={cn(
+                      "relative rounded-2xl p-6 border transition-all",
+                      tier.highlight
+                        ? "border-[#BFA14A]/45 bg-[#BFA14A]/6 shadow-[0_0_40px_rgba(191,161,74,0.15)]"
+                        : "border-white/10 bg-[#0C1919]/80 hover:border-white/18"
+                    )}
+                  >
+                    {tier.badge && (
+                      <span className={cn(
+                        "absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full whitespace-nowrap",
+                        tier.badge === "Most Popular"
+                          ? "bg-[#BFA14A] text-[#060D0D]"
+                          : "bg-[#0F5C5E] text-[#F4EFE6]"
+                      )}>
+                        {tier.badge}
+                      </span>
+                    )}
+                    <p className={cn(
+                      "text-xs uppercase tracking-wider font-semibold mb-1",
+                      tier.highlight ? "text-[#BFA14A]" : "text-[#F4EFE6]/50"
+                    )}>
+                      {tier.label}
+                    </p>
+                    <div className="flex items-baseline gap-0.5 mb-4">
+                      <span className="text-2xl font-bold text-[#F4EFE6]">{tier.price}</span>
+                      <span className="text-[#F4EFE6]/30 text-sm">{tier.interval}</span>
+                    </div>
+                    {tier.credits > 0 && (
+                      <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-white/5 border border-white/8">
+                        <Zap className="w-3.5 h-3.5 text-[#4ecdc4]" />
+                        <span className="text-xs text-[#F4EFE6]/60">
+                          <span className="font-semibold text-[#F4EFE6]/80">{tier.credits}</span> reports/month
+                        </span>
+                      </div>
+                    )}
+                    <div className="space-y-2 mb-5">
+                      {tier.features.map((f) => (
+                        <div key={f} className="flex items-start gap-2">
+                          <CheckCircle className={cn("w-3.5 h-3.5 mt-0.5 shrink-0", tier.highlight ? "text-[#BFA14A]" : "text-[#0F5C5E]")} />
+                          <span className="text-xs text-[#F4EFE6]/55 leading-relaxed">{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      className={cn(
+                        "w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
+                        tier.highlight
+                          ? "bg-[#BFA14A] text-[#060D0D] hover:bg-[#d4b456]"
+                          : tier.id === "professional"
+                            ? "bg-white/5 text-[#F4EFE6]/50 cursor-default text-xs"
+                            : "bg-transparent border border-white/15 text-[#F4EFE6]/55 hover:border-white/30 hover:text-[#F4EFE6]/80"
+                      )}
+                    >
+                      {tier.id === "professional" ? "Current Plan" : "Upgrade"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* White-label note */}
+              <div className="bg-[#0C1919] border border-white/8 rounded-2xl p-6 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#BFA14A]/10 border border-[#BFA14A]/20 flex items-center justify-center shrink-0">
+                  <Star className="w-5 h-5 text-[#BFA14A]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#F4EFE6]/80 mb-1">About White-Label Reporting</p>
+                  <p className="text-sm text-[#F4EFE6]/45 leading-relaxed">
+                    With the white-label add-on, your clients receive reports branded with your practice logo, colors, and name —
+                    with no visible BioHarmony branding. Requires any paid base subscription.
+                    Contact us to enable: {" "}
+                    <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A] hover:text-[#d4b456] transition underline underline-offset-2">
+                      info@bioharmonysolutions.ca
+                    </a>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-white/3 border border-white/6">
+                <Users className="w-4 h-4 text-[#F4EFE6]/30 mt-0.5 shrink-0" />
+                <p className="text-xs text-[#F4EFE6]/35 leading-relaxed">
+                  Stripe payment integration coming soon — billing will be processed securely. All plans include a 7-day trial period.
+                  Contact us at{" "}
+                  <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A]/55 hover:text-[#BFA14A] transition">
+                    info@bioharmonysolutions.ca
+                  </a>
+                  {" "}to get started immediately.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </div>
+
+    </div>
+  );
+}

@@ -7,9 +7,28 @@ import { z } from "zod";
 const router = Router();
 
 const VALID_STATUSES = ["new", "in_review", "in_progress", "completed", "delivered"] as const;
-const StatusSchema = z.object({
-  status: z.enum(VALID_STATUSES),
-});
+const PIPELINE_STAGES = [
+  "queued",
+  "extracting",
+  "interpreting",
+  "generating",
+  "quality_check",
+  "pdf_ready",
+  "audio_ready",
+  "delivered",
+] as const;
+const PAYMENT_STATUSES = ["pending", "paid", "failed", "waived"] as const;
+
+const AdminUpdateSchema = z
+  .object({
+    status: z.enum(VALID_STATUSES).optional(),
+    pipelineStage: z.enum(PIPELINE_STAGES).optional(),
+    paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
+  })
+  .refine(
+    (d) => d.status !== undefined || d.pipelineStage !== undefined || d.paymentStatus !== undefined,
+    { message: "At least one field (status, pipelineStage, or paymentStatus) is required" },
+  );
 
 function checkAuth(
   req: Parameters<Parameters<typeof router.get>[1]>[0],
@@ -50,33 +69,40 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
     return;
   }
 
-  const parsed = StatusSchema.safeParse(req.body);
+  const parsed = AdminUpdateSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Invalid status", details: parsed.error.issues });
+    res.status(400).json({ error: "Invalid update payload", details: parsed.error.issues });
     return;
   }
 
-  const { status } = parsed.data;
+  const data = parsed.data;
 
   try {
     if (source === "report") {
-      await db
-        .update(reportRequestsTable)
-        .set({ status })
-        .where(eq(reportRequestsTable.id, id));
+      const updateSet = {
+        ...(data.status !== undefined ? { status: data.status } : {}),
+      };
+      if (Object.keys(updateSet).length > 0) {
+        await db.update(reportRequestsTable).set(updateSet).where(eq(reportRequestsTable.id, id));
+      }
     } else {
-      await db
-        .update(scanRequestsTable)
-        .set({ status })
-        .where(eq(scanRequestsTable.id, id));
+      const updateSet = {
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.pipelineStage !== undefined ? { pipelineStage: data.pipelineStage } : {}),
+        ...(data.paymentStatus !== undefined ? { paymentStatus: data.paymentStatus } : {}),
+      };
+      if (Object.keys(updateSet).length > 0) {
+        await db.update(scanRequestsTable).set(updateSet).where(eq(scanRequestsTable.id, id));
+      }
     }
 
-    req.log.info({ source, id, status }, "Request status updated");
-    res.json({ success: true, id, status });
+    req.log.info({ source, id, ...data }, "Request updated by admin");
+    res.json({ success: true, id, ...data });
   } catch (err) {
-    req.log.error({ err }, "Failed to update status");
-    res.status(500).json({ error: "Could not update status" });
+    req.log.error({ err }, "Failed to update request");
+    res.status(500).json({ error: "Could not update request" });
   }
 });
 
+export { PIPELINE_STAGES, PAYMENT_STATUSES, VALID_STATUSES };
 export default router;

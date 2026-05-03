@@ -21,6 +21,7 @@ import SampleReports from "@/pages/SampleReports";
 import AdminLeads from "@/pages/AdminLeads";
 import AdminDashboard from "@/pages/AdminDashboard";
 import TrackReport from "@/pages/TrackReport";
+import PractitionerPortal from "@/pages/PractitionerPortal";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ function Router() {
           <Route path="/sample-report" component={SampleReport} />
           <Route path="/sample-reports" component={SampleReports} />
           <Route path="/track-report" component={TrackReport} />
+          <Route path="/practitioner-portal" component={PractitionerPortal} />
           <Route component={NotFound} />
         </Switch>
       </main>

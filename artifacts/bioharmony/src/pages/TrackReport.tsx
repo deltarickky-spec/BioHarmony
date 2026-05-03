@@ -1,58 +1,103 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, CheckCircle2, Circle, Loader2, ArrowRight, FileText } from "lucide-react";
+import {
+  Search, CheckCircle2, Circle, Loader2, AlertCircle,
+  CreditCard, FileText, MessageCircle, Clock, Lock
+} from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const TRACK_STATUSES = [
+const PIPELINE_STAGES = [
   {
-    key: "received",
-    label: "Request Received",
-    desc: "Your request has been logged in our system.",
+    key: "queued",
+    label: "Request Queued",
+    desc: "Your submission has been received and is in the queue.",
+    icon: "📥",
   },
   {
-    key: "in_review",
-    label: "In Review",
-    desc: "Kathy is personally reviewing your request.",
+    key: "extracting",
+    label: "Extracting Data",
+    desc: "Your scan data is being extracted and prepared for analysis.",
+    icon: "🔍",
   },
   {
-    key: "preparing",
-    label: "Report Being Prepared",
-    desc: "Your personalized report is being carefully prepared.",
+    key: "interpreting",
+    label: "AI Interpreting",
+    desc: "BioHarmony's AI engine is analyzing your bio-frequency data.",
+    icon: "🧠",
   },
   {
-    key: "quality",
+    key: "generating",
+    label: "Generating Report",
+    desc: "Your personalized wellness narrative is being written.",
+    icon: "✍️",
+  },
+  {
+    key: "quality_check",
     label: "Quality Check",
-    desc: "Final review to ensure accuracy and completeness.",
+    desc: "Final review to ensure accuracy and BioHarmony standards.",
+    icon: "✅",
   },
   {
-    key: "ready",
-    label: "Ready for Delivery",
-    desc: "Your report is complete and ready to send.",
+    key: "pdf_ready",
+    label: "PDF Created",
+    desc: "Your report has been compiled into a beautiful PDF.",
+    icon: "📄",
+  },
+  {
+    key: "audio_ready",
+    label: "Audio Narration Ready",
+    desc: "Your audio narration has been generated and attached.",
+    icon: "🎧",
   },
   {
     key: "delivered",
     label: "Delivered",
     desc: "Your report has been sent to your chosen delivery method.",
+    icon: "📬",
   },
-];
+] as const;
 
-const STATUS_INDEX_BY_LAST_DIGIT: Record<number, number> = {
-  0: 0,
-  1: 1,
-  2: 1,
-  3: 2,
-  4: 2,
-  5: 3,
-  6: 3,
-  7: 4,
-  8: 4,
-  9: 5,
+type PipelineStageKey = (typeof PIPELINE_STAGES)[number]["key"];
+
+const STAGE_INDEX: Record<PipelineStageKey, number> = {
+  queued: 0,
+  extracting: 1,
+  interpreting: 2,
+  generating: 3,
+  quality_check: 4,
+  pdf_ready: 5,
+  audio_ready: 6,
+  delivered: 7,
 };
 
-const REPORT_TYPES = ["Inner Voice", "Vitals", "Comprehensive", "Body Systems"];
-const DELIVERY_METHODS = ["Email", "Email", "WhatsApp", "Email", "WhatsApp"];
+const PLAN_LABELS: Record<string, string> = {
+  basic: "Basic — $55",
+  advanced: "Advanced — $99",
+  premium: "Premium — $149",
+};
+
+const LANG_LABELS: Record<string, string> = {
+  en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
+  de: "German", zh: "Chinese", ar: "Arabic", hi: "Hindi",
+};
+
+interface TrackResult {
+  id: number;
+  requestId: string;
+  name: string;
+  reportType: string;
+  plan: string;
+  language: string;
+  whatsapp: boolean;
+  fileName: string | null;
+  status: string;
+  pipelineStage: PipelineStageKey;
+  paymentStatus: string;
+  createdAt: string;
+}
 
 function formatRequestId(raw: string): string | null {
   const cleaned = raw.trim().toUpperCase().replace(/\s/g, "");
@@ -63,100 +108,69 @@ function formatRequestId(raw: string): string | null {
       : `BH-${cleaned}`;
   const match = withPrefix.match(/^BH-(\d{1,8})$/);
   if (!match) return null;
-  return `BH-${parseInt(match[1], 10).toString().padStart(4, "0")}`;
+  return `BH-${parseInt(match[1]!, 10).toString().padStart(4, "0")}`;
 }
 
-function getAdminNote(statusIdx: number, reportType: string): string | null {
-  const notes: Record<number, string> = {
-    2: `We've begun preparing your ${reportType} report. This is one of our more detailed analyses — we want every insight to be meaningful for you.`,
-    3: `Your ${reportType} report has passed our initial quality review. Final polish is underway.`,
-    4: `Your ${reportType} report is complete. Please ensure your inbox is ready for delivery.`,
-    5: `Your ${reportType} report was sent. Please check your inbox (and your spam folder, just in case). Reply to our email if you have any questions — Kathy personally responds to every message.`,
-  };
-  return notes[statusIdx] ?? null;
-}
-
-interface MockResult {
-  name: string;
-  requestId: string;
-  reportType: string;
-  deliveryMethod: string;
-  submittedDate: string;
-  statusIdx: number;
-  estimatedDelivery: string;
-  adminNote: string | null;
-}
-
-function buildMockResult(requestId: string, email: string): MockResult | null {
-  const formatted = formatRequestId(requestId);
-  if (!formatted) return null;
-
-  const numId = parseInt(formatted.replace("BH-", ""), 10);
-  const lastDigit = numId % 10;
-  const statusIdx = STATUS_INDEX_BY_LAST_DIGIT[lastDigit] ?? 0;
-
-  const reportType = REPORT_TYPES[numId % REPORT_TYPES.length];
-  const deliveryMethod = DELIVERY_METHODS[numId % DELIVERY_METHODS.length];
-
-  const daysAgo = (numId % 12) + 1;
-  const submittedDate = new Date();
-  submittedDate.setDate(submittedDate.getDate() - daysAgo);
-
-  const remaining = 5 - statusIdx;
-  let estimatedDelivery: string;
-  if (statusIdx >= 5) {
-    estimatedDelivery = "Delivered";
-  } else if (statusIdx >= 4) {
-    estimatedDelivery = "Within 24 hours";
-  } else if (remaining <= 1) {
-    estimatedDelivery = "1–2 business days";
-  } else {
-    estimatedDelivery = `${remaining}–${remaining + 1} business days`;
+function PaymentBanner({ paymentStatus }: { paymentStatus: string }) {
+  if (paymentStatus === "paid" || paymentStatus === "waived") return null;
+  if (paymentStatus === "failed") {
+    return (
+      <div className="flex items-start gap-4 p-5 rounded-2xl border border-red-500/30 bg-red-500/8 mb-5">
+        <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 shrink-0" />
+        <div>
+          <p className="text-red-300 font-semibold text-sm mb-1">Payment Failed</p>
+          <p className="text-[#F4EFE6]/55 text-sm leading-relaxed">
+            Your payment could not be processed. Please contact us at{" "}
+            <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A] underline underline-offset-2">
+              info@bioharmonysolutions.ca
+            </a>{" "}
+            to resolve this.
+          </p>
+        </div>
+      </div>
+    );
   }
-
-  const emailPrefix = email
-    .split("@")[0]
-    .replace(/[._\-+]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-
-  return {
-    name: emailPrefix || "Client",
-    requestId: formatted,
-    reportType,
-    deliveryMethod,
-    submittedDate: submittedDate.toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-    statusIdx,
-    estimatedDelivery,
-    adminNote: getAdminNote(statusIdx, reportType),
-  };
+  return (
+    <div className="flex items-start gap-4 p-5 rounded-2xl border border-[#BFA14A]/30 bg-[#BFA14A]/6 mb-5">
+      <CreditCard className="w-5 h-5 text-[#BFA14A] mt-0.5 shrink-0" />
+      <div>
+        <p className="text-[#BFA14A] font-semibold text-sm mb-1">Payment Pending</p>
+        <p className="text-[#F4EFE6]/55 text-sm leading-relaxed">
+          Your report request is received. Processing will begin once payment is confirmed.
+          We'll reach out shortly with a payment link, or contact us at{" "}
+          <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A] underline underline-offset-2">
+            info@bioharmonysolutions.ca
+          </a>.
+        </p>
+      </div>
+    </div>
+  );
 }
 
-function StatusStepper({ statusIdx }: { statusIdx: number }) {
+function PipelineStepper({ stage, plan }: { stage: PipelineStageKey; plan: string }) {
+  const currentIdx = STAGE_INDEX[stage] ?? 0;
+  const isAudioPlan = plan === "premium";
+
   return (
     <div className="space-y-0">
-      {TRACK_STATUSES.map((step, i) => {
-        const isDone = i < statusIdx;
-        const isCurrent = i === statusIdx;
-        const isPending = i > statusIdx;
+      {PIPELINE_STAGES.map((s, i) => {
+        const isAudioStage = s.key === "audio_ready";
+        const isSkipped = isAudioStage && !isAudioPlan;
+        const isDone = isSkipped ? false : i < currentIdx;
+        const isCurrent = !isSkipped && i === currentIdx;
+        const isPending = !isDone && !isCurrent;
 
         return (
-          <div key={step.key} className="flex gap-4">
-            {/* Line + icon column */}
+          <div key={s.key} className={cn("flex gap-4", isSkipped && "opacity-30")}>
             <div className="flex flex-col items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                  isDone
-                    ? "bg-[#BFA14A]/20 border border-[#BFA14A]/50"
-                    : isCurrent
-                      ? "bg-[#0F5C5E]/30 border-2 border-[#4ecdc4]/70"
-                      : "bg-white/5 border border-white/15"
-                }`}
-              >
+              <div className={cn(
+                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all text-base",
+                isDone
+                  ? "bg-[#BFA14A]/15 border border-[#BFA14A]/40 shadow-[0_0_12px_rgba(191,161,74,0.2)]"
+                  : isCurrent
+                    ? "bg-[#0F5C5E]/25 border-2 border-[#4ecdc4]/80 shadow-[0_0_16px_rgba(15,92,94,0.4)]"
+                    : "bg-white/[0.03] border border-white/10"
+              )}>
                 {isDone ? (
                   <CheckCircle2 className="w-4 h-4 text-[#BFA14A]" />
                 ) : isCurrent ? (
@@ -165,43 +179,40 @@ function StatusStepper({ statusIdx }: { statusIdx: number }) {
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-[#4ecdc4]" />
                   </span>
                 ) : (
-                  <Circle className="w-4 h-4 text-white/20" />
+                  <Circle className="w-4 h-4 text-white/15" />
                 )}
               </div>
-              {i < TRACK_STATUSES.length - 1 && (
-                <div
-                  className={`w-px flex-1 my-1 min-h-[24px] ${
-                    isDone ? "bg-[#BFA14A]/30" : "bg-white/8"
-                  }`}
-                />
+              {i < PIPELINE_STAGES.length - 1 && (
+                <div className={cn(
+                  "w-px flex-1 my-1 min-h-[20px] transition-colors",
+                  isDone ? "bg-[#BFA14A]/25" : "bg-white/6"
+                )} />
               )}
             </div>
 
-            {/* Text column */}
-            <div className={`pb-6 pt-1 ${i === TRACK_STATUSES.length - 1 ? "pb-0" : ""}`}>
-              <p
-                className={`text-sm font-semibold leading-tight ${
-                  isDone
-                    ? "text-[#BFA14A]"
-                    : isCurrent
-                      ? "text-[#F4EFE6]"
-                      : "text-[#F4EFE6]/30"
-                }`}
-              >
-                {step.label}
+            <div className={cn("pb-5 pt-1.5", i === PIPELINE_STAGES.length - 1 && "pb-0")}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className={cn(
+                  "text-sm font-medium leading-snug transition-colors",
+                  isDone ? "text-[#BFA14A]" : isCurrent ? "text-[#F4EFE6]" : "text-[#F4EFE6]/25"
+                )}>
+                  {s.label}
+                </p>
                 {isCurrent && (
-                  <span className="ml-2 text-xs font-normal text-[#4ecdc4]/80 tracking-wide">
-                    ← Current
+                  <span className="text-[10px] text-[#4ecdc4]/90 bg-[#0F5C5E]/20 border border-[#4ecdc4]/20 px-2 py-0.5 rounded-full uppercase tracking-wide font-medium">
+                    In Progress
                   </span>
                 )}
-              </p>
-              {(isDone || isCurrent) && (
-                <p
-                  className={`text-xs mt-0.5 leading-relaxed ${
-                    isDone ? "text-[#F4EFE6]/35" : "text-[#F4EFE6]/55"
-                  }`}
-                >
-                  {step.desc}
+                {isSkipped && (
+                  <span className="text-[10px] text-[#F4EFE6]/25 uppercase tracking-wide">Premium only</span>
+                )}
+              </div>
+              {(isDone || isCurrent) && !isSkipped && (
+                <p className={cn(
+                  "text-xs mt-0.5 leading-relaxed",
+                  isDone ? "text-[#F4EFE6]/30" : "text-[#F4EFE6]/55"
+                )}>
+                  {s.desc}
                 </p>
               )}
             </div>
@@ -214,16 +225,44 @@ function StatusStepper({ statusIdx }: { statusIdx: number }) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 py-3 border-b border-white/8 last:border-0">
-      <span className="text-xs text-[#F4EFE6]/40 uppercase tracking-wider flex-shrink-0">{label}</span>
-      <span className="text-sm text-[#F4EFE6]/85 text-right">{value}</span>
+    <div className="flex items-baseline justify-between gap-4 py-3 border-b border-white/6 last:border-0">
+      <span className="text-xs text-[#F4EFE6]/35 uppercase tracking-wider shrink-0">{label}</span>
+      <span className="text-sm text-[#F4EFE6]/80 text-right">{value}</span>
     </div>
   );
 }
 
-function ResultCard({ result }: { result: MockResult }) {
-  const currentStatus = TRACK_STATUSES[result.statusIdx];
-  const isDelivered = result.statusIdx >= 5;
+function PaymentStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    paid: "bg-green-900/25 text-green-300 border border-green-700/30",
+    pending: "bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/30",
+    failed: "bg-red-900/25 text-red-300 border border-red-700/30",
+    waived: "bg-purple-900/25 text-purple-300 border border-purple-700/30",
+  };
+  const labels: Record<string, string> = {
+    paid: "Payment Confirmed",
+    pending: "Payment Pending",
+    failed: "Payment Failed",
+    waived: "Payment Waived",
+  };
+  return (
+    <span className={cn("text-xs px-2.5 py-1 rounded-full font-medium", styles[status] ?? styles.pending)}>
+      {labels[status] ?? status}
+    </span>
+  );
+}
+
+function ResultCard({ result }: { result: TrackResult }) {
+  const stageIdx = STAGE_INDEX[result.pipelineStage] ?? 0;
+  const isDelivered = result.pipelineStage === "delivered";
+  const totalStages = 8;
+  const progress = Math.round((stageIdx / (totalStages - 1)) * 100);
+
+  const submittedDate = new Date(result.createdAt).toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <motion.div
@@ -232,71 +271,101 @@ function ResultCard({ result }: { result: MockResult }) {
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       className="space-y-5"
     >
-      {/* Header card */}
+      <PaymentBanner paymentStatus={result.paymentStatus} />
+
+      {/* Header */}
       <div className="bg-[#0C1919] border border-white/10 rounded-2xl overflow-hidden">
         <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BFA14A]/50 to-transparent" />
-        <div className="p-6 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] mb-1">Report Status</p>
-            <h2 className="text-xl font-serif text-[#F4EFE6]">{result.name}</h2>
-            <p className="text-sm text-[#F4EFE6]/45 mt-1">
-              Request ID:{" "}
-              <span className="text-[#F4EFE6]/70 font-mono tracking-wide">{result.requestId}</span>
-            </p>
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.22em] mb-1.5">Report Status</p>
+              <h2 className="text-xl font-serif text-[#F4EFE6]">{result.name}</h2>
+              <p className="text-sm text-[#F4EFE6]/40 mt-1 font-mono tracking-wide">{result.requestId}</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <PaymentStatusBadge status={result.paymentStatus} />
+              {isDelivered && (
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-green-900/25 text-green-300 border border-green-700/30">
+                  Delivered ✓
+                </span>
+              )}
+            </div>
           </div>
-          <div
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border flex-shrink-0 ${
-              isDelivered
-                ? "bg-green-900/30 text-green-300 border-green-700/30"
-                : result.statusIdx >= 4
-                  ? "bg-purple-900/30 text-purple-300 border-purple-700/30"
-                  : "bg-[#0F5C5E]/30 text-[#4ecdc4] border-[#0F5C5E]/40"
-            }`}
-          >
-            {currentStatus.label}
+
+          {/* Progress bar */}
+          <div className="mt-2">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Pipeline Progress</span>
+              <span className="text-[10px] text-[#BFA14A]/60 font-mono">{progress}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-white/6 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                className="h-full bg-gradient-to-r from-[#0F5C5E] to-[#BFA14A] rounded-full"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Two-column layout */}
+      {/* Two-column */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-5">
-        {/* Progress stepper */}
+
+        {/* Pipeline stepper */}
         <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#BFA14A] mb-5 font-medium">
-            Progress
-          </p>
-          <StatusStepper statusIdx={result.statusIdx} />
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[#BFA14A] mb-5 font-medium">Pipeline Progress</p>
+          <PipelineStepper stage={result.pipelineStage} plan={result.plan} />
         </div>
 
-        {/* Details panel */}
-        <div className="space-y-5">
+        {/* Right column */}
+        <div className="space-y-4">
+          {/* Details */}
           <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-5">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#BFA14A] mb-3 font-medium">
-              Details
-            </p>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[#BFA14A] mb-3 font-medium">Details</p>
             <DetailRow label="Report Type" value={result.reportType} />
-            <DetailRow label="Submitted" value={result.submittedDate} />
-            <DetailRow label="Est. Delivery" value={result.estimatedDelivery} />
-            <DetailRow label="Delivery Method" value={result.deliveryMethod} />
+            <DetailRow label="Plan" value={PLAN_LABELS[result.plan] ?? result.plan} />
+            <DetailRow label="Language" value={LANG_LABELS[result.language] ?? result.language} />
+            <DetailRow label="Submitted" value={submittedDate} />
+            {result.fileName && <DetailRow label="File" value={result.fileName} />}
+            <DetailRow label="Delivery" value={result.whatsapp ? "WhatsApp + Email" : "Email"} />
           </div>
 
-          {result.adminNote && (
-            <div className="bg-[#0C1919] border border-[#BFA14A]/20 rounded-2xl p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#BFA14A] mb-3 font-medium">
-                Note from BioHarmony
+          {/* Stage note */}
+          {!isDelivered && (
+            <div className="bg-[#0C1919] border border-[#0F5C5E]/30 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="w-3.5 h-3.5 text-[#4ecdc4]/60" />
+                <p className="text-[10px] uppercase tracking-[0.22em] text-[#4ecdc4]/70 font-medium">Current Stage</p>
+              </div>
+              <p className="text-sm text-[#F4EFE6]/70 font-medium mb-1">
+                {PIPELINE_STAGES[STAGE_INDEX[result.pipelineStage] ?? 0]?.label}
               </p>
-              <p className="text-sm text-[#F4EFE6]/65 leading-relaxed italic">
-                "{result.adminNote}"
+              <p className="text-xs text-[#F4EFE6]/40 leading-relaxed">
+                {PIPELINE_STAGES[STAGE_INDEX[result.pipelineStage] ?? 0]?.desc}
               </p>
-              <p className="text-xs text-[#F4EFE6]/30 mt-2">— Kathy Owens</p>
             </div>
           )}
 
-          <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-5 text-center">
-            <p className="text-xs text-[#F4EFE6]/40 mb-2">Questions about your report?</p>
+          {isDelivered && (
+            <div className="bg-green-900/15 border border-green-700/25 rounded-2xl p-5">
+              <p className="text-green-300 font-semibold text-sm mb-2">Report Delivered 🎉</p>
+              <p className="text-[#F4EFE6]/55 text-xs leading-relaxed">
+                Your report has been sent. Please check your inbox (and spam folder, just in case).
+                Reply to our email if you have any questions.
+              </p>
+              <p className="text-[#F4EFE6]/30 text-xs mt-2">— Kathy Owens, BioHarmony Solutions</p>
+            </div>
+          )}
+
+          {/* Contact */}
+          <div className="bg-[#0C1919] border border-white/8 rounded-2xl p-5 text-center">
+            <p className="text-xs text-[#F4EFE6]/35 mb-2">Questions about your report?</p>
             <a
               href="mailto:info@bioharmonysolutions.ca"
-              className="text-sm text-[#4ecdc4] hover:text-[#4ecdc4]/80 transition-colors"
+              className="text-sm text-[#4ecdc4] hover:text-[#4ecdc4]/70 transition-colors"
             >
               info@bioharmonysolutions.ca
             </a>
@@ -310,64 +379,65 @@ function ResultCard({ result }: { result: MockResult }) {
 export default function TrackReport() {
   const [email, setEmail] = useState("");
   const [requestId, setRequestId] = useState("");
-  const [result, setResult] = useState<MockResult | null>(null);
+  const [result, setResult] = useState<TrackResult | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setResult(null);
 
-    setTimeout(() => {
-      const mock = buildMockResult(requestId, email);
-      if (!mock) {
-        setError(
-          'Request ID not found. Please check your ID format (e.g. BH-0042) and ensure the email matches your submission.'
-        );
-        setResult(null);
-      } else {
-        setResult(mock);
+    const formatted = formatRequestId(requestId);
+    if (!formatted) {
+      setError('Invalid Request ID format. Use the format BH-0042 (found in your confirmation screen or email).');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const numId = parseInt(formatted.replace("BH-", ""), 10);
+      const resp = await fetch(
+        `${BASE}/api/scan-requests/track?id=${numId}&email=${encodeURIComponent(email.trim())}`,
+      );
+      const data = await resp.json() as { error?: string } & Partial<TrackResult>;
+
+      if (!resp.ok) {
+        setError(data.error ?? "Could not find your request. Please check your ID and email.");
+        return;
       }
+
+      setResult(data as TrackResult);
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   }
 
   const inputCls =
-    "w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-[#F4EFE6] text-sm placeholder:text-[#F4EFE6]/30 focus:outline-none focus:border-[#BFA14A]/50 transition-all duration-200";
+    "w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-[#F4EFE6] text-sm placeholder:text-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/50 transition-all duration-200";
 
   return (
     <div className="min-h-screen bg-[#060D0D]">
+
       {/* Hero */}
       <section className="py-20 border-b border-white/5">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.3em] mb-4">
-              BioHarmony Solutions
-            </p>
-            <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6] mb-4 leading-tight">
-              Track Your Report
-            </h1>
-            <p className="text-[#F4EFE6]/55 text-lg leading-relaxed">
-              Enter the email address used during submission and your Request ID to check the status
-              of your BioHarmony report.
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.3em] mb-4">BioHarmony Solutions</p>
+            <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6] mb-4 leading-tight">Track Your Report</h1>
+            <p className="text-[#F4EFE6]/50 text-lg leading-relaxed">
+              Enter your email and Request ID to see exactly where your report is in our AI processing pipeline.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Form */}
+      {/* Lookup Form */}
       <section className="py-14">
         <div className="max-w-lg mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
             <form
               onSubmit={handleSubmit}
               className="bg-[#0C1919] border border-white/10 rounded-2xl p-8 space-y-5"
@@ -375,41 +445,45 @@ export default function TrackReport() {
               <div className="h-[2px] -mt-8 -mx-8 mb-8 rounded-t-2xl bg-gradient-to-r from-transparent via-[#BFA14A]/40 to-transparent" />
 
               <div>
-                <label className="block text-xs text-[#F4EFE6]/50 uppercase tracking-wider mb-2">
-                  Email Address
-                </label>
+                <label className="block text-xs text-[#F4EFE6]/45 uppercase tracking-wider mb-2">Email Address</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="The email used when you submitted"
+                  placeholder="The email used at submission"
                   className={inputCls}
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-[#F4EFE6]/50 uppercase tracking-wider mb-2">
-                  Request ID
-                </label>
+                <label className="block text-xs text-[#F4EFE6]/45 uppercase tracking-wider mb-2">Request ID</label>
                 <input
                   type="text"
                   required
                   value={requestId}
                   onChange={(e) => setRequestId(e.target.value)}
                   placeholder="e.g. BH-0042"
-                  className={`${inputCls} font-mono tracking-wide`}
+                  className={`${inputCls} font-mono tracking-wider`}
                 />
-                <p className="text-xs text-[#F4EFE6]/25 mt-1.5 ml-1">
-                  Found in your submission confirmation email or on the confirmation screen.
+                <p className="text-xs text-[#F4EFE6]/22 mt-1.5 ml-1">
+                  Found on your confirmation screen or in your email.
                 </p>
               </div>
 
-              {error && (
-                <p className="text-sm text-red-400/80 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3">
-                  {error}
-                </p>
-              )}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-start gap-3 text-sm text-red-400/80 bg-red-400/8 border border-red-400/18 rounded-xl px-4 py-3 overflow-hidden"
+                  >
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{error}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <button
                 type="submit"
@@ -417,33 +491,33 @@ export default function TrackReport() {
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#0F5C5E] border border-[#BFA14A]/20 text-[#F4EFE6] text-sm font-medium shadow-[0_0_20px_rgba(191,161,74,0.2)] hover:shadow-[0_0_32px_rgba(191,161,74,0.35)] disabled:opacity-60 transition-all duration-200"
               >
                 {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Looking up your request…
-                  </>
+                  <><Loader2 className="w-4 h-4 animate-spin" />Looking up your request…</>
                 ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    Check Report Status
-                  </>
+                  <><Search className="w-4 h-4" />Check Report Status</>
                 )}
               </button>
             </form>
 
-            {/* Help text */}
-            <p className="text-center text-xs text-[#F4EFE6]/25 mt-5">
-              Don't have a Request ID?{" "}
-              <Link
-                href="/upload-scan"
-                className="text-[#BFA14A]/60 hover:text-[#BFA14A] transition-colors underline underline-offset-2"
-              >
+            <div className="flex items-center justify-center gap-6 mt-5">
+              {[
+                { icon: <Lock className="w-3 h-3" />, label: "Secure lookup" },
+                { icon: <FileText className="w-3 h-3" />, label: "Real-time status" },
+                { icon: <MessageCircle className="w-3 h-3" />, label: "8-stage pipeline" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-[#F4EFE6]/22 text-xs">
+                  <span className="text-[#BFA14A]/35">{item.icon}</span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+
+            <p className="text-center text-xs text-[#F4EFE6]/22 mt-4">
+              No Request ID?{" "}
+              <Link href="/upload-scan" className="text-[#BFA14A]/55 hover:text-[#BFA14A] transition-colors underline underline-offset-2">
                 Submit a new scan
-              </Link>{" "}
-              or email us at{" "}
-              <a
-                href="mailto:info@bioharmonysolutions.ca"
-                className="text-[#BFA14A]/60 hover:text-[#BFA14A] transition-colors"
-              >
+              </Link>
+              {" "}or email{" "}
+              <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A]/55 hover:text-[#BFA14A] transition-colors">
                 info@bioharmonysolutions.ca
               </a>
             </p>
@@ -457,17 +531,16 @@ export default function TrackReport() {
           <section className="pb-20">
             <div className="max-w-3xl mx-auto px-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-px flex-1 bg-white/10" />
-                <span className="text-xs uppercase tracking-[0.2em] text-[#F4EFE6]/30">
-                  Your Report
-                </span>
-                <div className="h-px flex-1 bg-white/10" />
+                <div className="h-px flex-1 bg-white/8" />
+                <span className="text-[10px] uppercase tracking-[0.25em] text-[#F4EFE6]/25">Your Report</span>
+                <div className="h-px flex-1 bg-white/8" />
               </div>
               <ResultCard result={result} />
             </div>
           </section>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

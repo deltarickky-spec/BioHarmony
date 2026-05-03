@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard, Zap, RotateCcw } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_PASSWORD_KEY = "bh_admin_token";
@@ -6,28 +8,61 @@ const ADMIN_PASSWORD_KEY = "bh_admin_token";
 const VALID_STATUSES = ["new", "in_review", "in_progress", "completed", "delivered"] as const;
 type Status = (typeof VALID_STATUSES)[number];
 
+const PIPELINE_STAGES = [
+  "queued", "extracting", "interpreting", "generating",
+  "quality_check", "pdf_ready", "audio_ready", "delivered",
+] as const;
+type PipelineStage = (typeof PIPELINE_STAGES)[number];
+
+const PAYMENT_STATUSES = ["pending", "paid", "failed", "waived"] as const;
+type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
 const STATUS_LABELS: Record<Status, string> = {
-  new: "New",
-  in_review: "In Review",
-  in_progress: "In Progress",
-  completed: "Completed",
-  delivered: "Delivered",
+  new: "New", in_review: "In Review", in_progress: "In Progress",
+  completed: "Completed", delivered: "Delivered",
+};
+
+const PIPELINE_LABELS: Record<PipelineStage, string> = {
+  queued: "Queued", extracting: "Extracting", interpreting: "Interpreting",
+  generating: "Generating", quality_check: "Quality Check",
+  pdf_ready: "PDF Ready", audio_ready: "Audio Ready", delivered: "Delivered",
+};
+
+const PIPELINE_NEXT: Record<PipelineStage, PipelineStage | null> = {
+  queued: "extracting", extracting: "interpreting", interpreting: "generating",
+  generating: "quality_check", quality_check: "pdf_ready",
+  pdf_ready: "audio_ready", audio_ready: "delivered", delivered: null,
+};
+
+const PIPELINE_STYLES: Record<PipelineStage, string> = {
+  queued: "bg-white/8 text-[#F4EFE6]/50 border border-white/12",
+  extracting: "bg-blue-900/30 text-blue-300 border border-blue-700/30",
+  interpreting: "bg-purple-900/30 text-purple-300 border border-purple-700/30",
+  generating: "bg-violet-900/30 text-violet-300 border border-violet-700/30",
+  quality_check: "bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/30",
+  pdf_ready: "bg-[#0F5C5E]/30 text-[#4ecdc4] border border-[#0F5C5E]/40",
+  audio_ready: "bg-teal-900/30 text-teal-300 border border-teal-700/30",
+  delivered: "bg-green-900/30 text-green-300 border border-green-700/30",
+};
+
+const PAYMENT_STYLES: Record<PaymentStatus, string> = {
+  pending: "bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/25",
+  paid: "bg-green-900/25 text-green-300 border border-green-700/25",
+  failed: "bg-red-900/25 text-red-400 border border-red-700/25",
+  waived: "bg-purple-900/25 text-purple-300 border border-purple-700/25",
 };
 
 const STATUS_STYLES: Record<Status, string> = {
-  new: "bg-[#BFA14A]/15 text-[#BFA14A] border border-[#BFA14A]/30",
-  in_review: "bg-blue-900/30 text-blue-300 border border-blue-700/30",
-  in_progress: "bg-[#0F5C5E]/40 text-[#4ecdc4] border border-[#0F5C5E]/50",
-  completed: "bg-green-900/30 text-green-300 border border-green-700/30",
-  delivered: "bg-purple-900/30 text-purple-300 border border-purple-700/30",
+  new: "bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/25",
+  in_review: "bg-blue-900/25 text-blue-300 border border-blue-700/25",
+  in_progress: "bg-[#0F5C5E]/30 text-[#4ecdc4] border border-[#0F5C5E]/40",
+  completed: "bg-green-900/25 text-green-300 border border-green-700/25",
+  delivered: "bg-purple-900/25 text-purple-300 border border-purple-700/25",
 };
 
 const STATUS_NEXT: Record<Status, Status[]> = {
-  new: ["in_review", "in_progress"],
-  in_review: ["in_progress", "completed"],
-  in_progress: ["completed"],
-  completed: ["delivered"],
-  delivered: [],
+  new: ["in_review", "in_progress"], in_review: ["in_progress", "completed"],
+  in_progress: ["completed"], completed: ["delivered"], delivered: [],
 };
 
 interface UnifiedRequest {
@@ -40,32 +75,24 @@ interface UnifiedRequest {
   language?: string | null;
   fileName?: string | null;
   whatsapp?: boolean | null;
+  plan?: string | null;
   note?: string | null;
   status: Status;
+  pipelineStage?: PipelineStage | null;
+  paymentStatus?: PaymentStatus | null;
   createdAt: string;
 }
 
 interface RawReportRequest {
-  id: number;
-  firstName: string;
-  email: string;
-  reportType: string;
-  note?: string | null;
-  status: string;
-  createdAt: string;
+  id: number; firstName: string; email: string;
+  reportType: string; note?: string | null; status: string; createdAt: string;
 }
 
 interface RawScanRequest {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string | null;
-  reportType: string;
-  language: string;
-  fileName?: string | null;
-  whatsapp?: boolean | null;
-  note?: string | null;
-  status: string;
+  id: number; name: string; email: string; phone?: string | null;
+  reportType: string; language: string; fileName?: string | null;
+  whatsapp?: boolean | null; plan?: string | null; note?: string | null;
+  status: string; pipelineStage?: string | null; paymentStatus?: string | null;
   createdAt: string;
 }
 
@@ -74,259 +101,362 @@ function normalizeStatus(s: string): Status {
   return "new";
 }
 
-function normalize(report: RawReportRequest): UnifiedRequest {
+function normalizePipelineStage(s: string | null | undefined): PipelineStage | null {
+  if (!s) return null;
+  if (PIPELINE_STAGES.includes(s as PipelineStage)) return s as PipelineStage;
+  return null;
+}
+
+function normalizePaymentStatus(s: string | null | undefined): PaymentStatus | null {
+  if (!s) return null;
+  if (PAYMENT_STATUSES.includes(s as PaymentStatus)) return s as PaymentStatus;
+  return null;
+}
+
+function normalize(r: RawReportRequest): UnifiedRequest {
   return {
-    id: report.id,
-    source: "report",
-    name: report.firstName,
-    email: report.email,
-    reportType: report.reportType,
-    note: report.note,
-    status: normalizeStatus(report.status),
-    createdAt: report.createdAt,
+    id: r.id, source: "report", name: r.firstName, email: r.email,
+    reportType: r.reportType, note: r.note,
+    status: normalizeStatus(r.status), createdAt: r.createdAt,
   };
 }
 
-function normalizeScan(scan: RawScanRequest): UnifiedRequest {
+function normalizeScan(s: RawScanRequest): UnifiedRequest {
   return {
-    id: scan.id,
-    source: "scan",
-    name: scan.name,
-    email: scan.email,
-    phone: scan.phone,
-    reportType: scan.reportType,
-    language: scan.language,
-    fileName: scan.fileName,
-    whatsapp: scan.whatsapp,
-    note: scan.note,
-    status: normalizeStatus(scan.status),
-    createdAt: scan.createdAt,
+    id: s.id, source: "scan", name: s.name, email: s.email, phone: s.phone,
+    reportType: s.reportType, language: s.language, fileName: s.fileName,
+    whatsapp: s.whatsapp, plan: s.plan, note: s.note,
+    status: normalizeStatus(s.status),
+    pipelineStage: normalizePipelineStage(s.pipelineStage),
+    paymentStatus: normalizePaymentStatus(s.paymentStatus),
+    createdAt: s.createdAt,
   };
 }
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-CA", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Date(iso).toLocaleDateString("en-CA", {
+    year: "numeric", month: "short", day: "numeric",
+    hour: "2-digit", minute: "2-digit",
   });
+}
+
+function PipelineBadge({ stage }: { stage: PipelineStage | null | undefined }) {
+  if (!stage) return <span className="text-xs text-[#F4EFE6]/20">—</span>;
+  return (
+    <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", PIPELINE_STYLES[stage])}>
+      {PIPELINE_LABELS[stage]}
+    </span>
+  );
+}
+
+function PaymentBadge({ status }: { status: PaymentStatus | null | undefined }) {
+  if (!status) return <span className="text-xs text-[#F4EFE6]/20">—</span>;
+  const labels: Record<PaymentStatus, string> = {
+    pending: "Pending", paid: "Paid ✓", failed: "Failed ✗", waived: "Waived",
+  };
+  return (
+    <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", PAYMENT_STYLES[status])}>
+      {labels[status]}
+    </span>
+  );
 }
 
 function StatusBadge({ status }: { status: Status }) {
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[status]}`}>
+    <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", STATUS_STYLES[status])}>
       {STATUS_LABELS[status]}
     </span>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  color,
-  onClick,
-  active,
-}: {
-  label: string;
-  value: number;
-  color: string;
-  onClick?: () => void;
-  active?: boolean;
+function StatCard({ label, value, color, onClick, active }: {
+  label: string; value: number; color: string;
+  onClick?: () => void; active?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 min-w-[120px] rounded-xl border p-4 text-left transition-all ${
-        active
-          ? "border-[#BFA14A] bg-[#BFA14A]/10"
-          : "border-white/10 bg-[#0C1919] hover:border-white/20"
-      }`}
+      className={cn(
+        "flex-1 min-w-[100px] rounded-xl border p-4 text-left transition-all",
+        active ? "border-[#BFA14A] bg-[#BFA14A]/8" : "border-white/8 bg-[#0C1919] hover:border-white/18"
+      )}
     >
-      <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className="text-xs text-[#F4EFE6]/50 mt-1">{label}</div>
+      <div className={cn("text-2xl font-bold", color)}>{value}</div>
+      <div className="text-xs text-[#F4EFE6]/40 mt-1">{label}</div>
     </button>
-  );
-}
-
-function DetailPanel({
-  request,
-  onClose,
-  onStatusChange,
-}: {
-  request: UnifiedRequest;
-  onClose: () => void;
-  onStatusChange: (id: number, source: "report" | "scan", status: Status) => void;
-}) {
-  const [updating, setUpdating] = useState(false);
-
-  async function changeStatus(status: Status) {
-    setUpdating(true);
-    onStatusChange(request.id, request.source, status);
-    setUpdating(false);
-  }
-
-  const langMap: Record<string, string> = {
-    en: "English",
-    es: "Spanish",
-    fr: "French",
-    pt: "Portuguese",
-    de: "German",
-    zh: "Chinese",
-    ar: "Arabic",
-    hi: "Hindi",
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        aria-hidden="true"
-      />
-      <div
-        className="relative z-10 w-full max-w-lg h-full bg-[#0C1919] border-l border-white/10 overflow-y-auto flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div>
-            <h2 className="text-lg font-semibold text-[#F4EFE6]">{request.name}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
-                  request.source === "scan"
-                    ? "bg-[#0F5C5E]/30 text-[#4ecdc4] border-[#0F5C5E]/40"
-                    : "bg-[#BFA14A]/10 text-[#BFA14A] border-[#BFA14A]/20"
-                }`}
-              >
-                {request.source === "scan" ? "Scan Upload" : "Report Request"}
-              </span>
-              <StatusBadge status={request.status} />
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-[#F4EFE6]/40 hover:text-[#F4EFE6] transition-colors text-xl leading-none"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Details */}
-        <div className="flex-1 p-6 space-y-6">
-          <section>
-            <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">
-              Client Info
-            </h3>
-            <div className="space-y-2">
-              <DetailRow label="Name" value={request.name} />
-              <DetailRow label="Email" value={request.email} />
-              {request.phone && (
-                <DetailRow
-                  label="Phone"
-                  value={
-                    request.phone +
-                    (request.whatsapp ? " ✓ WhatsApp" : "")
-                  }
-                />
-              )}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">
-              Submission Details
-            </h3>
-            <div className="space-y-2">
-              <DetailRow label="Report Type" value={request.reportType} />
-              {request.language && (
-                <DetailRow
-                  label="Language"
-                  value={langMap[request.language] ?? request.language}
-                />
-              )}
-              {request.fileName && (
-                <DetailRow label="Uploaded File" value={request.fileName} />
-              )}
-              <DetailRow label="Submitted" value={formatDate(request.createdAt)} />
-            </div>
-          </section>
-
-          {request.note && (
-            <section>
-              <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">
-                Notes
-              </h3>
-              <p className="text-sm text-[#F4EFE6]/70 bg-white/5 rounded-lg p-3 border border-white/10 leading-relaxed">
-                {request.note}
-              </p>
-            </section>
-          )}
-
-          {/* Status Management */}
-          <section>
-            <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">
-              Update Status
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {VALID_STATUSES.map((s) => (
-                <button
-                  key={s}
-                  disabled={updating || request.status === s}
-                  onClick={() => changeStatus(s)}
-                  className={`py-2.5 px-4 rounded-lg text-sm font-medium text-left flex items-center justify-between transition-all ${
-                    request.status === s
-                      ? `${STATUS_STYLES[s]} opacity-100 cursor-default`
-                      : "border border-white/10 text-[#F4EFE6]/60 hover:border-white/25 hover:text-[#F4EFE6]/90 hover:bg-white/5"
-                  } disabled:cursor-default`}
-                >
-                  <span>{STATUS_LABELS[s]}</span>
-                  {request.status === s && (
-                    <span className="text-xs opacity-70">Current</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Quick actions for most common next steps */}
-          {STATUS_NEXT[request.status].length > 0 && (
-            <section>
-              <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">
-                Quick Actions
-              </h3>
-              <div className="flex gap-2 flex-wrap">
-                {STATUS_NEXT[request.status].map((nextStatus) => (
-                  <button
-                    key={nextStatus}
-                    disabled={updating}
-                    onClick={() => changeStatus(nextStatus)}
-                    className="flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-semibold bg-[#BFA14A] text-[#060D0D] hover:bg-[#d4b456] transition-colors disabled:opacity-50"
-                  >
-                    Mark {STATUS_LABELS[nextStatus]}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-      </div>
-    </div>
   );
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3 text-sm">
-      <span className="text-[#F4EFE6]/40 min-w-[110px] shrink-0">{label}</span>
-      <span className="text-[#F4EFE6]/90 break-all">{value}</span>
+      <span className="text-[#F4EFE6]/35 min-w-[110px] shrink-0">{label}</span>
+      <span className="text-[#F4EFE6]/85 break-all">{value}</span>
     </div>
   );
 }
 
-// ── Auth Gate ─────────────────────────────────────────────────────────────────
+function PipelinePanel({
+  request, token, onUpdate,
+}: {
+  request: UnifiedRequest;
+  token: string;
+  onUpdate: (id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function patch(payload: Record<string, string>) {
+    setBusy(true);
+    onUpdate(request.id, request.source, payload as Partial<UnifiedRequest>);
+    try {
+      await fetch(`${BASE}/api/admin/requests/${request.source}/${request.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+    } catch { /* optimistic — already updated */ }
+    setBusy(false);
+  }
+
+  if (request.source !== "scan") return null;
+
+  const currentStage = request.pipelineStage ?? "queued";
+  const nextStage = PIPELINE_NEXT[currentStage];
+  const stageIdx = PIPELINE_STAGES.indexOf(currentStage);
+
+  return (
+    <section className="space-y-3">
+      <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] font-medium">AI Pipeline</h3>
+
+      {/* Mini progress */}
+      <div className="space-y-2">
+        {PIPELINE_STAGES.map((s, i) => {
+          const isDone = i < stageIdx;
+          const isCurrent = i === stageIdx;
+          return (
+            <button
+              key={s}
+              disabled={busy}
+              onClick={() => patch({ pipelineStage: s })}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all border",
+                isCurrent
+                  ? `${PIPELINE_STYLES[s]} ring-1 ring-inset ring-current/30`
+                  : isDone
+                    ? "bg-white/5 text-[#F4EFE6]/50 border-white/8"
+                    : "bg-transparent text-[#F4EFE6]/25 border-white/5 hover:border-white/12 hover:text-[#F4EFE6]/45",
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", isDone ? "bg-[#BFA14A]/50" : isCurrent ? "bg-current animate-pulse" : "bg-white/15")} />
+                {PIPELINE_LABELS[s]}
+              </span>
+              {isCurrent && <span className="opacity-60 text-[10px]">Current</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-2 flex-wrap pt-1">
+        {nextStage && (
+          <button
+            disabled={busy}
+            onClick={() => patch({ pipelineStage: nextStage })}
+            className="flex items-center gap-1.5 flex-1 min-w-[120px] py-2 px-3 rounded-lg text-xs font-semibold bg-[#0F5C5E] text-[#F4EFE6] border border-[#4ecdc4]/20 hover:bg-[#0F5C5E]/80 transition disabled:opacity-50"
+          >
+            <Zap className="w-3 h-3" />
+            Advance → {PIPELINE_LABELS[nextStage]}
+          </button>
+        )}
+        <button
+          disabled={busy}
+          onClick={() => patch({ pipelineStage: currentStage })}
+          title="Re-trigger current stage"
+          className="flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium border border-white/10 text-[#F4EFE6]/50 hover:border-white/20 hover:text-[#F4EFE6]/70 transition disabled:opacity-50"
+        >
+          <RotateCcw className="w-3 h-3" />
+          Retry
+        </button>
+      </div>
+
+      {/* Payment override */}
+      <div className="border-t border-white/8 pt-3">
+        <h4 className="text-xs text-[#F4EFE6]/35 uppercase tracking-wider mb-2">Payment Override</h4>
+        <div className="flex gap-2">
+          {PAYMENT_STATUSES.map((ps) => (
+            <button
+              key={ps}
+              disabled={busy || request.paymentStatus === ps}
+              onClick={() => patch({ paymentStatus: ps })}
+              className={cn(
+                "flex-1 py-1.5 px-2 rounded-lg text-[10px] font-medium border transition-all capitalize",
+                request.paymentStatus === ps
+                  ? PAYMENT_STYLES[ps]
+                  : "border-white/8 text-[#F4EFE6]/35 hover:border-white/18 hover:text-[#F4EFE6]/60 disabled:cursor-default"
+              )}
+            >
+              {ps}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DetailPanel({
+  request, token, onClose, onUpdate,
+}: {
+  request: UnifiedRequest;
+  token: string;
+  onClose: () => void;
+  onUpdate: (id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  const langMap: Record<string, string> = {
+    en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
+    de: "German", zh: "Chinese", ar: "Arabic", hi: "Hindi",
+  };
+  const planMap: Record<string, string> = {
+    basic: "Basic — $55", advanced: "Advanced — $99", premium: "Premium — $149",
+  };
+
+  async function changeStatus(status: Status) {
+    setBusy(true);
+    onUpdate(request.id, request.source, { status });
+    try {
+      await fetch(`${BASE}/api/admin/requests/${request.source}/${request.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      });
+    } catch { /* optimistic */ }
+    setBusy(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className="relative z-10 w-full max-w-lg h-full bg-[#0C1919] border-l border-white/10 overflow-y-auto flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-[#0C1919]/95 backdrop-blur-sm flex items-center justify-between p-6 border-b border-white/10 z-10">
+          <div>
+            <h2 className="text-lg font-semibold text-[#F4EFE6]">{request.name}</h2>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className={cn(
+                "text-xs px-2 py-0.5 rounded-full font-medium border",
+                request.source === "scan"
+                  ? "bg-[#0F5C5E]/25 text-[#4ecdc4] border-[#0F5C5E]/35"
+                  : "bg-[#BFA14A]/10 text-[#BFA14A] border-[#BFA14A]/20"
+              )}>
+                {request.source === "scan" ? "Scan Upload" : "Report Request"}
+              </span>
+              <StatusBadge status={request.status} />
+              {request.pipelineStage && <PipelineBadge stage={request.pipelineStage} />}
+              {request.paymentStatus && <PaymentBadge status={request.paymentStatus} />}
+            </div>
+          </div>
+          <button onClick={onClose} className="text-[#F4EFE6]/35 hover:text-[#F4EFE6] transition text-xl leading-none ml-4 shrink-0">
+            ✕
+          </button>
+        </div>
+
+        <div className="flex-1 p-6 space-y-7">
+          {/* Payment warning */}
+          {request.paymentStatus === "failed" && (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-red-900/20 border border-red-700/30">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              <p className="text-xs text-red-300">Payment failed — contact client before advancing pipeline.</p>
+            </div>
+          )}
+
+          {/* Client Info */}
+          <section>
+            <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Client Info</h3>
+            <div className="space-y-2">
+              <DetailRow label="Name" value={request.name} />
+              <DetailRow label="Email" value={request.email} />
+              {request.phone && (
+                <DetailRow label="Phone" value={request.phone + (request.whatsapp ? "  ✓ WhatsApp" : "")} />
+              )}
+            </div>
+          </section>
+
+          {/* Submission Details */}
+          <section>
+            <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Submission</h3>
+            <div className="space-y-2">
+              <DetailRow label="Report Type" value={request.reportType} />
+              {request.plan && <DetailRow label="Plan" value={planMap[request.plan] ?? request.plan} />}
+              {request.language && <DetailRow label="Language" value={langMap[request.language] ?? request.language} />}
+              {request.fileName && <DetailRow label="File" value={request.fileName} />}
+              <DetailRow label="Submitted" value={formatDate(request.createdAt)} />
+              <DetailRow label="Request ID" value={`BH-${request.id.toString().padStart(4, "0")}`} />
+            </div>
+          </section>
+
+          {request.note && (
+            <section>
+              <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Client Notes</h3>
+              <p className="text-sm text-[#F4EFE6]/65 bg-white/5 rounded-lg p-3 border border-white/8 leading-relaxed">
+                {request.note}
+              </p>
+            </section>
+          )}
+
+          {/* Pipeline control (scan only) */}
+          {request.source === "scan" && (
+            <PipelinePanel request={request} token={token} onUpdate={onUpdate} />
+          )}
+
+          {/* Status (legacy override) */}
+          <section>
+            <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Status Override</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {VALID_STATUSES.map((s) => (
+                <button
+                  key={s}
+                  disabled={busy || request.status === s}
+                  onClick={() => changeStatus(s)}
+                  className={cn(
+                    "py-2 px-3 rounded-lg text-xs font-medium text-left transition-all border",
+                    request.status === s
+                      ? `${STATUS_STYLES[s]} cursor-default`
+                      : "border-white/8 text-[#F4EFE6]/50 hover:border-white/18 hover:text-[#F4EFE6]/75 hover:bg-white/5 disabled:cursor-default"
+                  )}
+                >
+                  {STATUS_LABELS[s]}
+                  {request.status === s && <span className="ml-1 opacity-50">●</span>}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Next actions */}
+          {STATUS_NEXT[request.status].length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {STATUS_NEXT[request.status].map((nextStatus) => (
+                <button
+                  key={nextStatus}
+                  disabled={busy}
+                  onClick={() => changeStatus(nextStatus)}
+                  className="flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-semibold bg-[#BFA14A] text-[#060D0D] hover:bg-[#d4b456] transition disabled:opacity-50"
+                >
+                  Mark {STATUS_LABELS[nextStatus]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
   const [pw, setPw] = useState("");
@@ -344,33 +474,23 @@ function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
     <div className="min-h-screen bg-[#060D0D] flex items-center justify-center">
       <div className="w-full max-w-sm mx-4">
         <div className="text-center mb-8">
-          <div className="text-[#BFA14A] text-sm tracking-[0.3em] uppercase mb-2">
-            BioHarmony Solutions
-          </div>
+          <div className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-2">BioHarmony Solutions</div>
           <h1 className="text-2xl font-light text-[#F4EFE6]">Admin Dashboard</h1>
         </div>
-        <form
-          onSubmit={submit}
-          className="bg-[#0C1919] border border-white/10 rounded-2xl p-8 space-y-5"
-        >
+        <form onSubmit={submit} className="bg-[#0C1919] border border-white/10 rounded-2xl p-8 space-y-5">
           <div>
-            <label className="block text-xs text-[#F4EFE6]/50 mb-2 uppercase tracking-wider">
-              Password
-            </label>
+            <label className="block text-xs text-[#F4EFE6]/45 mb-2 uppercase tracking-wider">Password</label>
             <input
               type="password"
               value={pw}
               onChange={(e) => setPw(e.target.value)}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/30 focus:outline-none focus:border-[#BFA14A]/60 transition"
+              className="w-full bg-white/5 border border-white/12 rounded-lg px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/60 transition"
               placeholder="Enter admin password"
               autoFocus
             />
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
-          <button
-            type="submit"
-            className="w-full py-3 rounded-lg bg-[#BFA14A] text-[#060D0D] font-semibold hover:bg-[#d4b456] transition"
-          >
+          <button type="submit" className="w-full py-3 rounded-lg bg-[#BFA14A] text-[#060D0D] font-semibold hover:bg-[#d4b456] transition">
             Enter Dashboard
           </button>
         </form>
@@ -379,17 +499,14 @@ function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
   );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
-
 export default function AdminDashboard() {
-  const [token, setToken] = useState<string | null>(
-    () => sessionStorage.getItem(ADMIN_PASSWORD_KEY)
-  );
+  const [token, setToken] = useState<string | null>(() => sessionStorage.getItem(ADMIN_PASSWORD_KEY));
   const [requests, setRequests] = useState<UnifiedRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [sourceFilter, setSourceFilter] = useState<"all" | "report" | "scan">("all");
+  const [payFilter, setPayFilter] = useState<PaymentStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UnifiedRequest | null>(null);
 
@@ -406,7 +523,7 @@ export default function AdminDashboard() {
         return;
       }
       if (!resp.ok) throw new Error("Failed to fetch");
-      const data = await resp.json();
+      const data = await resp.json() as { reportRequests?: RawReportRequest[]; scanRequests?: RawScanRequest[] };
       const unified: UnifiedRequest[] = [
         ...(data.reportRequests ?? []).map(normalize),
         ...(data.scanRequests ?? []).map(normalizeScan),
@@ -435,46 +552,37 @@ export default function AdminDashboard() {
     if (token) fetchData(token);
   }, []);
 
-  async function handleStatusChange(id: number, source: "report" | "scan", status: Status) {
-    if (!token) return;
-
+  function handleUpdate(id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) {
     setRequests((prev) =>
-      prev.map((r) => (r.id === id && r.source === source ? { ...r, status } : r))
+      prev.map((r) => (r.id === id && r.source === source ? { ...r, ...patch } : r))
     );
     if (selected?.id === id && selected?.source === source) {
-      setSelected((prev) => (prev ? { ...prev, status } : prev));
-    }
-
-    try {
-      await fetch(`${BASE}/api/admin/requests/${source}/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status }),
-      });
-    } catch {
-      // silently ignore — UI is already updated optimistically
+      setSelected((prev) => (prev ? { ...prev, ...patch } : prev));
     }
   }
 
   const stats = useMemo(() => {
     const total = requests.length;
-    const byStatus = VALID_STATUSES.reduce(
-      (acc, s) => {
-        acc[s] = requests.filter((r) => r.status === s).length;
-        return acc;
-      },
-      {} as Record<Status, number>
-    );
-    return { total, ...byStatus };
+    const paid = requests.filter((r) => r.paymentStatus === "paid").length;
+    const pendingPay = requests.filter((r) => r.paymentStatus === "pending" || !r.paymentStatus).length;
+    const inPipeline = requests.filter(
+      (r) => r.pipelineStage && r.pipelineStage !== "queued" && r.pipelineStage !== "delivered"
+    ).length;
+    const delivered = requests.filter(
+      (r) => r.pipelineStage === "delivered" || r.status === "delivered"
+    ).length;
+    const byStatus = VALID_STATUSES.reduce((acc, s) => {
+      acc[s] = requests.filter((r) => r.status === s).length;
+      return acc;
+    }, {} as Record<Status, number>);
+    return { total, paid, pendingPay, inPipeline, delivered, ...byStatus };
   }, [requests]);
 
   const filtered = useMemo(() => {
     let list = requests;
     if (statusFilter !== "all") list = list.filter((r) => r.status === statusFilter);
     if (sourceFilter !== "all") list = list.filter((r) => r.source === sourceFilter);
+    if (payFilter !== "all") list = list.filter((r) => r.paymentStatus === payFilter);
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
@@ -485,179 +593,161 @@ export default function AdminDashboard() {
       );
     }
     return list;
-  }, [requests, statusFilter, sourceFilter, search]);
+  }, [requests, statusFilter, sourceFilter, payFilter, search]);
 
   if (!token) return <AuthGate onAuth={handleAuth} />;
 
   return (
     <div className="min-h-screen bg-[#060D0D] text-[#F4EFE6]">
+
       {/* Top Bar */}
-      <div className="sticky top-0 z-30 bg-[#060D0D]/95 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-[#BFA14A] text-sm tracking-[0.25em] uppercase font-medium">
-              BioHarmony
-            </div>
-            <span className="text-white/20">·</span>
-            <span className="text-[#F4EFE6]/60 text-sm">Admin Dashboard</span>
-          </div>
+      <div className="sticky top-0 z-30 bg-[#060D0D]/96 backdrop-blur-md border-b border-white/8">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <span className="text-[#BFA14A] text-xs tracking-[0.25em] uppercase font-medium">BioHarmony</span>
+            <span className="text-white/15">·</span>
+            <span className="text-[#F4EFE6]/50 text-xs">Operations Center</span>
+          </div>
+          <div className="flex items-center gap-2">
             <button
               onClick={() => token && fetchData(token)}
-              className="text-xs text-[#F4EFE6]/40 hover:text-[#F4EFE6]/80 transition px-3 py-1.5 rounded border border-white/10 hover:border-white/20"
+              className="flex items-center gap-1.5 text-xs text-[#F4EFE6]/35 hover:text-[#F4EFE6]/70 transition px-3 py-1.5 rounded border border-white/8 hover:border-white/18"
             >
-              Refresh
+              <RefreshCw className="w-3 h-3" /> Refresh
             </button>
             <button
               onClick={handleLogout}
-              className="text-xs text-[#F4EFE6]/40 hover:text-red-400 transition px-3 py-1.5 rounded border border-white/10 hover:border-red-900/40"
+              className="flex items-center gap-1.5 text-xs text-[#F4EFE6]/35 hover:text-red-400 transition px-3 py-1.5 rounded border border-white/8 hover:border-red-900/40"
             >
-              Sign Out
+              <LogOut className="w-3 h-3" /> Sign Out
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-7">
+
         {/* Stats */}
-        <div className="flex gap-3 flex-wrap">
-          <StatCard
-            label="All Requests"
-            value={stats.total}
-            color="text-[#F4EFE6]"
-            onClick={() => setStatusFilter("all")}
-            active={statusFilter === "all"}
-          />
-          <StatCard
-            label="New"
-            value={stats.new}
-            color="text-[#BFA14A]"
-            onClick={() => setStatusFilter("new")}
-            active={statusFilter === "new"}
-          />
-          <StatCard
-            label="In Review"
-            value={stats.in_review}
-            color="text-blue-300"
-            onClick={() => setStatusFilter("in_review")}
-            active={statusFilter === "in_review"}
-          />
-          <StatCard
-            label="In Progress"
-            value={stats.in_progress}
-            color="text-[#4ecdc4]"
-            onClick={() => setStatusFilter("in_progress")}
-            active={statusFilter === "in_progress"}
-          />
-          <StatCard
-            label="Completed"
-            value={stats.completed}
-            color="text-green-300"
-            onClick={() => setStatusFilter("completed")}
-            active={statusFilter === "completed"}
-          />
-          <StatCard
-            label="Delivered"
-            value={stats.delivered}
-            color="text-purple-300"
-            onClick={() => setStatusFilter("delivered")}
-            active={statusFilter === "delivered"}
-          />
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+          <StatCard label="All Requests" value={stats.total} color="text-[#F4EFE6]" onClick={() => setStatusFilter("all")} active={statusFilter === "all"} />
+          <StatCard label="New" value={stats.new} color="text-[#BFA14A]" onClick={() => setStatusFilter("new")} active={statusFilter === "new"} />
+          <StatCard label="In Progress" value={stats.in_progress} color="text-[#4ecdc4]" onClick={() => setStatusFilter("in_progress")} active={statusFilter === "in_progress"} />
+          <StatCard label="In Pipeline" value={stats.inPipeline} color="text-purple-300" />
+          <StatCard label="Paid" value={stats.paid} color="text-green-300" onClick={() => setPayFilter(payFilter === "paid" ? "all" : "paid")} active={payFilter === "paid"} />
+          <StatCard label="Delivered" value={stats.delivered} color="text-emerald-300" onClick={() => setStatusFilter("delivered")} active={statusFilter === "delivered"} />
         </div>
 
-        {/* Filters + Search */}
+        {/* Payment alert banner */}
+        {stats.pendingPay > 0 && (
+          <div
+            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#BFA14A]/6 border border-[#BFA14A]/20 cursor-pointer"
+            onClick={() => setPayFilter(payFilter === "pending" ? "all" : "pending")}
+          >
+            <CreditCard className="w-4 h-4 text-[#BFA14A] shrink-0" />
+            <p className="text-sm text-[#BFA14A]/80">
+              <span className="font-semibold text-[#BFA14A]">{stats.pendingPay} request{stats.pendingPay !== 1 ? "s" : ""}</span>
+              {" "}awaiting payment confirmation.{" "}
+              <span className="text-[#BFA14A]/60 text-xs underline underline-offset-2">
+                {payFilter === "pending" ? "Show all" : "Filter to pending"}
+              </span>
+            </p>
+          </div>
+        )}
+
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             placeholder="Search by name, email or report type…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-[#0C1919] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-[#F4EFE6] placeholder-[#F4EFE6]/30 focus:outline-none focus:border-[#BFA14A]/50 transition"
+            className="flex-1 bg-[#0C1919] border border-white/8 rounded-lg px-4 py-2.5 text-sm text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/40 transition"
           />
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap">
             {(["all", "report", "scan"] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => setSourceFilter(s)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition border ${
+                className={cn(
+                  "px-3 py-2 rounded-lg text-xs font-medium transition border",
                   sourceFilter === s
-                    ? "bg-[#BFA14A]/15 text-[#BFA14A] border-[#BFA14A]/40"
-                    : "bg-[#0C1919] text-[#F4EFE6]/50 border-white/10 hover:border-white/20 hover:text-[#F4EFE6]/70"
-                }`}
+                    ? "bg-[#BFA14A]/12 text-[#BFA14A] border-[#BFA14A]/35"
+                    : "bg-[#0C1919] text-[#F4EFE6]/45 border-white/8 hover:border-white/18 hover:text-[#F4EFE6]/65"
+                )}
               >
-                {s === "all" ? "All Types" : s === "report" ? "Report Requests" : "Scan Uploads"}
+                {s === "all" ? "All" : s === "report" ? "Reports" : "Scans"}
               </button>
             ))}
+            {payFilter !== "all" && (
+              <button
+                onClick={() => setPayFilter("all")}
+                className="px-3 py-2 rounded-lg text-xs font-medium transition border bg-[#BFA14A]/12 text-[#BFA14A] border-[#BFA14A]/35"
+              >
+                Payment: {payFilter} ✕
+              </button>
+            )}
           </div>
         </div>
 
         {/* Table */}
         {loading ? (
-          <div className="text-center py-24 text-[#F4EFE6]/40">Loading requests…</div>
+          <div className="text-center py-24 text-[#F4EFE6]/35">Loading requests…</div>
         ) : error ? (
           <div className="text-center py-24 text-red-400">{error}</div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-24 text-[#F4EFE6]/30">
-            {requests.length === 0
-              ? "No submissions yet."
-              : "No requests match your filters."}
+          <div className="text-center py-24 text-[#F4EFE6]/25">
+            {requests.length === 0 ? "No submissions yet." : "No requests match your filters."}
           </div>
         ) : (
-          <div className="rounded-xl border border-white/10 overflow-hidden">
-            {/* Table header */}
-            <div className="hidden md:grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-white/5 border-b border-white/10 text-xs uppercase tracking-wider text-[#F4EFE6]/40 font-medium">
+          <div className="rounded-xl border border-white/8 overflow-hidden">
+            <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 px-5 py-3 bg-white/4 border-b border-white/8 text-[10px] uppercase tracking-wider text-[#F4EFE6]/35 font-medium">
               <span>Client</span>
               <span>Email</span>
               <span>Report Type</span>
-              <span>Source</span>
+              <span>Pipeline Stage</span>
+              <span>Payment</span>
               <span>Submitted</span>
               <span>Status</span>
             </div>
 
-            <div className="divide-y divide-white/8">
+            <div className="divide-y divide-white/6">
               {filtered.map((req) => (
                 <button
                   key={`${req.source}-${req.id}`}
                   onClick={() => setSelected(req)}
-                  className="w-full text-left px-5 py-4 hover:bg-white/5 transition-colors"
+                  className="w-full text-left px-5 py-4 hover:bg-white/[0.03] transition-colors group"
                 >
-                  {/* Desktop row */}
-                  <div className="hidden md:grid grid-cols-[1fr_1.5fr_1fr_1fr_1fr_auto] gap-4 items-center">
-                    <span className="text-sm font-medium text-[#F4EFE6]/90 truncate">
-                      {req.name}
-                    </span>
-                    <span className="text-sm text-[#F4EFE6]/60 truncate">{req.email}</span>
-                    <span className="text-sm text-[#F4EFE6]/70 truncate">{req.reportType}</span>
-                    <span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
-                          req.source === "scan"
-                            ? "bg-[#0F5C5E]/30 text-[#4ecdc4] border-[#0F5C5E]/40"
-                            : "bg-[#BFA14A]/10 text-[#BFA14A] border-[#BFA14A]/20"
-                        }`}
-                      >
-                        {req.source === "scan" ? "Scan" : "Report"}
-                      </span>
-                    </span>
-                    <span className="text-xs text-[#F4EFE6]/40">{formatDate(req.createdAt)}</span>
-                    <StatusBadge status={req.status} />
+                  {/* Desktop */}
+                  <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 items-center">
+                    <div>
+                      <span className="text-sm font-medium text-[#F4EFE6]/85 truncate block">{req.name}</span>
+                      <span className="text-[10px] text-[#F4EFE6]/30">BH-{req.id.toString().padStart(4, "0")}</span>
+                    </div>
+                    <span className="text-sm text-[#F4EFE6]/55 truncate">{req.email}</span>
+                    <span className="text-sm text-[#F4EFE6]/65 truncate">{req.reportType}</span>
+                    <PipelineBadge stage={req.pipelineStage} />
+                    <PaymentBadge status={req.paymentStatus} />
+                    <span className="text-xs text-[#F4EFE6]/35">{formatDate(req.createdAt)}</span>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={req.status} />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#F4EFE6]/20 group-hover:text-[#F4EFE6]/50 transition-colors" />
+                    </div>
                   </div>
 
-                  {/* Mobile card */}
-                  <div className="md:hidden space-y-2">
+                  {/* Mobile */}
+                  <div className="lg:hidden space-y-2">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-sm font-medium text-[#F4EFE6]/90">{req.name}</div>
-                        <div className="text-xs text-[#F4EFE6]/50 mt-0.5">{req.email}</div>
+                        <div className="text-sm font-medium text-[#F4EFE6]/85">{req.name}</div>
+                        <div className="text-xs text-[#F4EFE6]/40 mt-0.5">{req.email}</div>
                       </div>
                       <StatusBadge status={req.status} />
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-[#F4EFE6]/50">
-                      <span>{req.reportType}</span>
-                      <span>·</span>
-                      <span>{req.source === "scan" ? "Scan Upload" : "Report Request"}</span>
-                      <span>·</span>
-                      <span>{formatDate(req.createdAt)}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-[#F4EFE6]/40">{req.reportType}</span>
+                      {req.pipelineStage && <PipelineBadge stage={req.pipelineStage} />}
+                      {req.paymentStatus && <PaymentBadge status={req.paymentStatus} />}
+                      <span className="text-xs text-[#F4EFE6]/25">{formatDate(req.createdAt)}</span>
                     </div>
                   </div>
                 </button>
@@ -666,17 +756,17 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="text-center text-xs text-[#F4EFE6]/20 pb-4">
-          Showing {filtered.length} of {requests.length} total submissions
+        <div className="text-center text-xs text-[#F4EFE6]/18 pb-4">
+          {filtered.length} of {requests.length} requests
         </div>
       </div>
 
-      {/* Detail Panel */}
-      {selected && (
+      {selected && token && (
         <DetailPanel
           request={selected}
+          token={token}
           onClose={() => setSelected(null)}
-          onStatusChange={handleStatusChange}
+          onUpdate={handleUpdate}
         />
       )}
     </div>

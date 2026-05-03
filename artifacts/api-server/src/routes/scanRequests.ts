@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { scanRequestsTable } from "@workspace/db/schema";
+import { eq, and, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { buildReportNotificationEmail, buildClientConfirmationEmail, sendEmail } from "../services/email";
 
@@ -16,6 +17,58 @@ const ScanRequestSchema = z.object({
   whatsapp: z.boolean().optional(),
   plan: z.enum(["basic", "advanced", "premium"]).optional(),
   note: z.string().max(1000).trim().optional(),
+});
+
+router.get("/scan-requests/track", async (req, res) => {
+  const rawId = (req.query["id"] as string | undefined) ?? "";
+  const email = ((req.query["email"] as string | undefined) ?? "").trim().toLowerCase();
+
+  if (!rawId || !email) {
+    res.status(400).json({ error: "Missing id or email parameters" });
+    return;
+  }
+
+  const cleaned = rawId.trim().toUpperCase().replace(/^BH-?/, "");
+  const numId = parseInt(cleaned, 10);
+  if (isNaN(numId) || numId <= 0) {
+    res.status(400).json({ error: "Invalid request ID format. Use BH-XXXX or just the number." });
+    return;
+  }
+
+  try {
+    const rows = await db
+      .select()
+      .from(scanRequestsTable)
+      .where(and(eq(scanRequestsTable.id, numId), ilike(scanRequestsTable.email, email)))
+      .limit(1);
+
+    if (rows.length === 0) {
+      res.status(404).json({
+        error: "Request not found. Please check your Request ID and email — both must match your original submission.",
+      });
+      return;
+    }
+
+    const row = rows[0]!;
+
+    res.json({
+      id: row.id,
+      requestId: `BH-${row.id.toString().padStart(4, "0")}`,
+      name: row.name,
+      reportType: row.reportType,
+      plan: row.plan ?? "basic",
+      language: row.language,
+      whatsapp: row.whatsapp ?? false,
+      fileName: row.fileName ?? null,
+      status: row.status,
+      pipelineStage: row.pipelineStage,
+      paymentStatus: row.paymentStatus,
+      createdAt: row.createdAt,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to look up scan request for tracking");
+    res.status(500).json({ error: "Could not retrieve your request. Please try again." });
+  }
 });
 
 router.post("/scan-requests", async (req, res) => {
