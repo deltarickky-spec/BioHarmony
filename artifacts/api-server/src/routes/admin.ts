@@ -7,6 +7,7 @@ import {
   isGlobalPaused,
   pauseGlobal,
   resumeGlobal,
+  sendDeliveryEmail,
 } from "../services/pipelineScheduler";
 
 const router = Router();
@@ -126,6 +127,20 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
       if (Object.keys(updateSet).length > 0) {
         await db.update(scanRequestsTable).set(updateSet).where(eq(scanRequestsTable.id, id));
       }
+
+      // If manually advancing to delivered, send delivery email (if not already sent)
+      if (data.pipelineStage === "delivered") {
+        const rows = await db
+          .select()
+          .from(scanRequestsTable)
+          .where(eq(scanRequestsTable.id, id))
+          .limit(1);
+        const row = rows[0];
+        if (row && !row.deliveredEmailSentAt &&
+            (row.paymentStatus === "paid" || row.paymentStatus === "waived")) {
+          await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType);
+        }
+      }
     }
 
     req.log.info({ source, id, ...data }, "Request updated by admin");
@@ -136,9 +151,56 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
   }
 });
 
+// ── Delivery email resend ──────────────────────────────────────────────────────
+
+/**
+ * Resend the "Your report is ready" delivery email for a specific scan request.
+ * Resets deliveredEmailSentAt so it is updated to the new send time on success.
+ */
+router.post("/admin/requests/scan/:id/resend-delivery-email", async (req, res) => {
+  if (!checkAuth(req, res)) return;
+
+  const id = Number(req.params["id"]);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  try {
+    const rows = await db
+      .select()
+      .from(scanRequestsTable)
+      .where(eq(scanRequestsTable.id, id))
+      .limit(1);
+
+    const row = rows[0];
+    if (!row) {
+      res.status(404).json({ error: "Request not found" });
+      return;
+    }
+    if (row.pipelineStage !== "delivered") {
+      res.status(400).json({ error: "Request is not in delivered state" });
+      return;
+    }
+
+    // Clear the sent flag so sendDeliveryEmail will update it on success
+    await db
+      .update(scanRequestsTable)
+      .set({ deliveredEmailSentAt: null })
+      .where(eq(scanRequestsTable.id, id));
+
+    await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType);
+
+    req.log.info({ id, email: row.email }, "Delivery email resent by admin");
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to resend delivery email");
+    res.status(500).json({ error: "Could not resend email" });
+  }
+});
+
 // ── Pipeline automation control ────────────────────────────────────────────────
 
-/** Get global pipeline automation status */
 router.get("/admin/pipeline/status", (req, res) => {
   if (!checkAuth(req, res)) return;
   res.json({ globalPaused: isGlobalPaused() });

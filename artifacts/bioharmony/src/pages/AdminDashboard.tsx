@@ -92,6 +92,7 @@ interface UnifiedRequest {
   pipelinePaused?: boolean | null;
   pipelineError?: string | null;
   stageEnteredAt?: string | null;
+  deliveredEmailSentAt?: string | null;
   createdAt: string;
 }
 
@@ -106,7 +107,7 @@ interface RawScanRequest {
   whatsapp?: boolean | null; plan?: string | null; note?: string | null;
   status: string; pipelineStage?: string | null; paymentStatus?: string | null;
   pipelinePaused?: boolean | null; pipelineError?: string | null;
-  stageEnteredAt?: string | null; createdAt: string;
+  stageEnteredAt?: string | null; deliveredEmailSentAt?: string | null; createdAt: string;
 }
 
 // ── Normalizers ────────────────────────────────────────────────────────────────
@@ -141,6 +142,7 @@ function normalizeScan(s: RawScanRequest): UnifiedRequest {
     pipelinePaused: s.pipelinePaused ?? false,
     pipelineError: s.pipelineError ?? null,
     stageEnteredAt: s.stageEnteredAt ?? null,
+    deliveredEmailSentAt: s.deliveredEmailSentAt ?? null,
     createdAt: s.createdAt,
   };
 }
@@ -450,6 +452,106 @@ function PipelinePanel({
   );
 }
 
+// ── Email Delivery Section ─────────────────────────────────────────────────────
+
+function EmailDeliverySection({
+  request, token, onUpdate,
+}: {
+  request: UnifiedRequest;
+  token: string;
+  onUpdate: (id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+
+  const sentAt = request.deliveredEmailSentAt
+    ? new Date(request.deliveredEmailSentAt).toLocaleString("en-CA", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      })
+    : null;
+
+  const isDelivered = request.pipelineStage === "delivered";
+
+  async function handleResend() {
+    setBusy(true);
+    setResendSuccess(false);
+    try {
+      const resp = await fetch(
+        `${BASE}/api/admin/requests/scan/${request.id}/resend-delivery-email`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (resp.ok) {
+        const now = new Date().toISOString();
+        onUpdate(request.id, "scan", { deliveredEmailSentAt: now });
+        setResendSuccess(true);
+        setTimeout(() => setResendSuccess(false), 4000);
+      }
+    } catch { /* ignore */ }
+    setBusy(false);
+  }
+
+  return (
+    <section>
+      <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">
+        Delivery Email
+      </h3>
+
+      <div className="bg-white/[0.02] border border-white/8 rounded-xl p-4 space-y-3">
+        {/* Status row */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className={cn(
+              "w-2 h-2 rounded-full shrink-0",
+              sentAt ? "bg-green-400" : isDelivered ? "bg-[#BFA14A]" : "bg-white/20"
+            )} />
+            <span className={cn(
+              "text-xs font-medium",
+              sentAt ? "text-green-300" : isDelivered ? "text-[#BFA14A]" : "text-[#F4EFE6]/35"
+            )}>
+              {sentAt
+                ? `Sent ${sentAt}`
+                : isDelivered
+                  ? "Not yet sent"
+                  : "Sends automatically when delivered"}
+            </span>
+          </div>
+          {sentAt && (
+            <span className="text-[10px] text-[#F4EFE6]/25 shrink-0">To: {request.email}</span>
+          )}
+        </div>
+
+        {/* Subject preview */}
+        <div className="bg-white/[0.03] rounded-lg px-3 py-2 border border-white/6">
+          <p className="text-[10px] text-[#F4EFE6]/25 uppercase tracking-wider mb-0.5">Subject</p>
+          <p className="text-xs text-[#F4EFE6]/60 font-mono">Your BioHarmony Report Is Ready</p>
+        </div>
+
+        {/* Success message */}
+        {resendSuccess && (
+          <p className="text-xs text-green-300/80 bg-green-900/15 border border-green-700/25 rounded-lg px-3 py-2">
+            Email sent successfully to {request.email}
+          </p>
+        )}
+
+        {/* Resend button — only available when delivered */}
+        {isDelivered && (
+          <button
+            disabled={busy}
+            onClick={handleResend}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium border border-[#BFA14A]/20 text-[#BFA14A]/60 hover:border-[#BFA14A]/40 hover:text-[#BFA14A] transition disabled:opacity-40"
+          >
+            {busy
+              ? <><span className="inline-block w-3 h-3 border border-current/40 border-t-current rounded-full animate-spin" />Sending…</>
+              : <>{sentAt ? "↩ Resend Email" : "✉ Send Now"}</>
+            }
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // ── Detail Panel ───────────────────────────────────────────────────────────────
 
 function DetailPanel({
@@ -571,6 +673,11 @@ function DetailPanel({
           {/* Pipeline control (scan only) */}
           {request.source === "scan" && (
             <PipelinePanel request={request} token={token} onUpdate={onUpdate} />
+          )}
+
+          {/* Delivery email status (scan only) */}
+          {request.source === "scan" && (
+            <EmailDeliverySection request={request} token={token} onUpdate={onUpdate} />
           )}
 
           {/* Legacy status override */}

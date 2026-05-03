@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { logger } from "../lib/logger";
 
 const ADMIN_EMAIL = process.env["ADMIN_EMAIL"] ?? "info@bioharmonysolutions.ca";
+const SITE_URL = process.env["SITE_URL"] ?? "https://bioharmonysolutions.ca";
 
 export interface EmailPayload {
   to: string;
@@ -103,7 +104,7 @@ export function buildReportNotificationEmail(data: ReportNotificationData): Emai
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td style="padding:20px 24px;border-top:1px solid #1a3535;text-align:center;">
-                  <a href="https://bioharmonysolutions.ca/admin"
+                  <a href="${SITE_URL}/admin"
                      style="display:inline-block;padding:10px 28px;background:#BFA14A;
                             color:#060D0D;font-size:13px;font-weight:600;text-decoration:none;
                             border-radius:6px;font-family:Arial,sans-serif;">
@@ -147,7 +148,7 @@ export function buildReportNotificationEmail(data: ReportNotificationData): Emai
     data.note ? textRow("Note / Message", data.note) : "",
     textRow("Submitted", dateStr),
     ``,
-    `View dashboard: https://bioharmonysolutions.ca/admin`,
+    `View dashboard: ${SITE_URL}/admin`,
     ``,
     `BioHarmony Solutions`,
   ]
@@ -167,6 +168,213 @@ export interface ClientConfirmationData {
   whatsapp?: boolean;
   note?: string;
 }
+
+// ── Delivered notification ─────────────────────────────────────────────────────
+
+export interface DeliveredEmailData {
+  name: string;
+  email: string;
+  requestId: string;  // e.g. "BH-0042"
+  plan: string;       // "basic" | "advanced" | "premium"
+  whatsapp: boolean;
+  reportType: string;
+}
+
+/**
+ * Build the "Your BioHarmony Report Is Ready" client email.
+ *
+ * This email is triggered automatically by the pipeline scheduler when a request
+ * reaches the "delivered" stage with a confirmed payment.
+ *
+ * Structured for SendGrid / Resend / SMTP — currently sent via Resend if
+ * RESEND_API_KEY is set, otherwise logged as a mock email.
+ */
+export function buildDeliveredEmail(data: DeliveredEmailData): EmailPayload {
+  const subject = "Your BioHarmony Report Is Ready";
+  const firstName = data.name.split(" ")[0] ?? data.name;
+  const trackUrl = `${SITE_URL}/track-report?id=${encodeURIComponent(data.requestId)}`;
+  const isPremium = data.plan === "premium";
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#060D0D;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060D0D;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0c1919,#0f2020);
+                     border-radius:12px 12px 0 0;padding:44px 40px 36px;
+                     border-top:3px solid #BFA14A;text-align:center;">
+            <p style="margin:0 0 16px;color:#BFA14A;font-size:11px;
+                      letter-spacing:0.3em;text-transform:uppercase;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+            <div style="display:inline-block;width:52px;height:52px;border-radius:50%;
+                        background:#0f2b2b;border:2px solid #BFA14A;line-height:52px;
+                        text-align:center;font-size:24px;margin-bottom:20px;">✓</div>
+            <h1 style="margin:0 0 10px;color:#F4EFE6;font-size:28px;
+                       font-family:Georgia,serif;font-weight:400;line-height:1.3;">
+              Your Report Is Ready
+            </h1>
+            <p style="margin:0;color:#F4EFE6;font-size:16px;
+                      font-family:Georgia,serif;font-style:italic;
+                      opacity:0.65;line-height:1.6;">
+              Hi ${firstName}, your BioHarmony report has been completed.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#0c1919;padding:36px 40px;border-radius:0 0 12px 12px;">
+
+            <!-- Divider -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="border-top:1px solid #1a3535;"></td>
+                <td style="padding:0 14px;white-space:nowrap;color:#BFA14A;font-size:11px;
+                           letter-spacing:0.2em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                  Your personalised wellness report
+                </td>
+                <td style="border-top:1px solid #1a3535;"></td>
+              </tr>
+            </table>
+
+            <!-- Message -->
+            <p style="margin:0 0 24px;color:#F4EFE6;font-size:15px;font-family:Georgia,serif;
+                      opacity:0.82;line-height:1.8;">
+              Your BioHarmony report is ready. You can view and download your report by visiting the link below:
+            </p>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="text-align:center;padding:8px 0;">
+                  <a href="${trackUrl}"
+                     style="display:inline-block;padding:14px 36px;
+                            background:linear-gradient(135deg,#0F5C5E,#0a4a4c);
+                            color:#F4EFE6;font-size:15px;font-weight:600;
+                            text-decoration:none;border-radius:8px;
+                            font-family:Arial,sans-serif;
+                            border:1px solid rgba(191,161,74,0.35);
+                            box-shadow:0 0 20px rgba(15,92,94,0.4);">
+                    View My Report →
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td style="text-align:center;padding-top:10px;">
+                  <p style="margin:0;color:#F4EFE6;font-size:11px;opacity:0.3;
+                             font-family:Arial,sans-serif;">
+                    Request ID: ${data.requestId}
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            ${(data.whatsapp || isPremium) ? `
+            <!-- Delivery note -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#0f2020;border-left:3px solid #BFA14A;
+                           padding:14px 18px;border-radius:0 8px 8px 0;">
+                  <p style="margin:0 0 6px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.15em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    Additional delivery options
+                  </p>
+                  <p style="margin:0;color:#F4EFE6;font-size:13px;opacity:0.75;
+                             font-family:Arial,sans-serif;line-height:1.6;">
+                    ${data.whatsapp ? "WhatsApp delivery will be sent to your registered number shortly. " : ""}
+                    ${isPremium ? "Your audio narration will appear on your report page when available." : ""}
+                  </p>
+                </td>
+              </tr>
+            </table>
+            ` : ""}
+
+            <!-- Questions -->
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#0f2020;border-radius:10px;border:1px solid #1a3535;">
+              <tr>
+                <td style="padding:20px 24px;text-align:center;">
+                  <p style="margin:0 0 8px;color:#F4EFE6;font-size:14px;
+                             font-family:Georgia,serif;opacity:0.75;">
+                    Questions about your report?
+                  </p>
+                  <a href="mailto:info@bioharmonysolutions.ca?subject=Re: My BioHarmony Report ${encodeURIComponent(data.requestId)}"
+                     style="color:#4ecdc4;font-size:13px;font-family:Arial,sans-serif;
+                            text-decoration:none;font-weight:600;">
+                    info@bioharmonysolutions.ca
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Signature -->
+        <tr>
+          <td style="padding:28px 0 8px;text-align:center;">
+            <p style="margin:0 0 4px;color:#F4EFE6;font-size:14px;
+                      font-family:Georgia,serif;font-style:italic;opacity:0.55;">
+              Warmly,
+            </p>
+            <p style="margin:0 0 2px;color:#BFA14A;font-size:14px;
+                      font-family:Georgia,serif;font-weight:600;opacity:0.85;">
+              Kathy Owens
+            </p>
+            <p style="margin:0;color:#F4EFE6;font-size:12px;opacity:0.3;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:8px 0 20px;text-align:center;border-top:1px solid #1a3535;">
+            <p style="margin:8px 0 0;color:#F4EFE6;font-size:10px;opacity:0.18;font-family:Arial,sans-serif;">
+              You received this because you submitted a scan request at bioharmonysolutions.ca
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = [
+    `Your BioHarmony Report Is Ready`,
+    `=================================`,
+    ``,
+    `Hi ${firstName},`,
+    ``,
+    `Your BioHarmony report is ready.`,
+    ``,
+    `You can view and download your report here:`,
+    trackUrl,
+    `Request ID: ${data.requestId}`,
+    ``,
+    data.whatsapp ? `WhatsApp delivery will be sent to your registered number shortly.` : "",
+    isPremium ? `Your audio narration will appear on your report page when available.` : "",
+    ``,
+    `If you have any questions about your report, please reply to this email`,
+    `or contact us at info@bioharmonysolutions.ca`,
+    ``,
+    `Warmly,`,
+    `Kathy Owens`,
+    `BioHarmony Solutions`,
+  ].filter((l) => l !== undefined).join("\n");
+
+  return { to: data.email, subject, html, text };
+}
+
+// ── Shared send helper ─────────────────────────────────────────────────────────
 
 const LANG_LABELS: Record<string, string> = {
   en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
@@ -389,7 +597,8 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
     return;
   }
 
-  // No provider configured — log the email for development
+  // No provider configured — log the mock email for development
+  // Structured for SendGrid / Resend / SMTP — add RESEND_API_KEY secret to enable real delivery
   logger.info(
     {
       to: payload.to,

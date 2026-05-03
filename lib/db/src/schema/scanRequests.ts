@@ -15,6 +15,7 @@ export const scanRequestsTable = pgTable("scan_requests", {
   stageEnteredAt: timestamp("stage_entered_at"),
   pipelinePaused: boolean("pipeline_paused").notNull().default(false),
   pipelineError: varchar("pipeline_error", { length: 500 }),
+  deliveredEmailSentAt: timestamp("delivered_email_sent_at"),
   note: text("note"),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

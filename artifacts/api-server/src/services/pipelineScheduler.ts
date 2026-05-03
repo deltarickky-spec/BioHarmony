@@ -11,12 +11,14 @@
  *   - Each AI stage completion should call: advanceStage(requestId, nextStage)
  *   - Remove STAGE_DURATIONS_SECONDS timing logic entirely.
  *   - Keep the pause/resume/error controls — they remain useful in production.
+ *   - Keep the delivered email notification — it fires after the real AI delivers.
  */
 
 import { db } from "@workspace/db";
 import { scanRequestsTable } from "@workspace/db/schema";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { buildDeliveredEmail, sendEmail } from "./email";
 
 type PipelineStage =
   | "queued"
@@ -39,7 +41,7 @@ const STAGE_DURATIONS_SECONDS: Record<PipelineStage, number> = {
   interpreting: 90,    // AI interpretation of bio-frequency data
   generating: 90,      // narrative report generation
   quality_check: 60,   // BioHarmony quality review pass
-  pdf_ready: 60,       // PDF compilation (also used for audio_ready stage)
+  pdf_ready: 60,       // PDF compilation
   audio_ready: 60,     // audio narration (Premium only)
   delivered: 0,        // terminal — no further progression
 };
@@ -84,17 +86,12 @@ export function resumeGlobal(): void {
   logger.info("BioHarmony pipeline automation globally resumed");
 }
 
-// ── Public stage helper (used by admin route to reset timer on manual advance) ─
-
-export function nowTimestamp(): Date {
-  return new Date();
-}
-
 // ── Scheduler tick ─────────────────────────────────────────────────────────────
 
 /**
  * Single scheduler tick.
  * Queries all eligible requests and advances any that have exceeded their stage duration.
+ * Sends "Report Is Ready" email when a request first reaches delivered.
  *
  * Mock pipeline progression — replace with Sage/Hermes AI processing webhook later.
  */
@@ -123,9 +120,9 @@ async function tick(): Promise<void> {
       const stage = row.pipelineStage as PipelineStage;
       const duration = STAGE_DURATIONS_SECONDS[stage] ?? 0;
 
-      if (duration === 0) continue; // terminal or unknown stage
+      if (duration === 0) continue;
 
-      // If stageEnteredAt is missing, initialise it — the request just became eligible
+      // If stageEnteredAt is missing, initialise it so the timer starts
       if (!row.stageEnteredAt) {
         await db
           .update(scanRequestsTable)
@@ -136,7 +133,7 @@ async function tick(): Promise<void> {
       }
 
       const elapsedSeconds = (now.getTime() - row.stageEnteredAt.getTime()) / 1_000;
-      if (elapsedSeconds < duration) continue; // not ready yet
+      if (elapsedSeconds < duration) continue;
 
       const nextStage = getNextStage(stage, row.plan);
       if (!nextStage) continue;
@@ -147,18 +144,61 @@ async function tick(): Promise<void> {
         "Auto-advancing pipeline stage",
       );
 
+      // Advance the stage in DB
       await db
         .update(scanRequestsTable)
         .set({
           pipelineStage: nextStage,
           stageEnteredAt: now,
-          // Keep legacy status field in sync when fully delivered
           ...(nextStage === "delivered" ? { status: "delivered" } : {}),
         })
         .where(eq(scanRequestsTable.id, row.id));
+
+      // Send "Your report is ready" email when advancing to delivered
+      // Only if email hasn't been sent yet (deliveredEmailSentAt is null)
+      if (
+        nextStage === "delivered" &&
+        !row.deliveredEmailSentAt
+      ) {
+        await sendDeliveryEmail(row.id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType);
+      }
     }
   } catch (err) {
     logger.error({ err }, "Pipeline scheduler tick failed");
+  }
+}
+
+/**
+ * Send the "Your BioHarmony Report Is Ready" email and mark it as sent.
+ * If sending fails, logs the error — admin can trigger a resend manually.
+ */
+export async function sendDeliveryEmail(
+  id: number,
+  name: string,
+  email: string,
+  plan: string | null,
+  whatsapp: boolean,
+  reportType: string,
+): Promise<void> {
+  const requestId = `BH-${id.toString().padStart(4, "0")}`;
+  try {
+    const payload = buildDeliveredEmail({
+      name,
+      email,
+      requestId,
+      plan: plan ?? "basic",
+      whatsapp,
+      reportType,
+    });
+    await sendEmail(payload);
+    // Mark email as sent only after confirmed delivery attempt
+    await db
+      .update(scanRequestsTable)
+      .set({ deliveredEmailSentAt: new Date() })
+      .where(eq(scanRequestsTable.id, id));
+    logger.info({ id, email, requestId }, "Delivery email sent successfully");
+  } catch (err) {
+    logger.error({ err, id, email }, "Failed to send delivery email — admin can use Resend button");
   }
 }
 
@@ -173,7 +213,7 @@ export function startPipelineScheduler(): void {
   tick().catch(() => {});
   _schedulerInterval = setInterval(() => {
     tick().catch(() => {});
-  }, 15_000); // poll every 15 seconds
+  }, 15_000);
 }
 
 export function stopPipelineScheduler(): void {

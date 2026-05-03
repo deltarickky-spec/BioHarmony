@@ -55,6 +55,7 @@ router.get("/scan-requests/track", async (req, res) => {
       id: row.id,
       requestId: `BH-${row.id.toString().padStart(4, "0")}`,
       name: row.name,
+      email: row.email,
       reportType: row.reportType,
       plan: row.plan ?? "basic",
       language: row.language,
@@ -63,6 +64,7 @@ router.get("/scan-requests/track", async (req, res) => {
       status: row.status,
       pipelineStage: row.pipelineStage,
       paymentStatus: row.paymentStatus,
+      deliveredEmailSentAt: row.deliveredEmailSentAt ?? null,
       createdAt: row.createdAt,
     });
   } catch (err) {
