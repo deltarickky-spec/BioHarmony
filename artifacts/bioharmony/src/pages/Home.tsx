@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
+import kathyAvatar from "@/assets/kathy-owens.jpg";
 import pemfVisual from "@/assets/pemf-visual.png";
 import solexBlood from "@/assets/solex-report-blood.png";
 import solexChakra from "@/assets/solex-report-chakra.png";
@@ -61,6 +62,27 @@ export default function Home() {
                 Already submitted? Track your report
               </Link>
             </div>
+
+            {/* Kathy personal welcome */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55, duration: 0.6, ease: "easeOut" }}
+              className="flex items-start gap-4 mt-6 max-w-md bg-white/[0.04] border border-white/8 rounded-2xl px-5 py-4 backdrop-blur-sm"
+            >
+              <img
+                src={kathyAvatar}
+                alt="Kathy Owens"
+                className="w-11 h-11 rounded-full object-cover object-top border border-[#BFA14A]/25 shrink-0 mt-0.5"
+              />
+              <div>
+                <p className="text-[#F4EFE6]/75 text-sm font-serif italic leading-relaxed">
+                  "I started BioHarmony so every person could finally understand what their body is quietly asking for."
+                </p>
+                <p className="text-[#BFA14A]/60 text-xs font-sans mt-2 tracking-wide">— Kathy Owens, Founder</p>
+              </div>
+            </motion.div>
+
           </motion.div>
         </div>
       </section>
