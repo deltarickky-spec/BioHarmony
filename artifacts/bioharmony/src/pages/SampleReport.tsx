@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
+import { BioHarmonyScore } from "@/components/BioHarmonyScore";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -191,6 +192,19 @@ export default function SampleReport() {
                 </p>
                 <p className="text-[#BFA14A]/60 text-xs mt-4 font-sans not-italic">— Kathy Owens, BioHarmony Solutions</p>
               </div>
+            </motion.div>
+
+            {/* Intelligence Score */}
+            <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
+              <BioHarmonyScore
+                score={72}
+                breakdown={[
+                  { label: "Stress Load", value: 65 },
+                  { label: "Energy Balance", value: 78 },
+                  { label: "System Alignment", value: 71 },
+                  { label: "Recovery Capacity", value: 74 },
+                ]}
+              />
             </motion.div>
 
             {/* Divider */}

@@ -6,6 +6,7 @@ import { DownloadReportButton } from "@/components/DownloadReportButton";
 import { REPORT_DATA } from "@/lib/reportData";
 import { ReportAudioPlayer } from "@/components/ReportAudioPlayer";
 import { buildNarrationScript } from "@/lib/narrationScript";
+import { BioHarmonyScore } from "@/components/BioHarmonyScore";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -137,6 +138,16 @@ function JaneDoeReport() {
         date="January 15, 2025"
       />
 
+      <BioHarmonyScore
+        score={72}
+        breakdown={[
+          { label: "Stress Load", value: 65 },
+          { label: "Energy Balance", value: 78 },
+          { label: "System Alignment", value: 71 },
+          { label: "Recovery Capacity", value: 74 },
+        ]}
+      />
+
       <PractitionerNote>
         "Jane, as I went through your scan, a few clear patterns began to stand out. What your body is showing isn't random — it's communicating a very connected story between your digestion, stress response, and energy levels. This is something I see quite often, and the good news is that once we understand the pattern, we can begin supporting it in a much more targeted and gentle way."
       </PractitionerNote>
@@ -219,6 +230,16 @@ function MariaThompsonReport() {
         badge="Advanced Case"
       />
 
+      <BioHarmonyScore
+        score={58}
+        breakdown={[
+          { label: "Stress Load", value: 48 },
+          { label: "Energy Balance", value: 62 },
+          { label: "System Alignment", value: 55 },
+          { label: "Recovery Capacity", value: 67 },
+        ]}
+      />
+
       <PractitionerNote>
         "Hi Maria, as I reviewed your scan, your body revealed a deeper pattern that has likely been building over time. This isn't just one isolated area — it's a layered response, where your system has been adapting to ongoing stress, inflammation, and internal imbalance. What stood out most is that your body is not overwhelmed — it's actually working very hard to keep things functioning, but it's now asking for more consistent support."
       </PractitionerNote>
@@ -299,6 +320,16 @@ function BellaReport() {
         scanType="AO Scan — Canine Wellness"
         date="February 20, 2025"
         badge="Pet Report"
+      />
+
+      <BioHarmonyScore
+        score={76}
+        breakdown={[
+          { label: "Stress Load", value: 72 },
+          { label: "Energy Balance", value: 80 },
+          { label: "System Alignment", value: 74 },
+          { label: "Recovery Capacity", value: 78 },
+        ]}
       />
 
       <PractitionerNote>

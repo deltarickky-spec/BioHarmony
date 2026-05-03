@@ -606,31 +606,61 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="py-24 bg-background">
-        <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif text-primary">Your Wellness Journey</h2>
-            <p className="text-muted-foreground mt-4 text-lg">A simple, seamless process designed for your comfort.</p>
+      <section className="py-24 bg-[#040A0A] border-t border-white/6">
+        <div className="container px-4 md:px-6 max-w-4xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-14">
+            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans mb-3">The Process</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6]">How It Works</h2>
           </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-            <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2 z-0"></div>
-            
+
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-3 gap-0 relative"
+          >
+            {/* connector lines — desktop only */}
+            <div className="hidden md:block absolute top-[52px] left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-[#BFA14A]/20 via-[#BFA14A]/40 to-[#BFA14A]/20 z-0" />
+
             {[
-              { step: "01", title: "Choose Your Scan", desc: "Select the wellness assessment that fits your current goals." },
-              { step: "02", title: "Submit a Voice Sample", desc: "Submit a simple 15-second voice recording." },
-              { step: "03", title: "We Analyze Your Energetic Patterns", desc: "Our technology identifies your unique frequency signature." },
-              { step: "04", title: "Receive a Personalized Report", desc: "Get a clear, client-friendly BioHarmony Analytics report." }
-            ].map((item, i) => (
-              <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="relative z-10 bg-card border border-border rounded-2xl p-6 shadow-sm text-center">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-serif text-xl mx-auto mb-4">
-                  {item.step}
+              {
+                num: "1",
+                icon: "↑",
+                title: "Upload Your Scan",
+                desc: "Share your AO Scan export or voice recording in under 2 minutes.",
+              },
+              {
+                num: "2",
+                icon: "◈",
+                title: "BioHarmony Interprets",
+                desc: "Our system translates your scan data into a clear, connected wellness story.",
+              },
+              {
+                num: "3",
+                icon: "✦",
+                title: "Your Report Arrives",
+                desc: "Receive a personalized, client-ready report delivered in 24–48 hours.",
+              },
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                variants={fadeInUp}
+                className="relative z-10 flex flex-col items-center text-center px-6 py-8 group"
+              >
+                {/* Step circle */}
+                <div className="w-[52px] h-[52px] rounded-full border border-[#BFA14A]/30 bg-[#BFA14A]/6 flex items-center justify-center mb-5 group-hover:border-[#BFA14A]/60 group-hover:bg-[#BFA14A]/12 transition-all duration-300 shadow-[0_0_20px_rgba(191,161,74,0.08)]">
+                  <span className="text-[#BFA14A] text-base font-serif font-semibold">{step.num}</span>
                 </div>
-                <h3 className="font-serif text-lg text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
+                {/* Icon accent */}
+                <span className="text-[#BFA14A]/30 text-xs mb-3 font-sans">{step.icon}</span>
+                <h3 className="font-serif text-lg text-[#F4EFE6] mb-2 group-hover:text-[#BFA14A]/90 transition-colors">
+                  {step.title}
+                </h3>
+                <p className="text-sm text-[#F4EFE6]/45 leading-relaxed max-w-[200px]">
+                  {step.desc}
+                </p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
