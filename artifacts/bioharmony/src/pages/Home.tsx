@@ -87,6 +87,62 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Credentials Strip */}
+      <section className="relative bg-[#040A0A] border-b border-white/8 py-10 overflow-hidden">
+        {/* subtle gold gradient glow */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#BFA14A]/[0.03] to-transparent pointer-events-none" />
+
+        <div className="container px-4 md:px-6">
+          {/* Badge row */}
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }}
+            variants={staggerContainer}
+            className="flex flex-wrap justify-center gap-3 mb-7"
+          >
+            {[
+              { icon: "✦", label: "30+ Years in Holistic Wellness" },
+              { icon: "⟡", label: "PEMF Therapy Practitioner" },
+              { icon: "◈", label: "Bioresonance / AO Scan User" },
+              { icon: "✧", label: "Reiki Master" },
+              { icon: "◎", label: "Serving Canada & Colombia" },
+              { icon: "⊕", label: "Reports Delivered Worldwide" },
+            ].map((item) => (
+              <motion.div
+                key={item.label}
+                variants={fadeInUp}
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-white/8 bg-white/[0.03] backdrop-blur-sm hover:border-[#BFA14A]/25 hover:bg-[#BFA14A]/[0.04] transition-all duration-300 group"
+              >
+                <span className="text-[#BFA14A]/50 text-xs group-hover:text-[#BFA14A]/75 transition-colors leading-none">{item.icon}</span>
+                <span className="text-[10px] uppercase tracking-[0.14em] font-sans font-medium text-[#F4EFE6]/55 group-hover:text-[#F4EFE6]/80 transition-colors whitespace-nowrap">
+                  {item.label}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Divider + disclaimer */}
+          <motion.div
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6"
+          >
+            <div className="hidden sm:block h-px w-12 bg-white/10" />
+            <div className="flex items-center gap-2">
+              <span className="text-[#BFA14A]/30 text-[10px]">◇</span>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#F4EFE6]/28 font-sans">
+                Client-Focused · Non-Diagnostic Wellness Insights
+              </p>
+              <span className="text-[#BFA14A]/30 text-[10px]">◇</span>
+            </div>
+            <div className="hidden sm:block h-px w-12 bg-white/10" />
+          </motion.div>
+
+          <p className="text-center text-[10px] text-[#F4EFE6]/20 font-sans tracking-wider mt-3">
+            For wellness education only. Not a medical service.
+          </p>
+        </div>
+      </section>
+
       {/* What We Do Overview */}
       <section className="py-24 bg-card">
         <div className="container px-4 md:px-6">
