@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Star, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const PROMPTS = [
   "How accurate did the report feel to your current wellness state?",
@@ -31,13 +33,39 @@ export default function Feedback() {
   const overallRating = ratings[0];
   const allRated = ratings.every((r) => r > 0);
 
+  const [submitError, setSubmitError] = useState("");
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!allRated) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
-    setSubmitted(true);
+    setSubmitError("");
+    try {
+      const res = await fetch(`${BASE}/api/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: requestId || undefined,
+          accuracyRating: ratings[0],
+          clarityRating: ratings[1],
+          returnLikelihood: ratings[2],
+          testimonial: testimonial.trim() || undefined,
+          referralSource: referral || undefined,
+          clientName: name.trim() || undefined,
+          consentShare,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json() as { error?: string };
+        setSubmitError(body.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setSubmitError("Connection error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -175,6 +203,10 @@ export default function Feedback() {
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#F4EFE6] placeholder-[#F4EFE6]/20 focus:outline-none focus:border-[#BFA14A]/40 transition"
             />
           </div>
+
+          {submitError && (
+            <p className="text-sm text-red-400/80 text-center -mb-2">{submitError}</p>
+          )}
 
           <button
             type="submit"

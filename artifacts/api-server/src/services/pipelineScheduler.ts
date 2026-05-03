@@ -18,7 +18,14 @@ import { db } from "@workspace/db";
 import { scanRequestsTable, practitionersTable } from "@workspace/db/schema";
 import { and, eq, inArray, ilike, isNull, lt } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { buildDeliveredEmail, buildPaymentReminderEmail, buildPractitionerCommissionEmail, sendEmail } from "./email";
+import {
+  buildDeliveredEmail,
+  buildPaymentReminderEmail,
+  buildPractitionerCommissionEmail,
+  buildProcessingStartedEmail,
+  buildTestimonialRequestEmail,
+  sendEmail,
+} from "./email";
 
 type PipelineStage =
   | "queued"
@@ -173,6 +180,20 @@ async function tick(): Promise<void> {
         })
         .where(eq(scanRequestsTable.id, row.id));
 
+      // Notify client that AI processing has started (first active stage)
+      if (nextStage === "extracting") {
+        const requestId = `BH-${row.id.toString().padStart(4, "0")}`;
+        sendEmail(buildProcessingStartedEmail({
+          name: row.name,
+          email: row.email,
+          requestId,
+          reportType: row.reportType,
+          plan: row.plan ?? "basic",
+        })).catch((err) => {
+          logger.error({ err, id: row.id }, "Failed to send processing-started email");
+        });
+      }
+
       // Send "Your report is ready" email when advancing to delivered
       // Only if email hasn't been sent yet (deliveredEmailSentAt is null)
       if (nextStage === "delivered" && !row.deliveredEmailSentAt) {
@@ -181,6 +202,16 @@ async function tick(): Promise<void> {
         if (row.practitionerCode) {
           await sendPractitionerCommissionEmail(row.id, row.practitionerCode, row.reportType, row.plan);
         }
+        // Send testimonial / feedback request alongside the delivery email
+        const requestId = `BH-${row.id.toString().padStart(4, "0")}`;
+        sendEmail(buildTestimonialRequestEmail({
+          name: row.name,
+          email: row.email,
+          requestId,
+          reportType: row.reportType,
+        })).catch((err) => {
+          logger.error({ err, id: row.id }, "Failed to send testimonial-request email");
+        });
       }
     }
   } catch (err) {

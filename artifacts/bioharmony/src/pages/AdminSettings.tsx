@@ -163,7 +163,7 @@ export default function AdminSettings() {
 
         {/* Delivery Options */}
         <Section title="Delivery Options" icon={Mail}>
-          <SettingRow label="Admin Notification Email" value="contact@bioharmonysolutions.com" note="Receives new submission alerts" />
+          <SettingRow label="Admin Notification Email" value="info@bioharmonysolutions.ca" note="Receives new submission alerts" />
           <SettingRow label="Email Delivery" value="Enabled" badge="on" />
           <SettingRow label="WhatsApp Delivery" value="Optional (client opt-in)" />
           <SettingRow label="PDF Format" value="A4 · Dark theme · BioHarmony branding" />

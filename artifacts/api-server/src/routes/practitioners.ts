@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { practitionersTable, scanRequestsTable } from "@workspace/db/schema";
 import { eq, ilike, desc } from "drizzle-orm";
 import { z } from "zod";
+import { buildPractitionerWelcomeEmail, sendEmail } from "../services/email";
 
 const router = Router();
 
@@ -94,6 +95,19 @@ router.post("/admin/practitioners", async (req, res) => {
       .insert(practitionersTable)
       .values(parsed.data)
       .returning();
+
+    // Send welcome email to newly-added practitioner
+    const siteUrl = process.env["SITE_URL"] ?? "https://bioharmonysolutions.ca";
+    sendEmail(buildPractitionerWelcomeEmail({
+      practitionerName: row.name,
+      practitionerEmail: row.email,
+      referralCode: row.referralCode,
+      commissionRate: row.commissionRate,
+      dashboardUrl: `${siteUrl}/practitioner-portal`,
+    })).catch((err) => {
+      req.log.error({ err, id: row.id }, "Failed to send practitioner welcome email");
+    });
+
     res.status(201).json(row);
   } catch (err: unknown) {
     const pg = err as { code?: string };

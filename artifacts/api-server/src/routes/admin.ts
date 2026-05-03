@@ -11,6 +11,7 @@ import {
   sendPaymentReminderEmail,
   sendPractitionerCommissionEmail,
 } from "../services/pipelineScheduler";
+import { buildPaymentReceivedEmail, sendEmail } from "../services/email";
 
 const router = Router();
 
@@ -136,6 +137,32 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
 
       if (Object.keys(updateSet).length > 0) {
         await db.update(scanRequestsTable).set(updateSet).where(eq(scanRequestsTable.id, id));
+      }
+
+      // If payment just confirmed by admin, send payment-received email to client
+      if (data.paymentStatus === "paid" || data.paymentStatus === "waived") {
+        const payRows = await db
+          .select()
+          .from(scanRequestsTable)
+          .where(eq(scanRequestsTable.id, id))
+          .limit(1);
+        const payRow = payRows[0];
+        if (payRow) {
+          const planPrices: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
+          const basePrice = planPrices[payRow.plan ?? "basic"] ?? 55;
+          const discount = payRow.discountAmount ?? 0;
+          const amount = data.paymentStatus === "waived" ? 0 : Math.max(0, basePrice - discount);
+          sendEmail(buildPaymentReceivedEmail({
+            name: payRow.name,
+            email: payRow.email,
+            requestId: `BH-${id.toString().padStart(4, "0")}`,
+            plan: payRow.plan ?? "basic",
+            reportType: payRow.reportType,
+            amount,
+          })).catch((err) => {
+            req.log.error({ err, id }, "Failed to send payment-received email");
+          });
+        }
       }
 
       // If manually advancing to delivered, send delivery + commission emails

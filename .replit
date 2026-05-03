@@ -38,3 +38,4 @@ externalPort = 80
 [userenv]
 
 [userenv.shared]
+ADMIN_NOTIFICATION_EMAIL = "info@bioharmonysolutions.ca"
