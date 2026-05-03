@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { timingSafeEqual } from "crypto";
 import { db } from "@workspace/db";
 import { scanRequestsTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,15 +10,65 @@ import { logger } from "../lib/logger";
 const router = Router();
 
 // ── Environment configuration ──────────────────────────────────────────────────
-// AI_PROCESSING_MODE: "mock" (default) | "live" — when "live", HP Sage/Hermes callbacks are processed
-// HP_AI_SERVER_URL:   Base URL of the HP AI processing server (empty = not connected)
+// AI_PROCESSING_MODE:  "mock" (default) | "live" — controls processing + signature enforcement
+// HP_AI_SERVER_URL:    Base URL of HP AI server (empty = not connected)
+// HP_WEBHOOK_SECRET:   Shared secret; HP must send as x-bioharmony-signature header (live mode only)
 const AI_PROCESSING_MODE = process.env["AI_PROCESSING_MODE"] ?? "mock";
 const HP_AI_SERVER_URL = process.env["HP_AI_SERVER_URL"] ?? "";
 
 logger.info(
-  { AI_PROCESSING_MODE, HP_AI_SERVER_URL: HP_AI_SERVER_URL || "(not set)" },
+  {
+    AI_PROCESSING_MODE,
+    HP_AI_SERVER_URL: HP_AI_SERVER_URL || "(not set)",
+    HP_WEBHOOK_SECRET: process.env["HP_WEBHOOK_SECRET"] ? "configured" : "(not set)",
+  },
   "Webhook config loaded",
 );
+
+// ── Signature verification ─────────────────────────────────────────────────────
+
+/**
+ * Verifies the x-bioharmony-signature header against HP_WEBHOOK_SECRET.
+ * Uses timingSafeEqual to prevent timing-based attacks.
+ * Returns true when:
+ *   - AI_PROCESSING_MODE is "mock" (verification skipped for safe testing)
+ *   - AI_PROCESSING_MODE is "live" AND the header matches the configured secret
+ */
+function verifyHpSignature(req: Parameters<Parameters<typeof router.post>[1]>[0]): {
+  valid: boolean;
+  reason?: string;
+} {
+  if (AI_PROCESSING_MODE !== "live") {
+    return { valid: true };
+  }
+
+  const secret = process.env["HP_WEBHOOK_SECRET"] ?? "";
+  if (!secret) {
+    logger.error("HP_WEBHOOK_SECRET is not configured — rejecting live webhook (fail secure)");
+    return { valid: false, reason: "HP_WEBHOOK_SECRET not configured on server" };
+  }
+
+  const received = (req.headers["x-bioharmony-signature"] as string | undefined) ?? "";
+  if (!received) {
+    return { valid: false, reason: "Missing x-bioharmony-signature header" };
+  }
+
+  // Constant-time comparison prevents timing attacks
+  try {
+    const secretBuf = Buffer.from(secret, "utf8");
+    const receivedBuf = Buffer.from(received, "utf8");
+    if (secretBuf.length !== receivedBuf.length) {
+      return { valid: false, reason: "Signature mismatch" };
+    }
+    if (!timingSafeEqual(secretBuf, receivedBuf)) {
+      return { valid: false, reason: "Signature mismatch" };
+    }
+  } catch {
+    return { valid: false, reason: "Signature comparison error" };
+  }
+
+  return { valid: true };
+}
 
 // ── HP payload schema ──────────────────────────────────────────────────────────
 
@@ -135,8 +186,19 @@ async function processHpReportPayload(payload: HpReportPayload): Promise<Process
 // Replace body with async queue dispatch when processing time grows.
 
 router.post("/webhooks/hp-report-generated", async (req, res) => {
-  const parsed = HpReportPayloadSchema.safeParse(req.body);
+  // ── Step 1: Signature verification (live mode enforces, mock mode skips) ──
+  const sig = verifyHpSignature(req);
+  if (!sig.valid) {
+    req.log.warn(
+      { reason: sig.reason, AI_PROCESSING_MODE },
+      "[WEBHOOK] hp-report-generated rejected — invalid signature",
+    );
+    res.status(401).json({ received: false, error: "Unauthorized", reason: sig.reason });
+    return;
+  }
 
+  // ── Step 2: Payload validation ─────────────────────────────────────────────
+  const parsed = HpReportPayloadSchema.safeParse(req.body);
   if (!parsed.success) {
     req.log.warn({ errors: parsed.error.flatten() }, "[WEBHOOK] hp-report-generated: invalid payload");
     res.status(400).json({ received: false, error: "Invalid payload", details: parsed.error.flatten() });
@@ -146,22 +208,24 @@ router.post("/webhooks/hp-report-generated", async (req, res) => {
   const payload = parsed.data;
   req.log.info({ requestId: payload.request_id, status: payload.status }, "[WEBHOOK] hp-report-generated received");
 
+  // ── Step 3: Mode gate — mock mode logs only, live mode processes ───────────
   if (AI_PROCESSING_MODE !== "live") {
     req.log.info(
       { AI_PROCESSING_MODE },
-      "[WEBHOOK] hp-report-generated ignored — AI_PROCESSING_MODE is not 'live'",
+      "[WEBHOOK] hp-report-generated — mock mode, payload logged but not processed",
     );
     res.json({ received: true, event: "hp-report-generated", note: "mock mode — payload logged but not processed" });
     return;
   }
 
+  // ── Step 4: Process payload ────────────────────────────────────────────────
   try {
     const result = await processHpReportPayload(payload);
     req.log.info({ result }, "[WEBHOOK] hp-report-generated processed");
     res.json({ received: true, event: "hp-report-generated", ...result });
   } catch (err) {
     req.log.error({ err }, "[WEBHOOK] hp-report-generated processing failed");
-    // Always return 200 to prevent HP from retrying indefinitely
+    // Always return 200 to prevent HP from retrying indefinitely on server errors
     res.json({ received: true, event: "hp-report-generated", ok: false, message: "Internal error — logged" });
   }
 });
