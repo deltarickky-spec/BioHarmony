@@ -4,7 +4,8 @@ import { Link } from "wouter";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
   Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign,
-  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download, BarChart2, BellRing, Tag, Percent
+  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download, BarChart2, BellRing, Tag, Percent,
+  Users, Plus, Copy, ExternalLink
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -676,6 +677,335 @@ function ReferralAnalytics({ requests }: { requests: UnifiedRequest[] }) {
               </div>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Affiliates Panel ────────────────────────────────────────────────────────────
+
+interface PractitionerRow {
+  id: number;
+  name: string;
+  email: string;
+  referralCode: string;
+  commissionRate: number;
+  tier: string | null;
+  active: boolean;
+  notes: string | null;
+  totalPaid: number;
+  totalReferrals: number;
+  completedReports: number;
+  revenueGenerated: number;
+  earnedCommission: number;
+  pendingPayout: number;
+  createdAt: string;
+}
+
+function AffiliatesPanel({ token }: { token: string }) {
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<PractitionerRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchErr, setFetchErr] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createErr, setCreateErr] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", referralCode: "", commissionRate: "10", tier: "professional" });
+  const [payoutTarget, setPayoutTarget] = useState<PractitionerRow | null>(null);
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [payingOut, setPayingOut] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  async function fetchData() {
+    setLoading(true);
+    setFetchErr(null);
+    try {
+      const res = await fetch(`${BASE}/api/admin/practitioners`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to load");
+      setRows(await res.json() as PractitionerRow[]);
+    } catch {
+      setFetchErr("Could not load affiliate data.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (open && rows.length === 0 && !loading) fetchData();
+  }, [open]);
+
+  async function createPractitioner() {
+    setCreating(true);
+    setCreateErr("");
+    try {
+      const res = await fetch(`${BASE}/api/admin/practitioners`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...form, commissionRate: parseInt(form.commissionRate, 10) }),
+      });
+      const body = await res.json() as { error?: string };
+      if (!res.ok) { setCreateErr(body.error ?? "Failed to create"); return; }
+      setShowCreate(false);
+      setForm({ name: "", email: "", referralCode: "", commissionRate: "10", tier: "professional" });
+      fetchData();
+    } catch {
+      setCreateErr("Connection error");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function recordPayout(row: PractitionerRow) {
+    const amount = parseInt(payoutAmount, 10);
+    if (!amount || amount <= 0) return;
+    setPayingOut(true);
+    try {
+      const res = await fetch(`${BASE}/api/admin/practitioners/${row.id}/payout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount }),
+      });
+      if (res.ok) { setPayoutTarget(null); setPayoutAmount(""); fetchData(); }
+    } catch { /* ignore */ } finally {
+      setPayingOut(false);
+    }
+  }
+
+  async function toggleActive(row: PractitionerRow) {
+    await fetch(`${BASE}/api/admin/practitioners/${row.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ active: !row.active }),
+    });
+    fetchData();
+  }
+
+  function copyCode(code: string) {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  }
+
+  const totalPending = rows.reduce((s, r) => s + r.pendingPayout, 0);
+  const totalEarned = rows.reduce((s, r) => s + r.earnedCommission, 0);
+
+  return (
+    <div className="rounded-xl border border-white/8 bg-[#0C1919]/60 overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Users className="w-4 h-4 text-[#BFA14A]" />
+          <span className="text-sm font-medium text-[#F4EFE6]/80">Affiliate Partners</span>
+          {rows.length > 0 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#BFA14A]/10 border border-[#BFA14A]/20 text-[#BFA14A]/70">
+              {rows.length} partner{rows.length !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          {totalPending > 0 && (
+            <span className="text-xs text-amber-400/70">${totalPending} pending payout</span>
+          )}
+          <span className={cn("text-[#F4EFE6]/30 text-xs transition-transform duration-200", open ? "rotate-180" : "")}>▾</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-white/8 p-6 space-y-5">
+
+          {/* Summary cards */}
+          {rows.length > 0 && (
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Partners", value: rows.length.toString(), color: "text-[#F4EFE6]/70" },
+                { label: "Commissions Earned", value: `$${totalEarned}`, color: "text-[#BFA14A]" },
+                { label: "Pending Payout", value: totalPending > 0 ? `$${totalPending}` : "—", color: totalPending > 0 ? "text-amber-400" : "text-[#F4EFE6]/25" },
+              ].map((s) => (
+                <div key={s.label} className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/6">
+                  <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-1">{s.label}</p>
+                  <p className={cn("text-lg font-bold", s.color)}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Actions row */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setShowCreate((v) => !v)}
+              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-[#BFA14A]/30 text-[#BFA14A]/80 hover:bg-[#BFA14A]/8 transition"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Partner
+            </button>
+            <button onClick={fetchData} className="text-[10px] text-[#F4EFE6]/25 hover:text-[#F4EFE6]/50 transition flex items-center gap-1">
+              <RefreshCw className="w-3 h-3" /> Refresh
+            </button>
+          </div>
+
+          {/* Create form */}
+          {showCreate && (
+            <div className="rounded-xl border border-[#BFA14A]/20 bg-[#BFA14A]/4 p-5 space-y-4">
+              <p className="text-xs uppercase tracking-wider text-[#BFA14A] font-medium">New Affiliate Partner</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {([
+                  { key: "name", label: "Full Name", placeholder: "Dr. Jane Smith" },
+                  { key: "email", label: "Email", placeholder: "jane@clinic.com" },
+                  { key: "referralCode", label: "Referral Code (UPPERCASE)", placeholder: "DRJANE" },
+                  { key: "commissionRate", label: "Commission %", placeholder: "10" },
+                ] as const).map((f) => (
+                  <div key={f.key}>
+                    <label className="block text-[10px] text-[#F4EFE6]/35 uppercase tracking-wider mb-1">{f.label}</label>
+                    <input
+                      value={form[f.key]}
+                      onChange={(e) => setForm((p) => ({ ...p, [f.key]: f.key === "referralCode" ? e.target.value.toUpperCase() : e.target.value }))}
+                      placeholder={f.placeholder}
+                      className="w-full bg-white/5 border border-white/12 rounded-lg px-3 py-2 text-sm text-[#F4EFE6] placeholder:text-[#F4EFE6]/20 focus:outline-none focus:border-[#BFA14A]/40 transition"
+                    />
+                  </div>
+                ))}
+              </div>
+              {createErr && <p className="text-red-400/80 text-xs">{createErr}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={createPractitioner}
+                  disabled={creating || !form.name || !form.email || !form.referralCode}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#BFA14A] text-[#060D0D] text-xs font-semibold hover:bg-[#d4b456] transition disabled:opacity-40"
+                >
+                  {creating ? "Creating…" : "Create Partner"}
+                </button>
+                <button
+                  onClick={() => { setShowCreate(false); setCreateErr(""); }}
+                  className="px-4 py-2 rounded-lg border border-white/10 text-xs text-[#F4EFE6]/40 hover:text-[#F4EFE6]/60 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Payout inline form */}
+          {payoutTarget && (
+            <div className="rounded-xl border border-amber-700/30 bg-amber-900/10 p-5 space-y-3">
+              <p className="text-xs uppercase tracking-wider text-amber-300 font-medium">
+                Record Payout — {payoutTarget.name}
+              </p>
+              <p className="text-xs text-[#F4EFE6]/45">
+                Pending: <span className="text-amber-300 font-semibold">${payoutTarget.pendingPayout}</span>
+                {" · "}Total paid so far: <span className="text-[#F4EFE6]/60">${payoutTarget.totalPaid}</span>
+              </p>
+              <div className="flex gap-2 items-center">
+                <span className="text-[#F4EFE6]/40 text-sm">$</span>
+                <input
+                  type="number"
+                  value={payoutAmount}
+                  onChange={(e) => setPayoutAmount(e.target.value)}
+                  placeholder={payoutTarget.pendingPayout.toString()}
+                  className="w-28 bg-white/5 border border-white/12 rounded-lg px-3 py-2 text-sm text-[#F4EFE6] focus:outline-none focus:border-amber-500/40 transition"
+                />
+                <button
+                  onClick={() => recordPayout(payoutTarget)}
+                  disabled={payingOut}
+                  className="px-4 py-2 rounded-lg bg-amber-700/40 text-amber-200 border border-amber-700/40 text-xs font-semibold hover:bg-amber-700/60 transition disabled:opacity-40"
+                >
+                  {payingOut ? "Saving…" : "Mark Paid"}
+                </button>
+                <button
+                  onClick={() => { setPayoutTarget(null); setPayoutAmount(""); }}
+                  className="text-[#F4EFE6]/25 hover:text-[#F4EFE6]/50 transition text-xs"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {loading && <p className="text-xs text-[#F4EFE6]/30 text-center py-4">Loading partners…</p>}
+          {fetchErr && <p className="text-xs text-red-400/70 text-center">{fetchErr}</p>}
+
+          {/* Table */}
+          {!loading && rows.length > 0 && (
+            <div className="space-y-2 overflow-x-auto">
+              <div className="min-w-[640px]">
+                <div className="grid grid-cols-[1.2fr_1fr_0.6fr_0.55fr_0.55fr_0.65fr_0.7fr_auto] gap-2 text-[10px] uppercase tracking-wider text-[#F4EFE6]/25 px-3 pb-2 border-b border-white/6">
+                  <span>Partner</span>
+                  <span>Code</span>
+                  <span className="text-right">Refs</span>
+                  <span className="text-right">Done</span>
+                  <span className="text-right">Rev</span>
+                  <span className="text-right">Commission</span>
+                  <span className="text-right">Pending</span>
+                  <span></span>
+                </div>
+
+                {rows.map((r) => (
+                  <div
+                    key={r.id}
+                    className={cn(
+                      "grid grid-cols-[1.2fr_1fr_0.6fr_0.55fr_0.55fr_0.65fr_0.7fr_auto] gap-2 items-center px-3 py-3 rounded-xl border mt-1.5",
+                      r.active ? "bg-white/[0.025] border-white/8" : "opacity-40 bg-transparent border-white/4"
+                    )}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-[#F4EFE6]/80 truncate">{r.name}</p>
+                      <p className="text-[10px] text-[#F4EFE6]/30 truncate">{r.email}</p>
+                    </div>
+
+                    <div className="flex items-center gap-1 min-w-0">
+                      <code className="text-xs font-mono text-[#BFA14A]/80 truncate">{r.referralCode}</code>
+                      <button
+                        onClick={() => copyCode(r.referralCode)}
+                        className="shrink-0 text-[#F4EFE6]/20 hover:text-[#BFA14A]/60 transition p-0.5"
+                        title="Copy code"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                      {copiedCode === r.referralCode && <span className="text-[10px] text-[#BFA14A]/60 shrink-0">✓</span>}
+                    </div>
+
+                    <p className="text-sm font-bold text-right text-[#F4EFE6]/60">{r.totalReferrals}</p>
+                    <p className="text-sm font-bold text-right text-[#F4EFE6]/60">{r.completedReports}</p>
+                    <p className="text-sm font-bold text-right text-[#F4EFE6]/70">${r.revenueGenerated}</p>
+                    <p className={cn("text-sm font-bold text-right", r.earnedCommission > 0 ? "text-[#BFA14A]" : "text-[#F4EFE6]/20")}>
+                      {r.earnedCommission > 0 ? `$${r.earnedCommission}` : "—"}
+                      <span className="block text-[10px] font-normal text-[#F4EFE6]/25">{r.commissionRate}%</span>
+                    </p>
+
+                    <div className="text-right">
+                      {r.pendingPayout > 0 ? (
+                        <button
+                          onClick={() => { setPayoutTarget(r); setPayoutAmount(r.pendingPayout.toString()); }}
+                          className="text-xs font-bold text-amber-400 hover:text-amber-300 transition underline underline-offset-2"
+                        >
+                          ${r.pendingPayout}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-green-400/40">✓ Paid</span>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => toggleActive(r)}
+                      title={r.active ? "Deactivate" : "Activate"}
+                      className="p-1 rounded text-[#F4EFE6]/20 hover:text-[#F4EFE6]/55 transition"
+                    >
+                      <Ban className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!loading && rows.length === 0 && !showCreate && (
+            <p className="text-sm text-[#F4EFE6]/25 text-center py-4">
+              No affiliate partners yet. Click "Add Partner" to register your first referral partner.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -1952,6 +2282,9 @@ export default function AdminDashboard() {
 
         {/* Referral analytics */}
         <ReferralAnalytics requests={requests} />
+
+        {/* Affiliate partners */}
+        {token && <AffiliatesPanel token={token} />}
 
         {/* Promo code analytics */}
         <PromoAnalytics requests={requests} />

@@ -68,6 +68,27 @@ All payment code is fully implemented and ready — **Stripe just needs to be co
 
 NOTE: The Replit Stripe integration was dismissed during setup. Reconnect via the Integrations panel or store `sk_test_...` key as a secret.
 
+### Affiliate / Referral Partner System
+Full practitioner referral system for tracking commissions and partner-referred submissions.
+
+**DB tables:**
+- `practitioners` — partner records (name, email, referralCode, commissionRate, totalPaid, active)
+- `scan_requests.practitioner_code` — links submissions to a practitioner referral
+
+**API routes** (`artifacts/api-server/src/routes/practitioners.ts`):
+- `GET/POST /api/admin/practitioners` — list (with live stats) + create (admin auth)
+- `PATCH /api/admin/practitioners/:id` — update commission rate, notes, active status
+- `POST /api/admin/practitioners/:id/payout` — record payout (increments totalPaid)
+- `DELETE /api/admin/practitioners/:id` — remove partner
+- `GET /api/practitioners/dashboard/:code` — public endpoint; auth by referral code
+
+**Frontend:**
+- **AdminDashboard** — `AffiliatesPanel` component: add partners, view live stats (referrals, revenue, earned commission, pending payout), mark paid
+- **PractitionerPortal** — new "Referrals" tab: code lookup → stats + shareable link + recent referrals list
+- **UploadScan** — reads `?ref=CODE` URL param → stores `practitionerCode` → included in scan submission
+
+**Commission calculation:** earned = `revenueGenerated × commissionRate / 100`; pending = earned − totalPaid (computed live, not stored)
+
 ### Audio Narration
 - Uses OpenAI TTS (`shimmer` voice) via `POST /api/narrate`
 - Cached in `report_audio` DB table by `cacheKey-language` (e.g. `jane-en`, `jane-es`)

@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import {
   Upload, FileText, Download, Star, Zap, Users, Crown,
-  ChevronRight, Lock, CheckCircle, Clock, BarChart3, Palette, ImageIcon, Save
+  ChevronRight, Lock, CheckCircle, Clock, BarChart3, Palette, ImageIcon, Save,
+  Link2, Copy, ExternalLink, TrendingUp, DollarSign, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -184,9 +185,65 @@ function CreditMeter({ used, total, tier }: { used: number; total: number; tier:
   );
 }
 
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+interface ReferralDashboard {
+  id: number;
+  name: string;
+  referralCode: string;
+  commissionRate: number;
+  totalReferrals: number;
+  completedReports: number;
+  revenueGenerated: number;
+  earnedCommission: number;
+  pendingPayout: number;
+  totalPaid: number;
+  recentReferrals: Array<{
+    reportType: string;
+    plan: string | null;
+    pipelineStage: string;
+    paymentStatus: string;
+    createdAt: string;
+  }>;
+}
+
 export default function PractitionerPortal() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(PRACTITIONER_KEY) === "1");
-  const [activeTab, setActiveTab] = useState<"overview" | "reports" | "plans" | "brand">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "reports" | "plans" | "brand" | "referrals">("overview");
+
+  // Referrals tab state
+  const [refCodeInput, setRefCodeInput] = useState("");
+  const [refDashboard, setRefDashboard] = useState<ReferralDashboard | null>(null);
+  const [refLoading, setRefLoading] = useState(false);
+  const [refError, setRefError] = useState("");
+  const [copied, setCopied] = useState<"code" | "link" | null>(null);
+
+  async function loadRefDashboard() {
+    const code = refCodeInput.trim().toUpperCase();
+    if (!code) { setRefError("Enter your referral code."); return; }
+    setRefLoading(true);
+    setRefError("");
+    try {
+      const res = await fetch(`${BASE}/api/practitioners/dashboard/${encodeURIComponent(code)}`);
+      if (!res.ok) {
+        const body = await res.json() as { error?: string };
+        setRefError(body.error ?? "Code not found.");
+        return;
+      }
+      setRefDashboard(await res.json() as ReferralDashboard);
+    } catch {
+      setRefError("Connection error. Please try again.");
+    } finally {
+      setRefLoading(false);
+    }
+  }
+
+  function copyToClipboard(text: string, type: "code" | "link") {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(type);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  }
   const [brandName, setBrandName] = useState("");
   const [brandLogo, setBrandLogo] = useState("");
   const [brandAccent, setBrandAccent] = useState("#BFA14A");
@@ -243,6 +300,7 @@ export default function PractitionerPortal() {
             {([
               { id: "overview", label: "Overview", icon: BarChart3 },
               { id: "reports", label: "My Reports", icon: FileText },
+              { id: "referrals", label: "Referrals", icon: Link2 },
               { id: "plans", label: "Plans & Billing", icon: Crown },
               { id: "brand", label: "Branding", icon: Palette },
             ] as const).map((tab) => (
@@ -421,6 +479,201 @@ export default function PractitionerPortal() {
               <div className="text-center pt-8 pb-4">
                 <p className="text-xs text-[#F4EFE6]/20">PDF downloads will be enabled once your report is fully delivered.</p>
               </div>
+            </motion.div>
+          )}
+
+          {/* ─── REFERRALS TAB ─── */}
+          {activeTab === "referrals" && (
+            <motion.div
+              key="referrals"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-7"
+            >
+              <div>
+                <h2 className="font-serif text-2xl text-[#F4EFE6] mb-2">Referral Dashboard</h2>
+                <p className="text-[#F4EFE6]/40 text-sm">
+                  Track the clients you've referred to BioHarmony and view your earned commissions.
+                </p>
+              </div>
+
+              {/* Code lookup */}
+              {!refDashboard && (
+                <div className="max-w-md">
+                  <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-7 space-y-5">
+                    <div className="h-[2px] -mt-7 -mx-7 mb-7 rounded-t-2xl bg-gradient-to-r from-transparent via-[#BFA14A]/30 to-transparent" />
+                    <div className="w-12 h-12 rounded-xl bg-[#BFA14A]/10 border border-[#BFA14A]/20 flex items-center justify-center">
+                      <Link2 className="w-5 h-5 text-[#BFA14A]" />
+                    </div>
+                    <div>
+                      <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.2em] mb-1">Your Referral Code</p>
+                      <p className="text-[#F4EFE6]/60 text-sm leading-relaxed">
+                        Enter the referral code assigned to you by BioHarmony to view your affiliate stats and shareable link.
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={refCodeInput}
+                        onChange={(e) => { setRefCodeInput(e.target.value.toUpperCase()); setRefError(""); }}
+                        onKeyDown={(e) => e.key === "Enter" && loadRefDashboard()}
+                        placeholder="e.g. DRSMITH or WELLNESS-JEN"
+                        className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] font-mono placeholder-[#F4EFE6]/20 focus:outline-none focus:border-[#BFA14A]/50 transition text-sm uppercase tracking-wider"
+                      />
+                      {refError && <p className="text-red-400/75 text-xs">{refError}</p>}
+                      <button
+                        onClick={loadRefDashboard}
+                        disabled={refLoading || !refCodeInput.trim()}
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#BFA14A] text-[#060D0D] text-sm font-semibold hover:bg-[#d4b456] transition disabled:opacity-40"
+                      >
+                        {refLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading…</> : <><TrendingUp className="w-4 h-4" /> View Dashboard</>}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-[#F4EFE6]/20">
+                      Don't have a referral code?{" "}
+                      <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A]/50 hover:text-[#BFA14A] transition">Contact us</a>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Dashboard — shown after successful code lookup */}
+              {refDashboard && (() => {
+                const shareUrl = `${window.location.origin}${BASE}/upload-scan?ref=${refDashboard.referralCode}`;
+                return (
+                  <div className="space-y-6">
+                    {/* Welcome bar */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.2em] mb-0.5">Affiliate Dashboard</p>
+                        <h3 className="text-xl font-serif text-[#F4EFE6]">{refDashboard.name}</h3>
+                      </div>
+                      <button
+                        onClick={() => { setRefDashboard(null); setRefCodeInput(""); }}
+                        className="text-xs text-[#F4EFE6]/25 hover:text-[#F4EFE6]/55 transition underline underline-offset-2"
+                      >
+                        Switch code
+                      </button>
+                    </div>
+
+                    {/* Stats grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {[
+                        { label: "Total Referrals", value: refDashboard.totalReferrals.toString(), icon: Users, color: "text-[#4ecdc4]" },
+                        { label: "Reports Delivered", value: refDashboard.completedReports.toString(), icon: CheckCircle, color: "text-green-300" },
+                        { label: "Commission Earned", value: `$${refDashboard.earnedCommission}`, icon: DollarSign, color: "text-[#BFA14A]" },
+                        { label: "Pending Payout", value: refDashboard.pendingPayout > 0 ? `$${refDashboard.pendingPayout}` : "—", icon: TrendingUp, color: refDashboard.pendingPayout > 0 ? "text-amber-300" : "text-[#F4EFE6]/25" },
+                      ].map((s) => (
+                        <div key={s.label} className="bg-[#0C1919] border border-white/10 rounded-2xl p-5 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.2em]">{s.label}</p>
+                            <s.icon className={cn("w-4 h-4", s.color)} />
+                          </div>
+                          <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Commission rate info */}
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#BFA14A]/5 border border-[#BFA14A]/15">
+                      <DollarSign className="w-4 h-4 text-[#BFA14A] shrink-0" />
+                      <p className="text-sm text-[#F4EFE6]/55">
+                        Your commission rate is <span className="text-[#BFA14A] font-semibold">{refDashboard.commissionRate}%</span> of net revenue from delivered reports.
+                        Total revenue generated: <span className="text-[#F4EFE6]/70 font-medium">${refDashboard.revenueGenerated}</span>
+                        {refDashboard.totalPaid > 0 && <> · Total paid out: <span className="text-green-300/70 font-medium">${refDashboard.totalPaid}</span></>}
+                      </p>
+                    </div>
+
+                    {/* Shareable link */}
+                    <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-6 space-y-4">
+                      <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.2em]">Your Shareable Link</p>
+                      <p className="text-[#F4EFE6]/45 text-sm">Share this link with clients — your referral code will be attached automatically.</p>
+
+                      {/* Referral code copy */}
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Referral Code</p>
+                          <div className="flex items-center gap-2">
+                            <code className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-[#BFA14A] font-mono text-sm tracking-[0.15em]">
+                              {refDashboard.referralCode}
+                            </code>
+                            <button
+                              onClick={() => copyToClipboard(refDashboard.referralCode, "code")}
+                              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-white/12 text-xs text-[#F4EFE6]/50 hover:text-[#F4EFE6]/80 hover:border-white/25 transition whitespace-nowrap"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              {copied === "code" ? "Copied!" : "Copy"}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Shareable URL</p>
+                          <div className="flex items-center gap-2">
+                            <code className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-[#4ecdc4]/70 font-mono text-xs truncate">
+                              {shareUrl}
+                            </code>
+                            <button
+                              onClick={() => copyToClipboard(shareUrl, "link")}
+                              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-white/12 text-xs text-[#F4EFE6]/50 hover:text-[#F4EFE6]/80 hover:border-white/25 transition whitespace-nowrap"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              {copied === "link" ? "Copied!" : "Copy"}
+                            </button>
+                            <a
+                              href={shareUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-white/12 text-xs text-[#F4EFE6]/50 hover:text-[#4ecdc4] hover:border-[#4ecdc4]/30 transition"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recent referrals */}
+                    {refDashboard.recentReferrals.length > 0 && (
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30 mb-4">Recent Referrals</p>
+                        <div className="rounded-xl border border-white/8 overflow-hidden">
+                          <div className="hidden sm:grid grid-cols-[1fr_0.8fr_0.8fr_0.8fr] gap-3 px-5 py-3 bg-white/4 border-b border-white/8 text-[10px] uppercase tracking-wider text-[#F4EFE6]/25">
+                            <span>Report Type</span>
+                            <span>Plan</span>
+                            <span>Stage</span>
+                            <span>Date</span>
+                          </div>
+                          {refDashboard.recentReferrals.map((r, i) => (
+                            <div key={i} className="flex sm:grid sm:grid-cols-[1fr_0.8fr_0.8fr_0.8fr] gap-3 items-center px-5 py-3.5 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                              <span className="text-sm text-[#F4EFE6]/75">{r.reportType}</span>
+                              <span className="text-xs text-[#F4EFE6]/45 capitalize">{r.plan ?? "basic"}</span>
+                              <span className={cn(
+                                "text-xs px-2 py-0.5 rounded-full w-fit border",
+                                r.pipelineStage === "delivered"
+                                  ? "bg-green-900/20 text-green-300 border-green-700/20"
+                                  : "bg-white/5 text-[#F4EFE6]/40 border-white/8"
+                              )}>
+                                {r.pipelineStage}
+                              </span>
+                              <span className="text-xs text-[#F4EFE6]/30">
+                                {new Date(r.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {refDashboard.recentReferrals.length === 0 && (
+                      <div className="text-center py-10 text-[#F4EFE6]/25 text-sm">
+                        No referrals yet. Share your link to get started.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </motion.div>
           )}
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -310,8 +310,11 @@ export default function UploadScan() {
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
+  const [, searchStr] = useLocation();
+  const refFromUrl = new URLSearchParams(searchStr).get("ref")?.trim().toUpperCase() ?? "";
   const [referralSource, setReferralSource] = useState("");
   const [referrerEmail, setReferrerEmail] = useState("");
+  const [practitionerCode] = useState(refFromUrl);
 
   // ── Promo code state ──────────────────────────────────────────────────────────
   const [promoInput, setPromoInput] = useState("");
@@ -418,6 +421,7 @@ export default function UploadScan() {
           plan,
           referralSource: referralSource || undefined,
           referrerEmail: (referralSource === "Friend / Referral" && referrerEmail.trim()) ? referrerEmail.trim() : undefined,
+          practitionerCode: practitionerCode || undefined,
           promoCode: promoApplied?.code ?? undefined,
           discountAmount: promoApplied?.discountAmount ?? undefined,
           note: isPetScan

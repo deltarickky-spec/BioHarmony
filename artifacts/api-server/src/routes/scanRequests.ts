@@ -20,6 +20,7 @@ const ScanRequestSchema = z.object({
   note: z.string().max(1000).trim().optional(),
   referralSource: z.string().max(100).trim().optional(),
   referrerEmail: z.string().email().max(255).trim().optional(),
+  practitionerCode: z.string().max(50).trim().toUpperCase().optional(),
   promoCode: z.string().max(50).trim().optional(),
   discountAmount: z.number().int().min(0).max(9999).optional(),
 });
@@ -153,6 +154,7 @@ router.post("/scan-requests", async (req, res) => {
         note: data.note,
         referralSource: data.referralSource,
         referrerEmail: data.referrerEmail ?? null,
+        practitionerCode: data.practitionerCode ?? null,
         promoCode: data.promoCode ?? null,
         discountAmount: data.discountAmount ?? null,
         tags: inferTags(data.note, data.reportType),

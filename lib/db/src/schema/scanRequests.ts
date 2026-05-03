@@ -26,6 +26,7 @@ export const scanRequestsTable = pgTable("scan_requests", {
   flagged: boolean("flagged").notNull().default(false),
   referralSource: varchar("referral_source", { length: 100 }),
   referrerEmail: varchar("referrer_email", { length: 255 }),
+  practitionerCode: varchar("practitioner_code", { length: 50 }),
   promoCode: varchar("promo_code", { length: 50 }),
   discountAmount: integer("discount_amount"),
   tags: text("tags").array().default(sql`'{}'`),
