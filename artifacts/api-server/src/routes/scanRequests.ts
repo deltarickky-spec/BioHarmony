@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { scanRequestsTable } from "@workspace/db/schema";
 import { z } from "zod";
-import { buildReportNotificationEmail, sendEmail } from "../services/email";
+import { buildReportNotificationEmail, buildClientConfirmationEmail, sendEmail } from "../services/email";
 
 const router = Router();
 
@@ -56,9 +56,25 @@ router.post("/scan-requests", async (req, res) => {
       submittedAt: new Date(),
     });
 
-    await sendEmail(emailPayload).catch((err: unknown) => {
-      req.log.error({ err }, "Email notification failed (non-fatal)");
+    const confirmPayload = buildClientConfirmationEmail({
+      source: "scan",
+      name: data.name,
+      email: data.email,
+      reportType: data.reportType,
+      language: data.language,
+      fileName: data.fileName,
+      whatsapp: data.whatsapp,
+      note: data.note,
     });
+
+    await Promise.all([
+      sendEmail(emailPayload).catch((err: unknown) => {
+        req.log.error({ err }, "Admin email notification failed (non-fatal)");
+      }),
+      sendEmail(confirmPayload).catch((err: unknown) => {
+        req.log.error({ err }, "Client confirmation email failed (non-fatal)");
+      }),
+    ]);
 
     res.status(201).json({ success: true, id: row.id });
   } catch (err) {

@@ -157,6 +157,216 @@ export function buildReportNotificationEmail(data: ReportNotificationData): Emai
   return { to: ADMIN_EMAIL, subject, html, text };
 }
 
+export interface ClientConfirmationData {
+  name: string;
+  email: string;
+  reportType: string;
+  source: "report" | "scan";
+  fileName?: string;
+  language?: string;
+  whatsapp?: boolean;
+  note?: string;
+}
+
+const LANG_LABELS: Record<string, string> = {
+  en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
+  de: "German", zh: "Chinese", ar: "Arabic", hi: "Hindi",
+};
+
+export function buildClientConfirmationEmail(data: ClientConfirmationData): EmailPayload {
+  const isScan = data.source === "scan";
+  const subject = `We've received your request — BioHarmony Solutions`;
+  const firstName = data.name.split(" ")[0];
+  const langLabel = data.language ? (LANG_LABELS[data.language] ?? data.language) : null;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#060D0D;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060D0D;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0c1919,#0f2020);
+                     border-radius:12px 12px 0 0;padding:40px 36px 32px;
+                     border-top:3px solid #BFA14A;text-align:center;">
+            <p style="margin:0 0 12px;color:#BFA14A;font-size:11px;
+                      letter-spacing:0.25em;text-transform:uppercase;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+            <h1 style="margin:0 0 10px;color:#F4EFE6;font-size:26px;
+                       font-family:Georgia,serif;font-weight:400;line-height:1.3;">
+              Thank you, ${firstName}.
+            </h1>
+            <p style="margin:0;color:#F4EFE6;font-size:15px;
+                      font-family:Georgia,serif;font-style:italic;opacity:0.65;line-height:1.6;">
+              Your ${isScan ? "scan upload" : "report request"} has been received.<br>
+              We'll be in touch with you shortly.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#0c1919;padding:32px 36px;border-radius:0 0 12px 12px;">
+
+            <!-- Divider -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr>
+                <td style="border-top:1px solid #1a3535;"></td>
+                <td style="padding:0 12px;white-space:nowrap;color:#BFA14A;font-size:11px;
+                           letter-spacing:0.2em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                  What we received
+                </td>
+                <td style="border-top:1px solid #1a3535;"></td>
+              </tr>
+            </table>
+
+            <!-- Summary pills -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td>
+                  ${summaryPill("Report Type", data.reportType)}
+                  ${langLabel ? summaryPill("Language", langLabel) : ""}
+                  ${data.fileName ? summaryPill("File", data.fileName) : ""}
+                  ${data.whatsapp ? summaryPill("Delivery", "WhatsApp") : ""}
+                </td>
+              </tr>
+            </table>
+
+            ${data.note ? `
+            <!-- Note -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#0f2020;border-left:3px solid #BFA14A;
+                           padding:14px 18px;border-radius:0 8px 8px 0;">
+                  <p style="margin:0 0 4px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.15em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    Your note
+                  </p>
+                  <p style="margin:0;color:#F4EFE6;font-size:13px;font-style:italic;
+                             opacity:0.8;font-family:Georgia,serif;line-height:1.6;">
+                    "${data.note}"
+                  </p>
+                </td>
+              </tr>
+            </table>
+            ` : ""}
+
+            <!-- What happens next -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td>
+                  <p style="margin:0 0 14px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.2em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    What happens next
+                  </p>
+                  ${nextStep("1", "Review", "Kathy personally reviews every request to ensure the highest quality analysis.")}
+                  ${nextStep("2", "Preparation", isScan
+                    ? "Your uploaded scan data is processed and your personalized report is prepared."
+                    : "Your personalized bioenergetic report is carefully prepared.")}
+                  ${nextStep("3", "Delivery", data.whatsapp
+                    ? "Your completed report will be delivered to you via WhatsApp."
+                    : "Your completed report will be sent to " + data.email + ".")}
+                </td>
+              </tr>
+            </table>
+
+            <!-- Questions CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#0f2020;border-radius:10px;border:1px solid #1a3535;">
+              <tr>
+                <td style="padding:20px 24px;text-align:center;">
+                  <p style="margin:0 0 8px;color:#F4EFE6;font-size:14px;
+                             font-family:Georgia,serif;opacity:0.8;">
+                    Questions or changes to your request?
+                  </p>
+                  <a href="mailto:info@bioharmonysolutions.ca"
+                     style="color:#4ecdc4;font-size:13px;font-family:Arial,sans-serif;
+                            text-decoration:none;font-weight:600;">
+                    info@bioharmonysolutions.ca
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 0;text-align:center;">
+            <p style="margin:0;color:#F4EFE6;font-size:11px;opacity:0.25;font-family:Arial,sans-serif;">
+              BioHarmony Solutions &nbsp;·&nbsp; Kathy Owens
+            </p>
+            <p style="margin:4px 0 0;color:#F4EFE6;font-size:10px;opacity:0.15;font-family:Arial,sans-serif;">
+              You received this because you submitted a request at bioharmonysolutions.ca
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = [
+    `Thank you, ${firstName}!`,
+    ``,
+    `Your ${isScan ? "scan upload" : "report request"} has been received by BioHarmony Solutions.`,
+    `We'll be in touch with you shortly.`,
+    ``,
+    `--- What we received ---`,
+    `Report Type: ${data.reportType}`,
+    langLabel ? `Language: ${langLabel}` : "",
+    data.fileName ? `File: ${data.fileName}` : "",
+    data.whatsapp ? `Delivery: WhatsApp` : "",
+    data.note ? `\nYour note: "${data.note}"` : "",
+    ``,
+    `--- What happens next ---`,
+    `1. Kathy personally reviews every request.`,
+    `2. Your personalized report is carefully prepared.`,
+    `3. Your completed report will be ${data.whatsapp ? "delivered via WhatsApp" : "sent to " + data.email}.`,
+    ``,
+    `Questions? Email us at info@bioharmonysolutions.ca`,
+    ``,
+    `BioHarmony Solutions · Kathy Owens`,
+  ].filter((l) => l !== undefined).join("\n");
+
+  return { to: data.email, subject, html, text };
+}
+
+function summaryPill(label: string, value: string): string {
+  return `<span style="display:inline-block;margin:0 6px 8px 0;padding:5px 12px;
+    background:#0f2020;border:1px solid #1a3535;border-radius:20px;
+    color:#F4EFE6;font-size:12px;font-family:Arial,sans-serif;">
+    <span style="color:#BFA14A;font-weight:600;">${label}:</span> ${value}
+  </span>`;
+}
+
+function nextStep(num: string, title: string, body: string): string {
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+    <tr>
+      <td width="28" style="vertical-align:top;padding-top:1px;">
+        <span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;
+                     background:#BFA14A;border-radius:50%;color:#060D0D;
+                     font-size:11px;font-weight:700;font-family:Arial,sans-serif;">${num}</span>
+      </td>
+      <td style="padding-left:10px;vertical-align:top;">
+        <p style="margin:0 0 2px;color:#F4EFE6;font-size:13px;font-weight:600;font-family:Arial,sans-serif;">
+          ${title}
+        </p>
+        <p style="margin:0;color:#F4EFE6;font-size:12px;opacity:0.6;font-family:Arial,sans-serif;line-height:1.5;">
+          ${body}
+        </p>
+      </td>
+    </tr>
+  </table>`;
+}
+
 export async function sendEmail(payload: EmailPayload): Promise<void> {
   const apiKey = process.env["RESEND_API_KEY"];
 
