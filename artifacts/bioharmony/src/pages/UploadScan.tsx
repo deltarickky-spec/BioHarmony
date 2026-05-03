@@ -586,22 +586,6 @@ export default function UploadScan() {
                           </FormItem>
                         )} />
 
-                        <FormField control={form.control} name="phone" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[#F4EFE6]/60 text-sm">
-                              Phone <span className="text-[#F4EFE6]/25 font-normal">(optional)</span>
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type="tel"
-                                placeholder="+1 (555) 000-0000"
-                                className="bg-white/5 border border-white/12 text-[#F4EFE6] placeholder:text-[#F4EFE6]/25 rounded-xl focus-visible:border-[#BFA14A]/50 focus-visible:ring-0 h-12 px-4"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )} />
-
                         <FormField control={form.control} name="whatsapp" render={({ field }) => (
                           <FormItem>
                             <button
@@ -617,7 +601,7 @@ export default function UploadScan() {
                               <MessageCircle className={cn("w-5 h-5 shrink-0", watchWhatsapp ? "text-[#25D366]" : "text-[#F4EFE6]/25")} />
                               <div className="flex-1">
                                 <p className={cn("text-sm font-medium", watchWhatsapp ? "text-[#F4EFE6]/80" : "text-[#F4EFE6]/45")}>
-                                  Deliver via WhatsApp
+                                  Send via WhatsApp
                                 </p>
                                 <p className="text-[#F4EFE6]/25 text-xs mt-0.5">We'll send your report directly to your WhatsApp</p>
                               </div>
@@ -628,6 +612,39 @@ export default function UploadScan() {
                                 {watchWhatsapp && <CheckCircle className="w-3 h-3 text-white" />}
                               </div>
                             </button>
+
+                            <AnimatePresence>
+                              {watchWhatsapp && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                  animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                  transition={{ duration: 0.22, ease: "easeOut" }}
+                                  className="overflow-hidden"
+                                >
+                                  <FormField control={form.control} name="phone" render={({ field: phoneField }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-[#25D366]/70 text-sm flex items-center gap-1.5">
+                                        <MessageCircle className="w-3.5 h-3.5" />
+                                        WhatsApp Number
+                                        <span className="text-[#F4EFE6]/25 font-normal">(optional)</span>
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...phoneField}
+                                          type="tel"
+                                          placeholder="+1 (555) 000-0000"
+                                          className="bg-[#25D366]/5 border border-[#25D366]/25 text-[#F4EFE6] placeholder:text-[#F4EFE6]/25 rounded-xl focus-visible:border-[#25D366]/50 focus-visible:ring-0 h-12 px-4"
+                                        />
+                                      </FormControl>
+                                      <p className="text-[10px] text-[#F4EFE6]/28 mt-1 ml-1">
+                                        Include country code — e.g. +1 for Canada/USA
+                                      </p>
+                                    </FormItem>
+                                  )} />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </FormItem>
                         )} />
 

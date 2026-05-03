@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, boolean, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, boolean, text, timestamp, integer } from "drizzle-orm/pg-core";
 
 export const scanRequestsTable = pgTable("scan_requests", {
   id: serial("id").primaryKey(),
@@ -16,6 +16,8 @@ export const scanRequestsTable = pgTable("scan_requests", {
   pipelinePaused: boolean("pipeline_paused").notNull().default(false),
   pipelineError: varchar("pipeline_error", { length: 500 }),
   deliveredEmailSentAt: timestamp("delivered_email_sent_at"),
+  bioharmonyScore: integer("bioharmony_score"),
+  scoreBreakdown: text("score_breakdown"),
   note: text("note"),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -65,6 +65,8 @@ router.get("/scan-requests/track", async (req, res) => {
       pipelineStage: row.pipelineStage,
       paymentStatus: row.paymentStatus,
       deliveredEmailSentAt: row.deliveredEmailSentAt ?? null,
+      bioharmonyScore: row.bioharmonyScore ?? null,
+      scoreBreakdown: row.scoreBreakdown ?? null,
       createdAt: row.createdAt,
     });
   } catch (err) {

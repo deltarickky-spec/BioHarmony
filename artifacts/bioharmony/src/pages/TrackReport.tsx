@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, CheckCircle2, Circle, Loader2, AlertCircle,
   CreditCard, FileText, MessageCircle, Clock, Lock,
-  RefreshCw, Mail, Download, ExternalLink
+  RefreshCw, Mail, Download, ExternalLink, Headphones
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { BioHarmonyScore } from "@/components/BioHarmonyScore";
+import { ReportAudioPlayer } from "@/components/ReportAudioPlayer";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const AUTO_REFRESH_MS = 12_000;
@@ -51,6 +53,8 @@ interface TrackResult {
   pipelineStage: PipelineStageKey;
   paymentStatus: string;
   deliveredEmailSentAt: string | null;
+  bioharmonyScore: number | null;
+  scoreBreakdown: string | null;
   createdAt: string;
 }
 
@@ -138,6 +142,57 @@ function LiveBadge({ lastUpdated }: { lastUpdated: Date | null }) {
 
 // ── Delivered section ──────────────────────────────────────────────────────────
 
+function AudioSection({ result }: { result: TrackResult }) {
+  const isPremium = result.plan === "premium";
+
+  const audioScript = [
+    `Hello ${result.name}, welcome to your BioHarmony wellness report.`,
+    result.bioharmonyScore !== null
+      ? `Your BioHarmony Intelligence Score is ${result.bioharmonyScore} out of 100.`
+      : "",
+    `This report covers your ${result.reportType.replace(/_/g, " ")} scan and has been carefully interpreted by Kathy Owens.`,
+    `We hope the insights in your report help guide your wellness journey. Please reach out to us at info@bioharmonysolutions.ca if you have any questions.`,
+  ].filter(Boolean).join(" ");
+
+  if (isPremium) {
+    return (
+      <div className="mt-6 text-left">
+        <ReportAudioPlayer
+          cacheKey={`track-${result.requestId}`}
+          scriptText={audioScript}
+          clientName={result.name}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6 text-left">
+      <div className="rounded-2xl border border-white/8 bg-white/[0.025] overflow-hidden">
+        <div className="flex items-start gap-3 px-5 py-4">
+          <div className="mt-0.5 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+            <Headphones className="w-4 h-4 text-[#F4EFE6]/25" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <p className="text-[#F4EFE6]/45 text-sm font-medium">Listen to Your Report</p>
+              <span className="text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/25">
+                Premium
+              </span>
+            </div>
+            <p className="text-[#F4EFE6]/28 text-xs leading-relaxed">
+              Audio narration — your full report read aloud — is available on the Premium plan.
+            </p>
+          </div>
+          <div className="flex-shrink-0 mt-0.5">
+            <Lock className="w-4 h-4 text-[#F4EFE6]/18" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DeliveredSection({ result }: { result: TrackResult }) {
   const [showContactMsg, setShowContactMsg] = useState(false);
   const sentAt = result.deliveredEmailSentAt
@@ -146,6 +201,13 @@ function DeliveredSection({ result }: { result: TrackResult }) {
         hour: "2-digit", minute: "2-digit",
       })
     : null;
+
+  const showScore = result.bioharmonyScore !== null && result.plan !== "basic";
+  const parsedBreakdown = (() => {
+    if (!result.scoreBreakdown) return undefined;
+    try { return JSON.parse(result.scoreBreakdown) as { label: string; value: number }[]; }
+    catch { return undefined; }
+  })();
 
   return (
     <motion.div
@@ -218,7 +280,7 @@ function DeliveredSection({ result }: { result: TrackResult }) {
                     )}
                     {result.plan === "premium" && (
                       <p className="text-xs text-[#F4EFE6]/45 mt-1">
-                        Your audio narration will be available shortly if not already received.
+                        Your audio narration is available below.
                       </p>
                     )}
                     <p className="text-xs text-[#F4EFE6]/35 mt-2">
@@ -237,10 +299,25 @@ function DeliveredSection({ result }: { result: TrackResult }) {
 
         {/* Email sent confirmation */}
         {sentAt && (
-          <p className="text-xs text-[#F4EFE6]/22">
+          <p className="text-xs text-[#F4EFE6]/22 mb-0">
             Delivery email sent {sentAt}
           </p>
         )}
+      </div>
+
+      {/* BioHarmony Score — advanced & premium only */}
+      {showScore && (
+        <div className="border-t border-white/6 px-8 py-6">
+          <BioHarmonyScore
+            score={result.bioharmonyScore!}
+            breakdown={parsedBreakdown}
+          />
+        </div>
+      )}
+
+      {/* Audio section */}
+      <div className="border-t border-white/6 px-8 pb-8">
+        <AudioSection result={result} />
       </div>
     </motion.div>
   );

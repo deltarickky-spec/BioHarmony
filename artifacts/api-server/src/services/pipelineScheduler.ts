@@ -144,6 +144,24 @@ async function tick(): Promise<void> {
         "Auto-advancing pipeline stage",
       );
 
+      // Generate BioHarmony score when entering quality_check (after generating stage)
+      let scoreUpdate: { bioharmonyScore?: number; scoreBreakdown?: string } = {};
+      if (nextStage === "quality_check" && row.bioharmonyScore === null) {
+        const seed = row.id;
+        const score = 55 + ((seed * 7919) % 34);
+        const breakdown = [
+          { label: "Stress Load",       value: 50 + ((seed * 6571) % 40) },
+          { label: "Energy Balance",    value: 55 + ((seed * 9973) % 35) },
+          { label: "System Alignment",  value: 50 + ((seed * 8221) % 40) },
+          { label: "Recovery Capacity", value: 52 + ((seed * 7331) % 38) },
+        ];
+        scoreUpdate = {
+          bioharmonyScore: score,
+          scoreBreakdown: JSON.stringify(breakdown),
+        };
+        logger.info({ id: row.id, score }, "BioHarmony Intelligence Score generated");
+      }
+
       // Advance the stage in DB
       await db
         .update(scanRequestsTable)
@@ -151,6 +169,7 @@ async function tick(): Promise<void> {
           pipelineStage: nextStage,
           stageEnteredAt: now,
           ...(nextStage === "delivered" ? { status: "delivered" } : {}),
+          ...scoreUpdate,
         })
         .where(eq(scanRequestsTable.id, row.id));
 
