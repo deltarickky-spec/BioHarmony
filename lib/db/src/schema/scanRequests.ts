@@ -1,4 +1,5 @@
 import { pgTable, serial, varchar, boolean, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const scanRequestsTable = pgTable("scan_requests", {
   id: serial("id").primaryKey(),
@@ -24,8 +25,10 @@ export const scanRequestsTable = pgTable("scan_requests", {
   starred: boolean("starred").notNull().default(false),
   flagged: boolean("flagged").notNull().default(false),
   referralSource: varchar("referral_source", { length: 100 }),
+  referrerEmail: varchar("referrer_email", { length: 255 }),
   promoCode: varchar("promo_code", { length: 50 }),
   discountAmount: integer("discount_amount"),
+  tags: text("tags").array().default(sql`'{}'`),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

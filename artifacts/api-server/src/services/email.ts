@@ -844,6 +844,168 @@ function nextStep(num: string, title: string, body: string): string {
   </table>`;
 }
 
+// ── Referral reward email ───────────────────────────────────────────────────────
+
+export interface ReferralRewardData {
+  referrerEmail: string;
+  referrerName?: string;
+  referredName: string;
+  rewardCode: string;
+  rewardLabel: string;
+}
+
+export function buildReferralRewardEmail(data: ReferralRewardData): EmailPayload {
+  const subject = "You've earned a BioHarmony reward!";
+  const firstName = data.referrerName?.split(" ")[0] ?? "Friend";
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#060D0D;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060D0D;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0c1919,#0f2020);
+                     border-radius:12px 12px 0 0;padding:44px 40px 36px;
+                     border-top:3px solid #BFA14A;text-align:center;">
+            <p style="margin:0 0 14px;color:#BFA14A;font-size:11px;
+                      letter-spacing:0.3em;text-transform:uppercase;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+            <div style="display:inline-block;width:52px;height:52px;border-radius:50%;
+                        background:#0f2b2b;border:2px solid #BFA14A;line-height:52px;
+                        text-align:center;font-size:26px;margin-bottom:20px;">🎁</div>
+            <h1 style="margin:0 0 10px;color:#F4EFE6;font-size:26px;
+                       font-family:Georgia,serif;font-weight:400;line-height:1.3;">
+              Thank you for the referral!
+            </h1>
+            <p style="margin:0;color:#F4EFE6;font-size:15px;
+                      font-family:Georgia,serif;font-style:italic;
+                      opacity:0.65;line-height:1.6;">
+              Hi ${firstName}, <strong style="color:#F4EFE6;opacity:0.85;">${data.referredName}</strong>
+              just submitted their first BioHarmony report.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#0c1919;padding:36px 40px;border-radius:0 0 12px 12px;">
+
+            <p style="margin:0 0 28px;color:#F4EFE6;font-size:15px;font-family:Georgia,serif;
+                      opacity:0.82;line-height:1.8;">
+              As a thank-you for spreading the word, here's your exclusive discount code for your next report:
+            </p>
+
+            <!-- Code block -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="text-align:center;padding:24px;background:#0f2020;
+                           border:2px dashed rgba(191,161,74,0.35);border-radius:12px;">
+                  <p style="margin:0 0 8px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.25em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    Your reward code
+                  </p>
+                  <p style="margin:0 0 6px;color:#F4EFE6;font-size:28px;font-weight:700;
+                             font-family:monospace;letter-spacing:0.12em;">
+                    ${data.rewardCode}
+                  </p>
+                  <p style="margin:0;color:#BFA14A;font-size:13px;font-family:Arial,sans-serif;opacity:0.8;">
+                    ${data.rewardLabel}
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="text-align:center;">
+                  <a href="${SITE_URL}/upload-scan"
+                     style="display:inline-block;padding:14px 36px;
+                            background:linear-gradient(135deg,#BFA14A,#d4b456);
+                            color:#060D0D;font-size:15px;font-weight:700;
+                            text-decoration:none;border-radius:8px;
+                            font-family:Arial,sans-serif;">
+                    Use My Reward →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Expiry note -->
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#0f2020;border-radius:10px;border:1px solid #1a3535;">
+              <tr>
+                <td style="padding:18px 24px;text-align:center;">
+                  <p style="margin:0;color:#F4EFE6;font-size:13px;opacity:0.6;
+                             font-family:Arial,sans-serif;line-height:1.6;">
+                    Enter this code on the upload form to apply your discount.<br>
+                    Questions? Reply to this email or contact
+                    <a href="mailto:info@bioharmonysolutions.ca"
+                       style="color:#4ecdc4;text-decoration:none;">info@bioharmonysolutions.ca</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Signature -->
+        <tr>
+          <td style="padding:28px 0 8px;text-align:center;">
+            <p style="margin:0 0 4px;color:#F4EFE6;font-size:14px;
+                      font-family:Georgia,serif;font-style:italic;opacity:0.55;">Warmly,</p>
+            <p style="margin:0 0 2px;color:#BFA14A;font-size:14px;
+                      font-family:Georgia,serif;font-weight:600;opacity:0.85;">Kathy Owens</p>
+            <p style="margin:0;color:#F4EFE6;font-size:12px;opacity:0.3;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:8px 0 20px;text-align:center;border-top:1px solid #1a3535;">
+            <p style="margin:8px 0 0;color:#F4EFE6;font-size:10px;opacity:0.18;font-family:Arial,sans-serif;">
+              You received this because someone listed you as a referral source on bioharmonysolutions.ca
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = [
+    `Thank you for the referral!`,
+    ``,
+    `Hi ${firstName},`,
+    ``,
+    `${data.referredName} just submitted their first BioHarmony report — thanks to you!`,
+    ``,
+    `Here's your reward code for your next report:`,
+    ``,
+    `  ${data.rewardCode}  —  ${data.rewardLabel}`,
+    ``,
+    `Enter this code on the upload form at ${SITE_URL}/upload-scan`,
+    ``,
+    `Questions? Contact info@bioharmonysolutions.ca`,
+    ``,
+    `Warmly,`,
+    `Kathy Owens`,
+    `BioHarmony Solutions`,
+  ].join("\n");
+
+  return { to: data.referrerEmail, subject, html, text };
+}
+
 export async function sendEmail(payload: EmailPayload): Promise<void> {
   const apiKey = process.env["RESEND_API_KEY"];
 

@@ -96,9 +96,11 @@ interface UnifiedRequest {
   starred?: boolean;
   flagged?: boolean;
   referralSource?: string | null;
+  referrerEmail?: string | null;
   paymentReminderSentAt?: string | null;
   promoCode?: string | null;
   discountAmount?: number | null;
+  tags?: string[] | null;
   status: Status;
   pipelineStage?: PipelineStage | null;
   paymentStatus?: PaymentStatus | null;
@@ -123,6 +125,8 @@ interface RawScanRequest {
   starred?: boolean; flagged?: boolean; referralSource?: string | null;
   paymentReminderSentAt?: string | null;
   promoCode?: string | null; discountAmount?: number | null;
+  referrerEmail?: string | null;
+  tags?: string[] | null;
   status: string; pipelineStage?: string | null; paymentStatus?: string | null;
   pipelinePaused?: boolean | null; pipelineError?: string | null;
   stageEnteredAt?: string | null; deliveredEmailSentAt?: string | null; createdAt: string;
@@ -158,9 +162,11 @@ function normalizeScan(s: RawScanRequest): UnifiedRequest {
     whatsapp: s.whatsapp, plan: s.plan, note: s.note, adminNote: s.adminNote,
     starred: s.starred ?? false, flagged: s.flagged ?? false,
     referralSource: s.referralSource ?? null,
+    referrerEmail: s.referrerEmail ?? null,
     paymentReminderSentAt: s.paymentReminderSentAt ?? null,
     promoCode: s.promoCode ?? null,
     discountAmount: s.discountAmount ?? null,
+    tags: s.tags ?? [],
     status: normalizeStatus(s.status),
     pipelineStage: normalizePipelineStage(s.pipelineStage),
     paymentStatus: normalizePaymentStatus(s.paymentStatus),
@@ -317,6 +323,16 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 // ── Revenue Summary ────────────────────────────────────────────────────────────
 
 const PLAN_PRICES: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
+
+const TAG_COLORS: Record<string, string> = {
+  stress: "bg-rose-900/30 text-rose-300 border-rose-700/30",
+  digestion: "bg-green-900/25 text-green-300 border-green-700/25",
+  sleep: "bg-indigo-900/30 text-indigo-300 border-indigo-700/30",
+  inflammation: "bg-orange-900/25 text-orange-300 border-orange-700/25",
+  hormones: "bg-purple-900/25 text-purple-300 border-purple-700/25",
+  energy: "bg-[#BFA14A]/10 text-[#BFA14A] border-[#BFA14A]/25",
+};
+const ALL_TAGS = ["stress", "digestion", "sleep", "inflammation", "hormones", "energy"] as const;
 const PLAN_LABELS: Record<string, string> = { basic: "Basic", advanced: "Advanced", premium: "Premium" };
 const PLAN_COLORS: Record<string, string> = {
   basic:    "text-[#4ecdc4]",
@@ -1482,6 +1498,19 @@ function DetailPanel({
               <DetailRow label="Submitted" value={formatDate(request.createdAt)} />
               <DetailRow label="Request ID" value={`BH-${request.id.toString().padStart(4, "0")}`} />
               {request.referralSource && <DetailRow label="Referred via" value={request.referralSource} />}
+              {request.referrerEmail && <DetailRow label="Referrer Email" value={request.referrerEmail} />}
+              {request.tags && request.tags.length > 0 && (
+                <div className="flex justify-between gap-4">
+                  <span className="text-[#F4EFE6]/30 text-sm shrink-0">Tags</span>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {request.tags.map((t) => (
+                      <span key={t} className={cn("text-[10px] px-2 py-0.5 rounded-full border capitalize", TAG_COLORS[t] ?? "bg-white/5 text-[#F4EFE6]/40 border-white/10")}>
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {request.promoCode && (
                 <DetailRow
                   label="Promo Code"
@@ -1647,6 +1676,7 @@ export default function AdminDashboard() {
   const [petOnly, setPetOnly] = useState(false);
   const [starOnly, setStarOnly] = useState(false);
   const [flagOnly, setFlagOnly] = useState(false);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UnifiedRequest | null>(null);
   const [globalPaused, setGlobalPaused] = useState(false);
@@ -1814,6 +1844,7 @@ export default function AdminDashboard() {
     if (petOnly) list = list.filter((r) => r.reportType === "pet_scan");
     if (starOnly) list = list.filter((r) => r.starred);
     if (flagOnly) list = list.filter((r) => r.flagged);
+    if (tagFilter.length > 0) list = list.filter((r) => tagFilter.every((t) => r.tags?.includes(t)));
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
@@ -1822,7 +1853,7 @@ export default function AdminDashboard() {
       );
     }
     return list;
-  }, [requests, statusFilter, sourceFilter, payFilter, petOnly, search]);
+  }, [requests, statusFilter, sourceFilter, payFilter, petOnly, starOnly, flagOnly, tagFilter, search]);
 
   if (!token) return <AuthGate onAuth={handleAuth} />;
 
@@ -1991,6 +2022,25 @@ export default function AdminDashboard() {
               </button>
             )}
 
+            {/* Tag filter chips */}
+            {ALL_TAGS.map((t) => {
+              const active = tagFilter.includes(t);
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTagFilter((prev) => active ? prev.filter((x) => x !== t) : [...prev, t])}
+                  className={cn(
+                    "px-3 py-2 rounded-lg text-xs font-medium transition border capitalize",
+                    active
+                      ? `${TAG_COLORS[t]} opacity-100`
+                      : "bg-[#0C1919] text-[#F4EFE6]/45 border-white/8 hover:border-white/18 hover:text-[#F4EFE6]/65"
+                  )}
+                >
+                  {t}
+                </button>
+              );
+            })}
+
             {/* Star / Flag filter chips */}
             <button
               onClick={() => { setStarOnly((v) => !v); if (!starOnly) setFlagOnly(false); }}
@@ -2067,7 +2117,16 @@ export default function AdminDashboard() {
                             })()}
                           </div>
                         </div>
-                        <span className="text-[10px] text-[#F4EFE6]/25 ml-3.5">BH-{req.id.toString().padStart(4, "0")}</span>
+                          <span className="text-[10px] text-[#F4EFE6]/25 ml-3.5">BH-{req.id.toString().padStart(4, "0")}</span>
+                        {req.tags && req.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1 ml-3.5">
+                            {req.tags.map((t) => (
+                              <span key={t} className={cn("text-[9px] px-1.5 py-0.5 rounded-full border capitalize", TAG_COLORS[t] ?? "bg-white/5 text-[#F4EFE6]/40 border-white/10")}>
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <span className="text-sm text-[#F4EFE6]/55 truncate">{req.email}</span>
                       <span className="text-sm text-[#F4EFE6]/65 truncate">{req.reportType}</span>

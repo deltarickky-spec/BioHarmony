@@ -311,6 +311,7 @@ export default function UploadScan() {
   const [submitError, setSubmitError] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
   const [referralSource, setReferralSource] = useState("");
+  const [referrerEmail, setReferrerEmail] = useState("");
 
   // ── Promo code state ──────────────────────────────────────────────────────────
   const [promoInput, setPromoInput] = useState("");
@@ -416,6 +417,7 @@ export default function UploadScan() {
           whatsapp: values.whatsapp,
           plan,
           referralSource: referralSource || undefined,
+          referrerEmail: (referralSource === "Friend / Referral" && referrerEmail.trim()) ? referrerEmail.trim() : undefined,
           promoCode: promoApplied?.code ?? undefined,
           discountAmount: promoApplied?.discountAmount ?? undefined,
           note: isPetScan
@@ -1005,6 +1007,25 @@ export default function UploadScan() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Referrer email — shown when "Friend / Referral" is selected */}
+                    {referralSource === "Friend / Referral" && (
+                      <div className="mt-4">
+                        <label className="block text-xs text-[#F4EFE6]/40 mb-2 uppercase tracking-wider">
+                          Their email address <span className="text-[#F4EFE6]/20 normal-case font-normal">(so we can send them a thank-you reward)</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={referrerEmail}
+                          onChange={(e) => setReferrerEmail(e.target.value)}
+                          placeholder="friend@email.com"
+                          className="w-full bg-white/5 border border-white/12 text-[#F4EFE6] placeholder:text-[#F4EFE6]/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#BFA14A]/40 transition"
+                        />
+                        <p className="mt-1.5 text-[10px] text-[#F4EFE6]/25">
+                          We'll automatically send them a 20% discount code as a thank-you.
+                        </p>
+                      </div>
+                    )}
 
                     {/* Promo code input */}
                     <div className="mt-7">

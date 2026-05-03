@@ -3,7 +3,8 @@ import { db } from "@workspace/db";
 import { scanRequestsTable } from "@workspace/db/schema";
 import { eq, and, ilike } from "drizzle-orm";
 import { z } from "zod";
-import { buildReportNotificationEmail, buildClientConfirmationEmail, sendEmail } from "../services/email";
+import { buildReportNotificationEmail, buildClientConfirmationEmail, buildReferralRewardEmail, sendEmail } from "../services/email";
+import { inferTags } from "../services/tagInference";
 
 const router = Router();
 
@@ -18,6 +19,7 @@ const ScanRequestSchema = z.object({
   plan: z.enum(["basic", "advanced", "premium"]).optional(),
   note: z.string().max(1000).trim().optional(),
   referralSource: z.string().max(100).trim().optional(),
+  referrerEmail: z.string().email().max(255).trim().optional(),
   promoCode: z.string().max(50).trim().optional(),
   discountAmount: z.number().int().min(0).max(9999).optional(),
 });
@@ -149,8 +151,10 @@ router.post("/scan-requests", async (req, res) => {
         plan: data.plan,
         note: data.note,
         referralSource: data.referralSource,
+        referrerEmail: data.referrerEmail ?? null,
         promoCode: data.promoCode ?? null,
         discountAmount: data.discountAmount ?? null,
+        tags: inferTags(data.note, data.reportType),
       })
       .returning({ id: scanRequestsTable.id });
 
@@ -183,14 +187,31 @@ router.post("/scan-requests", async (req, res) => {
       discountAmount: data.discountAmount ?? undefined,
     });
 
-    await Promise.all([
+    const emailPromises: Promise<void>[] = [
       sendEmail(emailPayload).catch((err: unknown) => {
         req.log.error({ err }, "Admin email notification failed (non-fatal)");
       }),
       sendEmail(confirmPayload).catch((err: unknown) => {
         req.log.error({ err }, "Client confirmation email failed (non-fatal)");
       }),
-    ]);
+    ];
+
+    // Referral reward — send WELLNESS20 to the referrer if an email was provided
+    if (data.referrerEmail) {
+      const rewardPayload = buildReferralRewardEmail({
+        referrerEmail: data.referrerEmail,
+        referredName: data.name,
+        rewardCode: "WELLNESS20",
+        rewardLabel: "20% off your next report",
+      });
+      emailPromises.push(
+        sendEmail(rewardPayload).catch((err: unknown) => {
+          req.log.error({ err }, "Referral reward email failed (non-fatal)");
+        }),
+      );
+    }
+
+    await Promise.all(emailPromises);
 
     res.status(201).json({ success: true, id: row.id });
   } catch (err) {
