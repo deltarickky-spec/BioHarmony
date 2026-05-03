@@ -53,6 +53,13 @@ export default function Home() {
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground italic ml-2 mt-1">Takes 2 minutes • No guesswork • Delivered in 24–48 hours</p>
+              <Link
+                href="/track-report"
+                className="inline-flex items-center gap-1.5 ml-2 mt-1 text-sm text-[#BFA14A]/60 hover:text-[#BFA14A] transition-colors duration-200 group"
+              >
+                <span className="w-1 h-1 rounded-full bg-[#BFA14A]/40 group-hover:bg-[#BFA14A] transition-colors" />
+                Already submitted? Track your report
+              </Link>
             </div>
           </motion.div>
         </div>

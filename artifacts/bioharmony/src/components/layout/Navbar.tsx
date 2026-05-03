@@ -89,6 +89,7 @@ export function Navbar() {
     { href: "/pet-scans", label: "Pet Scans" },
     { href: "/about", label: "About Kathy" },
     { href: "/contact", label: "Contact" },
+    { href: "/track-report", label: "Track My Report", highlight: true },
   ];
 
   return (
@@ -128,6 +129,19 @@ export function Navbar() {
                 </Link>
               ))}
             </div>
+            <div className="w-px h-4 bg-white/15 mx-1" />
+            <Link
+              href="/track-report"
+              className={cn(
+                "text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
+                location === "/track-report"
+                  ? "text-[#BFA14A]"
+                  : "text-[#BFA14A]/55 hover:text-[#BFA14A]"
+              )}
+              data-testid="nav-link-track-report"
+            >
+              Track My Report
+            </Link>
             <div className="flex items-center gap-3">
               <LangDropdown />
               <Button
@@ -162,7 +176,9 @@ export function Navbar() {
                   "text-base font-medium py-3 px-2 rounded-lg transition-all duration-200",
                   location === link.href
                     ? "text-[#BFA14A] bg-[#BFA14A]/8"
-                    : "text-[#F4EFE6]/60 hover:text-[#BFA14A]/80 hover:bg-white/4"
+                    : link.highlight
+                      ? "text-[#BFA14A]/70 hover:text-[#BFA14A] hover:bg-[#BFA14A]/6"
+                      : "text-[#F4EFE6]/60 hover:text-[#BFA14A]/80 hover:bg-white/4"
                 )}
                 onClick={() => setIsOpen(false)}
                 data-testid={`mobile-nav-link-${link.label.toLowerCase().replace(/\s+/g, '-')}`}

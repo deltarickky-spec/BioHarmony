@@ -29,6 +29,7 @@ export function Footer() {
                 { href: "/", label: "For You" },
                 { href: "/for-practitioners", label: "For Practitioners" },
                 { href: "/upload-scan", label: "Upload Scan" },
+                { href: "/track-report", label: "Track My Report" },
                 { href: "/membership", label: "Membership" },
                 { href: "/pet-scans", label: "Pet Scans" },
                 { href: "/about", label: "About Kathy" },
