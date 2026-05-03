@@ -16,9 +16,9 @@
 
 import { db } from "@workspace/db";
 import { scanRequestsTable } from "@workspace/db/schema";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { buildDeliveredEmail, sendEmail } from "./email";
+import { buildDeliveredEmail, buildPaymentReminderEmail, sendEmail } from "./email";
 
 type PipelineStage =
   | "queued"
@@ -187,6 +187,79 @@ async function tick(): Promise<void> {
   }
 }
 
+// ── Payment reminder ───────────────────────────────────────────────────────────
+
+const SITE_URL_SCHEDULER = process.env["SITE_URL"] ?? "https://bioharmonysolutions.ca";
+const REMINDER_DELAY_MS = 24 * 60 * 60 * 1_000; // 24 hours
+
+/**
+ * Send the "Complete Your BioHarmony Report" payment reminder email.
+ * Marks paymentReminderSentAt so the reminder is only sent once per request
+ * (unless manually reset via the admin resend endpoint).
+ */
+export async function sendPaymentReminderEmail(
+  id: number,
+  name: string,
+  email: string,
+  whatsapp: boolean,
+): Promise<void> {
+  const requestId = `BH-${id.toString().padStart(4, "0")}`;
+  const paymentUrl = `${SITE_URL_SCHEDULER}/upload?resume=${encodeURIComponent(requestId)}`;
+  try {
+    const payload = buildPaymentReminderEmail({ name, email, requestId, paymentUrl, whatsapp });
+    await sendEmail(payload);
+    await db
+      .update(scanRequestsTable)
+      .set({ paymentReminderSentAt: new Date() })
+      .where(eq(scanRequestsTable.id, id));
+    logger.info({ id, email, requestId }, "Payment reminder sent successfully");
+
+    // WhatsApp placeholder — log the message that would be sent via WhatsApp Business API
+    if (whatsapp) {
+      logger.info(
+        { id, requestId },
+        "[WhatsApp placeholder] Payment reminder — would send via WhatsApp Business API: " +
+        `"Hi ${name.split(" ")[0]}, your BioHarmony report is ready to begin. ` +
+        `Complete your payment here: ${paymentUrl} (Ref: ${requestId})"`,
+      );
+    }
+  } catch (err) {
+    logger.error({ err, id, email }, "Failed to send payment reminder — admin can use Resend button");
+  }
+}
+
+/**
+ * Scan for pending requests older than 24 hours that haven't received a reminder yet,
+ * and send them a payment reminder email.
+ * Runs hourly via the scheduler.
+ */
+async function paymentReminderTick(): Promise<void> {
+  const threshold = new Date(Date.now() - REMINDER_DELAY_MS);
+  try {
+    const rows = await db
+      .select()
+      .from(scanRequestsTable)
+      .where(
+        and(
+          eq(scanRequestsTable.paymentStatus, "pending"),
+          lt(scanRequestsTable.createdAt, threshold),
+          isNull(scanRequestsTable.paymentReminderSentAt),
+        ),
+      );
+
+    if (rows.length === 0) return;
+    logger.info({ count: rows.length }, "Payment reminder tick: found overdue pending requests");
+
+    for (const row of rows) {
+      await sendPaymentReminderEmail(row.id, row.name, row.email, row.whatsapp ?? false);
+    }
+  } catch (err) {
+    logger.error({ err }, "Payment reminder tick failed");
+  }
+}
+
+// ── Delivery email ─────────────────────────────────────────────────────────────
+
 /**
  * Send the "Your BioHarmony Report Is Ready" email and mark it as sent.
  * If sending fails, logs the error — admin can trigger a resend manually.
@@ -225,6 +298,8 @@ export async function sendDeliveryEmail(
 
 let _schedulerInterval: ReturnType<typeof setInterval> | null = null;
 
+let _reminderInterval: ReturnType<typeof setInterval> | null = null;
+
 export function startPipelineScheduler(): void {
   if (_schedulerInterval) return;
   // Mock pipeline progression — replace with Sage/Hermes AI processing webhook later.
@@ -233,12 +308,25 @@ export function startPipelineScheduler(): void {
   _schedulerInterval = setInterval(() => {
     tick().catch(() => {});
   }, 15_000);
+
+  // Payment reminder scheduler — runs every hour
+  if (!_reminderInterval) {
+    logger.info("Payment reminder scheduler started (checks every hour for 24h+ pending requests)");
+    paymentReminderTick().catch(() => {}); // run immediately on startup too
+    _reminderInterval = setInterval(() => {
+      paymentReminderTick().catch(() => {});
+    }, 60 * 60 * 1_000);
+  }
 }
 
 export function stopPipelineScheduler(): void {
   if (_schedulerInterval) {
     clearInterval(_schedulerInterval);
     _schedulerInterval = null;
-    logger.info("Pipeline scheduler stopped");
   }
+  if (_reminderInterval) {
+    clearInterval(_reminderInterval);
+    _reminderInterval = null;
+  }
+  logger.info("Pipeline + reminder schedulers stopped");
 }

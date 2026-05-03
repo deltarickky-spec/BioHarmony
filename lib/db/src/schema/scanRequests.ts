@@ -16,6 +16,7 @@ export const scanRequestsTable = pgTable("scan_requests", {
   pipelinePaused: boolean("pipeline_paused").notNull().default(false),
   pipelineError: varchar("pipeline_error", { length: 500 }),
   deliveredEmailSentAt: timestamp("delivered_email_sent_at"),
+  paymentReminderSentAt: timestamp("payment_reminder_sent_at"),
   bioharmonyScore: integer("bioharmony_score"),
   scoreBreakdown: text("score_breakdown"),
   note: text("note"),

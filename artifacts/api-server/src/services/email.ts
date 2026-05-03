@@ -374,6 +374,190 @@ export function buildDeliveredEmail(data: DeliveredEmailData): EmailPayload {
   return { to: data.email, subject, html, text };
 }
 
+// ── Payment reminder email ─────────────────────────────────────────────────────
+
+export interface PaymentReminderData {
+  name: string;
+  email: string;
+  requestId: string;
+  paymentUrl: string;
+  whatsapp: boolean;
+}
+
+/**
+ * Build the "Complete Your BioHarmony Report" payment reminder email.
+ * Sent automatically 24 hours after a pending scan request has not been paid.
+ */
+export function buildPaymentReminderEmail(data: PaymentReminderData): EmailPayload {
+  const subject = "Complete Your BioHarmony Report";
+  const firstName = data.name.split(" ")[0] ?? data.name;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#060D0D;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060D0D;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0c1919,#0f2020);
+                     border-radius:12px 12px 0 0;padding:44px 40px 36px;
+                     border-top:3px solid #BFA14A;text-align:center;">
+            <p style="margin:0 0 14px;color:#BFA14A;font-size:11px;
+                      letter-spacing:0.3em;text-transform:uppercase;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+            <div style="display:inline-block;width:52px;height:52px;border-radius:50%;
+                        background:#0f2b2b;border:2px solid #BFA14A;line-height:52px;
+                        text-align:center;font-size:22px;margin-bottom:20px;">⏳</div>
+            <h1 style="margin:0 0 12px;color:#F4EFE6;font-size:26px;
+                       font-family:Georgia,serif;font-weight:400;line-height:1.3;">
+              Your report is ready to begin
+            </h1>
+            <p style="margin:0;color:#F4EFE6;font-size:15px;
+                      font-family:Georgia,serif;font-style:italic;
+                      opacity:0.65;line-height:1.6;">
+              Hi ${firstName}, we're just waiting for your payment to start processing.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#0c1919;padding:36px 40px;border-radius:0 0 12px 12px;">
+
+            <p style="margin:0 0 28px;color:#F4EFE6;font-size:15px;font-family:Georgia,serif;
+                      opacity:0.82;line-height:1.8;">
+              Your report is ready to begin — we're just waiting for your payment to start processing.
+              Once your payment is confirmed, your report will immediately enter the AI processing queue.
+            </p>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="text-align:center;padding:8px 0;">
+                  <a href="${data.paymentUrl}"
+                     style="display:inline-block;padding:16px 40px;
+                            background:linear-gradient(135deg,#BFA14A,#d4b456);
+                            color:#060D0D;font-size:16px;font-weight:700;
+                            text-decoration:none;border-radius:8px;
+                            font-family:Arial,sans-serif;
+                            box-shadow:0 0 24px rgba(191,161,74,0.4);">
+                    Complete My Payment →
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td style="text-align:center;padding-top:10px;">
+                  <p style="margin:0;color:#F4EFE6;font-size:11px;opacity:0.3;font-family:Arial,sans-serif;">
+                    Reference: ${data.requestId}
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- What's included note -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#0f2020;border-left:3px solid #BFA14A;
+                           padding:14px 18px;border-radius:0 8px 8px 0;">
+                  <p style="margin:0 0 6px;color:#BFA14A;font-size:11px;
+                             letter-spacing:0.15em;text-transform:uppercase;font-family:Arial,sans-serif;">
+                    Once payment is confirmed
+                  </p>
+                  <p style="margin:0;color:#F4EFE6;font-size:13px;opacity:0.75;
+                             font-family:Arial,sans-serif;line-height:1.6;">
+                    Your scan data immediately enters our AI pipeline — typically completing within 2–4 hours.
+                    ${data.whatsapp ? "Your completed report will be delivered via WhatsApp." : "Your completed report will be sent to this email address."}
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Questions CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#0f2020;border-radius:10px;border:1px solid #1a3535;">
+              <tr>
+                <td style="padding:20px 24px;text-align:center;">
+                  <p style="margin:0 0 8px;color:#F4EFE6;font-size:13px;
+                             font-family:Arial,sans-serif;opacity:0.65;">
+                    Need help or have questions?
+                  </p>
+                  <a href="mailto:info@bioharmonysolutions.ca?subject=Re: Payment - ${data.requestId}"
+                     style="color:#4ecdc4;font-size:13px;font-family:Arial,sans-serif;
+                            text-decoration:none;font-weight:600;">
+                    info@bioharmonysolutions.ca
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Signature -->
+        <tr>
+          <td style="padding:28px 0 8px;text-align:center;">
+            <p style="margin:0 0 4px;color:#F4EFE6;font-size:14px;
+                      font-family:Georgia,serif;font-style:italic;opacity:0.55;">
+              Warmly,
+            </p>
+            <p style="margin:0 0 2px;color:#BFA14A;font-size:14px;
+                      font-family:Georgia,serif;font-weight:600;opacity:0.85;">
+              Kathy Owens
+            </p>
+            <p style="margin:0;color:#F4EFE6;font-size:12px;opacity:0.3;font-family:Arial,sans-serif;">
+              BioHarmony Solutions
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:8px 0 20px;text-align:center;border-top:1px solid #1a3535;">
+            <p style="margin:8px 0 0;color:#F4EFE6;font-size:10px;opacity:0.18;font-family:Arial,sans-serif;">
+              You received this because you submitted a scan request at bioharmonysolutions.ca.
+              If you no longer wish to proceed, simply ignore this email.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = [
+    `Complete Your BioHarmony Report`,
+    `================================`,
+    ``,
+    `Hi ${firstName},`,
+    ``,
+    `Your report is ready to begin — we're just waiting for your payment to start processing.`,
+    ``,
+    `Complete your request here:`,
+    data.paymentUrl,
+    `Reference: ${data.requestId}`,
+    ``,
+    `Once completed, your report will immediately enter the AI processing queue.`,
+    ``,
+    data.whatsapp
+      ? `Your completed report will be delivered via WhatsApp.`
+      : `Your completed report will be sent to this email address.`,
+    ``,
+    `Questions? Email us at info@bioharmonysolutions.ca`,
+    ``,
+    `Warmly,`,
+    `Kathy Owens`,
+    `BioHarmony Solutions`,
+  ].join("\n");
+
+  return { to: data.email, subject, html, text };
+}
+
 // ── Shared send helper ─────────────────────────────────────────────────────────
 
 const LANG_LABELS: Record<string, string> = {

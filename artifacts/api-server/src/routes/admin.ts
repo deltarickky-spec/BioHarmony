@@ -8,6 +8,7 @@ import {
   pauseGlobal,
   resumeGlobal,
   sendDeliveryEmail,
+  sendPaymentReminderEmail,
 } from "../services/pipelineScheduler";
 
 const router = Router();
@@ -156,6 +157,54 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to update request");
     res.status(500).json({ error: "Could not update request" });
+  }
+});
+
+// ── Payment reminder resend ────────────────────────────────────────────────────
+
+/**
+ * Manually trigger (or resend) a payment reminder for a specific pending scan request.
+ * Resets paymentReminderSentAt so the send timestamp is updated on success.
+ */
+router.post("/admin/requests/scan/:id/resend-payment-reminder", async (req, res) => {
+  if (!checkAuth(req, res)) return;
+
+  const id = Number(req.params["id"]);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  try {
+    const rows = await db
+      .select()
+      .from(scanRequestsTable)
+      .where(eq(scanRequestsTable.id, id))
+      .limit(1);
+
+    const row = rows[0];
+    if (!row) {
+      res.status(404).json({ error: "Request not found" });
+      return;
+    }
+    if (row.paymentStatus !== "pending") {
+      res.status(400).json({ error: "Request is not awaiting payment" });
+      return;
+    }
+
+    // Reset the sent flag so the timestamp updates on success
+    await db
+      .update(scanRequestsTable)
+      .set({ paymentReminderSentAt: null })
+      .where(eq(scanRequestsTable.id, id));
+
+    await sendPaymentReminderEmail(id, row.name, row.email, row.whatsapp ?? false);
+
+    req.log.info({ id, email: row.email }, "Payment reminder resent by admin");
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to resend payment reminder");
+    res.status(500).json({ error: "Could not resend payment reminder" });
   }
 });
 

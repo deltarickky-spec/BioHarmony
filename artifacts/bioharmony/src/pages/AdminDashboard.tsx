@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
   Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign,
-  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download, BarChart2
+  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download, BarChart2, BellRing
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -96,6 +96,7 @@ interface UnifiedRequest {
   starred?: boolean;
   flagged?: boolean;
   referralSource?: string | null;
+  paymentReminderSentAt?: string | null;
   status: Status;
   pipelineStage?: PipelineStage | null;
   paymentStatus?: PaymentStatus | null;
@@ -118,6 +119,7 @@ interface RawScanRequest {
   reportType: string; language: string; fileName?: string | null;
   whatsapp?: boolean | null; plan?: string | null; note?: string | null; adminNote?: string | null;
   starred?: boolean; flagged?: boolean; referralSource?: string | null;
+  paymentReminderSentAt?: string | null;
   status: string; pipelineStage?: string | null; paymentStatus?: string | null;
   pipelinePaused?: boolean | null; pipelineError?: string | null;
   stageEnteredAt?: string | null; deliveredEmailSentAt?: string | null; createdAt: string;
@@ -153,6 +155,7 @@ function normalizeScan(s: RawScanRequest): UnifiedRequest {
     whatsapp: s.whatsapp, plan: s.plan, note: s.note, adminNote: s.adminNote,
     starred: s.starred ?? false, flagged: s.flagged ?? false,
     referralSource: s.referralSource ?? null,
+    paymentReminderSentAt: s.paymentReminderSentAt ?? null,
     status: normalizeStatus(s.status),
     pipelineStage: normalizePipelineStage(s.pipelineStage),
     paymentStatus: normalizePaymentStatus(s.paymentStatus),
@@ -1026,6 +1029,113 @@ function EmailDeliverySection({
   );
 }
 
+// ── Payment Reminder Section ───────────────────────────────────────────────────
+
+function PaymentReminderSection({
+  request, token, onUpdate,
+}: {
+  request: UnifiedRequest;
+  token: string;
+  onUpdate: (id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<"success" | "error" | null>(null);
+
+  const sentAt = request.paymentReminderSentAt
+    ? new Date(request.paymentReminderSentAt).toLocaleString("en-CA", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      })
+    : null;
+
+  async function handleResend() {
+    setBusy(true);
+    setResult(null);
+    try {
+      const resp = await fetch(
+        `${BASE}/api/admin/requests/scan/${request.id}/resend-payment-reminder`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (resp.ok) {
+        const now = new Date().toISOString();
+        onUpdate(request.id, "scan", { paymentReminderSentAt: now });
+        setResult("success");
+        setTimeout(() => setResult(null), 4000);
+      } else {
+        setResult("error");
+      }
+    } catch { setResult("error"); }
+    setBusy(false);
+  }
+
+  return (
+    <section>
+      <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium flex items-center gap-2">
+        <BellRing className="w-3 h-3" />
+        Payment Reminder
+      </h3>
+
+      <div className="bg-white/[0.02] border border-white/8 rounded-xl p-4 space-y-3">
+        {/* Status row */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className={cn(
+              "w-2 h-2 rounded-full shrink-0",
+              sentAt ? "bg-[#BFA14A]" : "bg-white/20"
+            )} />
+            <span className={cn(
+              "text-xs font-medium",
+              sentAt ? "text-[#BFA14A]" : "text-[#F4EFE6]/35"
+            )}>
+              {sentAt ? `Sent ${sentAt}` : "Not yet sent — sends automatically after 24 hrs"}
+            </span>
+          </div>
+          {sentAt && (
+            <span className="text-[10px] text-[#F4EFE6]/25 shrink-0">To: {request.email}</span>
+          )}
+        </div>
+
+        {/* Subject preview */}
+        <div className="bg-white/[0.03] rounded-lg px-3 py-2 border border-white/6">
+          <p className="text-[10px] text-[#F4EFE6]/25 uppercase tracking-wider mb-0.5">Subject</p>
+          <p className="text-xs text-[#F4EFE6]/60 font-mono">Complete Your BioHarmony Report</p>
+        </div>
+
+        {/* WhatsApp note */}
+        {request.whatsapp && (
+          <p className="text-[10px] text-[#F4EFE6]/35 bg-white/[0.02] rounded-lg px-3 py-2 border border-white/6">
+            WhatsApp message will also be logged when reminder fires.
+          </p>
+        )}
+
+        {/* Result message */}
+        {result === "success" && (
+          <p className="text-xs text-green-300/80 bg-green-900/15 border border-green-700/25 rounded-lg px-3 py-2">
+            Reminder sent to {request.email}
+          </p>
+        )}
+        {result === "error" && (
+          <p className="text-xs text-red-300/80 bg-red-900/15 border border-red-700/25 rounded-lg px-3 py-2">
+            Send failed — check server logs
+          </p>
+        )}
+
+        {/* Send / Resend button */}
+        <button
+          disabled={busy}
+          onClick={handleResend}
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium border border-[#BFA14A]/20 text-[#BFA14A]/60 hover:border-[#BFA14A]/40 hover:text-[#BFA14A] transition disabled:opacity-40"
+        >
+          {busy
+            ? <><span className="inline-block w-3 h-3 border border-current/40 border-t-current rounded-full animate-spin" />Sending…</>
+            : <><BellRing className="w-3 h-3" />{sentAt ? "↩ Resend Reminder" : "✉ Send Reminder Now"}</>
+          }
+        </button>
+      </div>
+    </section>
+  );
+}
+
 // ── Kathy's Internal Notes ─────────────────────────────────────────────────────
 
 function KathyNotesSection({
@@ -1270,6 +1380,11 @@ function DetailPanel({
           {/* Pipeline control (scan only) */}
           {request.source === "scan" && (
             <PipelinePanel request={request} token={token} onUpdate={onUpdate} />
+          )}
+
+          {/* Payment reminder (scan only, pending payment) */}
+          {request.source === "scan" && request.paymentStatus === "pending" && (
+            <PaymentReminderSection request={request} token={token} onUpdate={onUpdate} />
           )}
 
           {/* Delivery email status (scan only) */}
@@ -1803,6 +1918,15 @@ export default function AdminDashboard() {
                       {/* Payment cell — shows badge + quick actions for pending */}
                       <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <PaymentBadge status={req.paymentStatus} />
+                        {/* Reminder sent indicator */}
+                        {req.source === "scan" && req.paymentStatus === "pending" && req.paymentReminderSentAt && (
+                          <span
+                            title={`Payment reminder sent ${formatDate(req.paymentReminderSentAt)}`}
+                            className="shrink-0"
+                          >
+                            <BellRing className="w-3 h-3 text-[#BFA14A]/60" />
+                          </span>
+                        )}
                         {req.paymentStatus === "pending" && (
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
