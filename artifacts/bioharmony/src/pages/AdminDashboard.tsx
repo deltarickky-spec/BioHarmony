@@ -168,6 +168,32 @@ function formatDate(iso: string) {
   });
 }
 
+const SPECIES_EMOJI: Record<string, string> = {
+  Dog: "🐕", Cat: "🐈", Horse: "🐴", Other: "🐾",
+};
+
+function parsePetInfo(note: string | null | undefined): {
+  petName?: string; species?: string; age?: string; breed?: string; ownerNotes?: string;
+} | null {
+  if (!note) return null;
+  const lines = note.split("\n");
+  const get = (key: string) => {
+    const line = lines.find(l => l.startsWith(`${key}: `));
+    return line ? line.slice(key.length + 2).trim() : undefined;
+  };
+  const petName = get("PET NAME");
+  if (!petName) return null;
+  const ownerNotesIdx = note.indexOf("\nOWNER NOTES: ");
+  const ownerNotes = ownerNotesIdx !== -1 ? note.slice(ownerNotesIdx + 14).trim() : undefined;
+  return {
+    petName,
+    species: get("SPECIES"),
+    age: get("AGE"),
+    breed: get("BREED"),
+    ownerNotes,
+  };
+}
+
 function stageElapsed(enteredAt: string | null | undefined): string | null {
   if (!enteredAt) return null;
   const secs = Math.round((Date.now() - new Date(enteredAt).getTime()) / 1000);
@@ -821,12 +847,43 @@ function DetailPanel({
             </div>
           </section>
 
-          {request.note && (
-            <section>
-              <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Client Notes</h3>
-              <p className="text-sm text-[#F4EFE6]/65 bg-white/5 rounded-xl p-3 border border-white/8 leading-relaxed">{request.note}</p>
-            </section>
-          )}
+          {request.note && (() => {
+            const pet = request.reportType === "pet_scan" ? parsePetInfo(request.note) : null;
+            if (pet) {
+              return (
+                <section>
+                  <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Pet Details</h3>
+                  <div className="rounded-2xl border border-[#BFA14A]/20 bg-[#BFA14A]/5 overflow-hidden">
+                    {/* Pet header */}
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8">
+                      <span className="text-2xl">{SPECIES_EMOJI[pet.species ?? ""] ?? "🐾"}</span>
+                      <div>
+                        <p className="text-base font-semibold text-[#F4EFE6]">{pet.petName}</p>
+                        {pet.species && <p className="text-xs text-[#F4EFE6]/45">{pet.species}</p>}
+                      </div>
+                    </div>
+                    {/* Fields */}
+                    <div className="px-4 py-3 space-y-2">
+                      {pet.age && <DetailRow label="Age" value={pet.age} />}
+                      {pet.breed && <DetailRow label="Breed" value={pet.breed} />}
+                    </div>
+                  </div>
+                  {pet.ownerNotes && (
+                    <div className="mt-3">
+                      <p className="text-[10px] text-[#F4EFE6]/35 uppercase tracking-widest mb-1.5">Owner's Notes</p>
+                      <p className="text-sm text-[#F4EFE6]/65 bg-white/5 rounded-xl p-3 border border-white/8 leading-relaxed">{pet.ownerNotes}</p>
+                    </div>
+                  )}
+                </section>
+              );
+            }
+            return (
+              <section>
+                <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Client Notes</h3>
+                <p className="text-sm text-[#F4EFE6]/65 bg-white/5 rounded-xl p-3 border border-white/8 leading-relaxed">{request.note}</p>
+              </section>
+            );
+          })()}
 
           {/* Payment (scan only) */}
           {request.source === "scan" && (
@@ -1218,7 +1275,20 @@ export default function AdminDashboard() {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <AutoStatusDot autoStatus={autoStatus} />
-                          <span className="text-sm font-medium text-[#F4EFE6]/85 truncate">{req.name}</span>
+                          <div className="min-w-0">
+                            <span className="text-sm font-medium text-[#F4EFE6]/85 truncate block">{req.name}</span>
+                            {req.reportType === "pet_scan" && (() => {
+                              const pet = parsePetInfo(req.note);
+                              if (!pet?.petName) return null;
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-[#BFA14A]/70 mt-0.5">
+                                  <span>{SPECIES_EMOJI[pet.species ?? ""] ?? "🐾"}</span>
+                                  <span className="font-medium">{pet.petName}</span>
+                                  {pet.species && <span className="text-[#F4EFE6]/30">· {pet.species}</span>}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                         <span className="text-[10px] text-[#F4EFE6]/25 ml-3.5">BH-{req.id.toString().padStart(4, "0")}</span>
                       </div>
@@ -1274,6 +1344,17 @@ export default function AdminDashboard() {
                           <AutoStatusDot autoStatus={autoStatus} />
                           <div>
                             <div className="text-sm font-medium text-[#F4EFE6]/85">{req.name}</div>
+                            {req.reportType === "pet_scan" && (() => {
+                              const pet = parsePetInfo(req.note);
+                              if (!pet?.petName) return null;
+                              return (
+                                <div className="flex items-center gap-1 text-[10px] text-[#BFA14A]/70 mt-0.5">
+                                  <span>{SPECIES_EMOJI[pet.species ?? ""] ?? "🐾"}</span>
+                                  <span className="font-medium">{pet.petName}</span>
+                                  {pet.species && <span className="text-[#F4EFE6]/30">· {pet.species}</span>}
+                                </div>
+                              );
+                            })()}
                             <div className="text-xs text-[#F4EFE6]/40 mt-0.5">{req.email}</div>
                           </div>
                         </div>
