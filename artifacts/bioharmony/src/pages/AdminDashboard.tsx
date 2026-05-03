@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
-  Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign
+  Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign,
+  TrendingUp
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -259,6 +260,81 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-start gap-3 text-sm">
       <span className="text-[#F4EFE6]/35 min-w-[110px] shrink-0">{label}</span>
       <span className="text-[#F4EFE6]/85 break-all">{value}</span>
+    </div>
+  );
+}
+
+// ── Revenue Summary ────────────────────────────────────────────────────────────
+
+const PLAN_PRICES: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
+const PLAN_LABELS: Record<string, string> = { basic: "Basic", advanced: "Advanced", premium: "Premium" };
+const PLAN_COLORS: Record<string, string> = {
+  basic:    "text-[#4ecdc4]",
+  advanced: "text-[#BFA14A]",
+  premium:  "text-purple-300",
+};
+
+function detectPlan(req: UnifiedRequest): string | null {
+  const raw = (req.plan ?? req.reportType ?? "").toLowerCase();
+  if (raw.includes("premium")) return "premium";
+  if (raw.includes("advanced")) return "advanced";
+  if (raw.includes("basic")) return "basic";
+  return null;
+}
+
+function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
+  const revenue = useMemo(() => {
+    const paidScans = requests.filter(
+      (r) => r.source === "scan" && (r.paymentStatus === "paid")
+    );
+    const byPlan: Record<string, { count: number; total: number }> = {
+      basic: { count: 0, total: 0 },
+      advanced: { count: 0, total: 0 },
+      premium: { count: 0, total: 0 },
+    };
+    let grand = 0;
+    for (const r of paidScans) {
+      const plan = detectPlan(r);
+      if (plan && PLAN_PRICES[plan] !== undefined) {
+        byPlan[plan].count++;
+        byPlan[plan].total += PLAN_PRICES[plan];
+        grand += PLAN_PRICES[plan];
+      }
+    }
+    return { byPlan, grand, totalPaid: paidScans.length };
+  }, [requests]);
+
+  if (revenue.totalPaid === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-white/8 bg-[#0C1919] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/8">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-3.5 h-3.5 text-[#BFA14A]" />
+          <span className="text-xs font-semibold text-[#F4EFE6]/70 uppercase tracking-widest">Revenue</span>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="text-xl font-bold text-[#BFA14A]">${revenue.grand.toLocaleString("en-CA")}</span>
+          <span className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">CAD</span>
+          <span className="text-xs text-[#F4EFE6]/25 ml-2">({revenue.totalPaid} paid)</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-white/8">
+        {(["basic", "advanced", "premium"] as const).map((plan) => {
+          const { count, total } = revenue.byPlan[plan];
+          return (
+            <div key={plan} className="px-5 py-4 flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30">{PLAN_LABELS[plan]}</span>
+              <span className={cn("text-lg font-bold", PLAN_COLORS[plan])}>
+                {count > 0 ? `$${total.toLocaleString("en-CA")}` : "—"}
+              </span>
+              <span className="text-[10px] text-[#F4EFE6]/30">
+                {count} {count === 1 ? "client" : "clients"} · ${PLAN_PRICES[plan]} ea
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1056,6 +1132,9 @@ export default function AdminDashboard() {
           <StatCard label="Paid" value={stats.paid} color="text-green-300" onClick={() => setPayFilter(payFilter === "paid" ? "all" : "paid")} active={payFilter === "paid"} />
           <StatCard label="Delivered" value={stats.delivered} color="text-emerald-300" onClick={() => setStatusFilter("delivered")} active={statusFilter === "delivered"} />
         </div>
+
+        {/* Revenue summary */}
+        <RevenueSummary requests={requests} />
 
         {/* Payment alert */}
         {stats.waitingPay > 0 && payFilter !== "pending" && (

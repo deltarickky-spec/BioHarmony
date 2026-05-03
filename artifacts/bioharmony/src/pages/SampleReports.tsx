@@ -134,8 +134,9 @@ function JaneDoeReport() {
       <SampleBadge />
       <ClientCard
         name="Jane Doe"
-        scanType="Inner Voice + Basic Vitals"
+        scanType="Comprehensive AO Scan"
         date="January 15, 2025"
+        badge="Basic Human Sample"
       />
 
       <BioHarmonyScore
@@ -225,9 +226,9 @@ function MariaThompsonReport() {
       <SampleBadge />
       <ClientCard
         name="Maria Thompson"
-        scanType="Comprehensive AO Scan"
+        scanType="Advanced BioHarmony Interpretation"
         date="February 3, 2025"
-        badge="Advanced Case"
+        badge="Advanced Human Case"
       />
 
       <BioHarmonyScore
@@ -317,9 +318,9 @@ function BellaReport() {
       <SampleBadge />
       <ClientCard
         name="Bella"
-        scanType="AO Scan — Canine Wellness"
+        scanType="Pet Wellness Scan"
         date="February 20, 2025"
-        badge="Pet Report"
+        badge="Pet Report Sample"
       />
 
       <BioHarmonyScore
@@ -404,9 +405,9 @@ function BellaReport() {
 }
 
 const TABS = [
-  { id: "jane", label: "Basic Report", sub: "Jane Doe" },
-  { id: "maria", label: "Advanced Case", sub: "Maria Thompson" },
-  { id: "bella", label: "Pet Report", sub: "Bella" },
+  { id: "jane", label: "Jane Doe", sub: "Basic Human Sample" },
+  { id: "maria", label: "Maria Thompson", sub: "Advanced Human Case" },
+  { id: "bella", label: "Bella", sub: "Pet Report Sample" },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -438,7 +439,7 @@ export default function SampleReports() {
         <div className="container px-4 md:px-6 max-w-3xl mx-auto">
 
           {/* Tabs */}
-          <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="mb-10">
+          <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="mb-6">
             <div className="grid grid-cols-3 gap-3">
               {TABS.map((tab) => (
                 <button
@@ -461,6 +462,14 @@ export default function SampleReports() {
                   )}
                 </button>
               ))}
+            </div>
+
+            {/* Disclaimer note */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Sparkles className="w-3 h-3 text-[#BFA14A]/40 shrink-0" />
+              <p className="text-[#F4EFE6]/38 text-xs text-center">
+                These are sample reports. Your report will be fully personalized based on your scan.
+              </p>
             </div>
           </motion.div>
 
