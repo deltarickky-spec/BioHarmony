@@ -218,7 +218,7 @@ function JaneDoeReport({ onOpen }: { onOpen: () => void }) {
 
       <GoldDivider />
       <ReportAudioPlayer
-        cacheKey="jane-en"
+        cacheKey="jane"
         scriptText={buildNarrationScript(REPORT_DATA.jane)}
         clientName="Jane Doe"
       />
@@ -328,7 +328,7 @@ function MariaThompsonReport({ onOpen }: { onOpen: () => void }) {
 
       <GoldDivider />
       <ReportAudioPlayer
-        cacheKey="maria-en"
+        cacheKey="maria"
         scriptText={buildNarrationScript(REPORT_DATA.maria)}
         clientName="Maria Thompson"
       />
@@ -413,7 +413,7 @@ function BellaReport({ onOpen }: { onOpen: () => void }) {
 
       <GoldDivider />
       <ReportAudioPlayer
-        cacheKey="bella-en"
+        cacheKey="bella"
         scriptText={buildNarrationScript(REPORT_DATA.bella)}
         clientName="Bella"
       />

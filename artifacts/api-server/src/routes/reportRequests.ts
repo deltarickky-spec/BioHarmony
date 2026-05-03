@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { reportRequestsTable } from "@workspace/db/schema";
 import { z } from "zod";
+import { buildReportNotificationEmail, sendEmail } from "../services/email";
 
 const router = Router();
 
@@ -19,13 +20,28 @@ router.post("/report-requests", async (req, res) => {
     return;
   }
 
+  const data = parsed.data;
+
   try {
     const [row] = await db
       .insert(reportRequestsTable)
-      .values(parsed.data)
+      .values(data)
       .returning({ id: reportRequestsTable.id });
 
-    req.log.info({ id: row.id, email: parsed.data.email }, "New report request submitted");
+    req.log.info({ id: row.id, email: data.email }, "New report request submitted");
+
+    const emailPayload = buildReportNotificationEmail({
+      name: data.firstName,
+      email: data.email,
+      reportType: data.reportType,
+      note: data.note,
+      submittedAt: new Date(),
+    });
+
+    await sendEmail(emailPayload).catch((err: unknown) => {
+      req.log.error({ err }, "Email notification failed (non-fatal)");
+    });
+
     res.status(201).json({ success: true, id: row.id });
   } catch (err) {
     req.log.error({ err }, "Failed to save report request");

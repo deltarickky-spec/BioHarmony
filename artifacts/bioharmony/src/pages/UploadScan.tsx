@@ -3,14 +3,17 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
-import { UploadCloud, CheckCircle, Globe } from "lucide-react";
+import { UploadCloud, CheckCircle, Globe, MessageCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LANGUAGES, useLanguage, type Language } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -20,36 +23,69 @@ const fadeInUp = {
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
   reportType: z.string().min(1, "Please select a report type"),
   preferredLanguage: z.string().min(2),
+  whatsapp: z.boolean().default(false),
+  note: z.string().optional(),
 });
 
 export default function UploadScan() {
   const { language } = useLanguage();
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submittedData, setSubmittedData] = useState<{ email: string; language: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       reportType: "",
       preferredLanguage: language,
+      whatsapp: false,
+      note: "",
     },
   });
 
   const selectedLang = form.watch("preferredLanguage");
   const selectedLangLabel = LANGUAGES.find((l) => l.code === selectedLang)?.label ?? "English";
+  const watchWhatsapp = form.watch("whatsapp");
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!selectedFile) {
       form.setError("root", { message: "Please select a file to upload" });
       return;
     }
-    setSubmittedData({ email: values.email, language: values.preferredLanguage });
-    setIsSubmitted(true);
+    setIsLoading(true);
+    setSubmitError("");
+    try {
+      const res = await fetch(`${BASE}/api/scan-requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          phone: values.phone || undefined,
+          reportType: values.reportType,
+          language: values.preferredLanguage,
+          fileName: selectedFile,
+          whatsapp: values.whatsapp,
+          note: values.note || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        throw new Error(data.error ?? "Something went wrong");
+      }
+      setIsSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Could not submit your request. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const handleFileSelect = () => {
@@ -81,26 +117,18 @@ export default function UploadScan() {
       <section className="py-16 md:py-24">
         <div className="container px-4 md:px-6 max-w-2xl mx-auto">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
-            {isSubmitted && submittedData ? (
+            {isSubmitted ? (
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 shadow-[0_0_40px_rgba(15,92,94,0.3)] text-center space-y-6 flex flex-col items-center">
                 <div className="w-20 h-20 bg-[#BFA14A]/10 rounded-full flex items-center justify-center mb-2">
                   <CheckCircle className="w-10 h-10 text-[#BFA14A]" />
                 </div>
-                <h2 className="text-3xl font-serif text-[#F4EFE6]">Your report is being prepared.</h2>
-                <p className="text-[#F4EFE6]/70 max-w-md mx-auto text-lg leading-relaxed">
-                  You'll receive your interpretation in{" "}
-                  <span className="text-[#BFA14A] font-medium">
-                    {LANGUAGES.find((l) => l.code === submittedData.language)?.label ?? "English"}
-                  </span>{" "}
-                  at{" "}
-                  <span className="font-medium text-white">{submittedData.email}</span>{" "}
-                  within 24–48 hours.
-                </p>
-                <div className="flex items-center gap-2 bg-[#BFA14A]/8 border border-[#BFA14A]/20 rounded-full px-5 py-2">
-                  <Globe className="w-3.5 h-3.5 text-[#BFA14A]/60" />
-                  <span className="text-[#BFA14A]/80 text-sm">
-                    {LANGUAGES.find((l) => l.code === submittedData.language)?.nativeLabel}
-                  </span>
+                <div>
+                  <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] mb-3">Request Received</p>
+                  <h2 className="text-3xl font-serif text-[#F4EFE6] mb-4">Thank you.</h2>
+                  <p className="text-[#F4EFE6]/70 max-w-md mx-auto text-lg leading-relaxed">
+                    Your request has been received. We'll review your submission and prepare your report within{" "}
+                    <span className="text-[#BFA14A] font-medium">24–48 hours</span>.
+                  </p>
                 </div>
                 <Button
                   asChild
@@ -109,9 +137,9 @@ export default function UploadScan() {
                 >
                   <button onClick={() => {
                     setIsSubmitted(false);
-                    form.reset({ preferredLanguage: language });
+                    form.reset({ preferredLanguage: language, whatsapp: false });
                     setSelectedFile(null);
-                    setSubmittedData(null);
+                    setSubmitError("");
                   }}>
                     Upload Another Scan
                   </button>
@@ -145,6 +173,7 @@ export default function UploadScan() {
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 md:p-10 shadow-xl">
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
                       <FormField
                         control={form.control}
                         name="name"
@@ -163,6 +192,7 @@ export default function UploadScan() {
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={form.control}
                         name="email"
@@ -182,6 +212,29 @@ export default function UploadScan() {
                           </FormItem>
                         )}
                       />
+
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[#F4EFE6]/70 text-sm">
+                              Phone <span className="text-[#F4EFE6]/30 font-normal">(optional)</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                className="bg-white/5 border border-white/15 text-[#F4EFE6] placeholder:text-[#F4EFE6]/30 rounded-xl focus-visible:border-[#BFA14A]/50 focus-visible:ring-0 h-12 px-4"
+                                placeholder="+1 (555) 000-0000"
+                                type="tel"
+                                {...field}
+                                data-testid="upload-input-phone"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-400/80" />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={form.control}
                         name="reportType"
@@ -249,16 +302,97 @@ export default function UploadScan() {
                         )}
                       />
 
-                      {form.formState.errors.root && (
-                        <p className="text-sm font-medium text-red-400/80">{form.formState.errors.root.message}</p>
+                      {/* WhatsApp delivery */}
+                      <FormField
+                        control={form.control}
+                        name="whatsapp"
+                        render={({ field }) => (
+                          <FormItem>
+                            <button
+                              type="button"
+                              onClick={() => field.onChange(!field.value)}
+                              className={cn(
+                                "w-full flex items-center gap-4 px-5 py-4 rounded-xl border transition-all duration-200 text-left",
+                                watchWhatsapp
+                                  ? "border-[#25D366]/40 bg-[#25D366]/[0.06] shadow-[0_0_14px_rgba(37,211,102,0.12)]"
+                                  : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                              )}
+                              data-testid="upload-toggle-whatsapp"
+                            >
+                              <div className={cn(
+                                "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center border transition-all",
+                                watchWhatsapp
+                                  ? "bg-[#25D366]/20 border-[#25D366]/50"
+                                  : "bg-white/[0.05] border-white/15"
+                              )}>
+                                <MessageCircle className={cn(
+                                  "w-4 h-4 transition-colors",
+                                  watchWhatsapp ? "text-[#25D366]" : "text-[#F4EFE6]/30"
+                                )} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn(
+                                  "text-sm font-medium transition-colors",
+                                  watchWhatsapp ? "text-[#F4EFE6]" : "text-[#F4EFE6]/60"
+                                )}>
+                                  Deliver my report via WhatsApp
+                                </p>
+                                <p className="text-[#F4EFE6]/30 text-xs mt-0.5">
+                                  We'll send your interpretation directly to your WhatsApp number
+                                </p>
+                              </div>
+                              <div className={cn(
+                                "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                                watchWhatsapp
+                                  ? "border-[#25D366] bg-[#25D366]"
+                                  : "border-white/20"
+                              )}>
+                                {watchWhatsapp && (
+                                  <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 8" fill="none">
+                                    <path d="M1 4L3.5 6.5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </div>
+                            </button>
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Note / message */}
+                      <FormField
+                        control={form.control}
+                        name="note"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[#F4EFE6]/70 text-sm">
+                              Notes or questions <span className="text-[#F4EFE6]/30 font-normal">(optional)</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                className="bg-white/5 border border-white/15 text-[#F4EFE6] placeholder:text-[#F4EFE6]/30 rounded-xl focus-visible:border-[#BFA14A]/50 focus-visible:ring-0 min-h-[100px] px-4 py-3 resize-none"
+                                placeholder="Tell Kathy anything relevant about your scan, symptoms, or what you'd like to understand…"
+                                {...field}
+                                data-testid="upload-input-note"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-400/80" />
+                          </FormItem>
+                        )}
+                      />
+
+                      {(form.formState.errors.root || submitError) && (
+                        <p className="text-sm font-medium text-red-400/80 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+                          {form.formState.errors.root?.message ?? submitError}
+                        </p>
                       )}
 
                       <Button
                         type="submit"
-                        className="w-full rounded-full bg-[#0F5C5E] text-white shadow-[0_0_20px_rgba(191,161,74,0.3)] hover:shadow-[0_0_35px_rgba(191,161,74,0.5)] transition-all border-none mt-4 h-14 text-lg"
+                        disabled={isLoading}
+                        className="w-full rounded-full bg-[#0F5C5E] text-white shadow-[0_0_20px_rgba(191,161,74,0.3)] hover:shadow-[0_0_35px_rgba(191,161,74,0.5)] transition-all border-none mt-4 h-14 text-lg disabled:opacity-60"
                         data-testid="upload-submit-button"
                       >
-                        Submit for Interpretation
+                        {isLoading ? "Submitting…" : "Submit for Interpretation"}
                       </Button>
                     </form>
                   </Form>

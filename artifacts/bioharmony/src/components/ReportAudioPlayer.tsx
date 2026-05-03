@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Pause, Download, Loader2, Headphones, Volume2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -18,6 +19,9 @@ function formatTime(seconds: number): string {
 type PlayerState = "idle" | "loading" | "ready" | "error";
 
 export function ReportAudioPlayer({ cacheKey, scriptText, clientName }: Props) {
+  const { language } = useLanguage();
+  const effectiveCacheKey = `${cacheKey}-${language}`;
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
   const [playerState, setPlayerState] = useState<PlayerState>("idle");
@@ -33,6 +37,18 @@ export function ReportAudioPlayer({ cacheKey, scriptText, clientName }: Props) {
     };
   }, []);
 
+  useEffect(() => {
+    if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+    audioRef.current?.pause();
+    audioRef.current = null;
+    blobUrlRef.current = null;
+    setPlayerState("idle");
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setErrorMsg("");
+  }, [effectiveCacheKey]);
+
   const loadAudio = useCallback(async () => {
     setPlayerState("loading");
     setErrorMsg("");
@@ -40,7 +56,7 @@ export function ReportAudioPlayer({ cacheKey, scriptText, clientName }: Props) {
       const res = await fetch(`${BASE}/api/narrate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: scriptText, cacheKey }),
+        body: JSON.stringify({ text: scriptText, cacheKey: effectiveCacheKey, language }),
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
@@ -67,7 +83,7 @@ export function ReportAudioPlayer({ cacheKey, scriptText, clientName }: Props) {
       setPlayerState("error");
       setErrorMsg(err instanceof Error ? err.message : "Could not generate audio.");
     }
-  }, [cacheKey, scriptText]);
+  }, [effectiveCacheKey, scriptText, language]);
 
   function togglePlay() {
     const audio = audioRef.current;
@@ -110,7 +126,9 @@ export function ReportAudioPlayer({ cacheKey, scriptText, clientName }: Props) {
           <p className="text-[#BFA14A] text-[10px] uppercase tracking-[0.18em] mb-1">Audio Report</p>
           <h4 className="text-[#F4EFE6] text-sm font-medium leading-snug">Listen to Your Report</h4>
           <p className="text-[#F4EFE6]/40 text-xs mt-1 leading-relaxed">
-            Prefer to listen? Your full report is available as an audio walkthrough.
+            {language === "en"
+              ? "Prefer to listen? Your full report is available as an audio walkthrough."
+              : `Audio narration will be generated in your selected language.`}
           </p>
         </div>
       </div>

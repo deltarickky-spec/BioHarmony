@@ -7,10 +7,37 @@ import { z } from "zod";
 
 const router = Router();
 
+const LANG_NAMES: Record<string, string> = {
+  es: "Spanish",
+  fr: "French",
+  pt: "Portuguese",
+  de: "German",
+  it: "Italian",
+};
+
 const NarrateSchema = z.object({
   text: z.string().min(1).max(5000),
   cacheKey: z.string().min(1).max(100),
+  language: z.string().min(2).max(5).optional().default("en"),
 });
+
+async function translateNarration(text: string, targetLang: string): Promise<string> {
+  const langName = LANG_NAMES[targetLang];
+  if (!langName) return text;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: `You are a professional wellness translator. Translate the following narration from English to ${langName}. Maintain a warm, calm, personal tone — as if Kathy Owens is speaking directly to the client. Return only the translated text, no other commentary.`,
+      },
+      { role: "user", content: text },
+    ],
+  });
+
+  return completion.choices[0]?.message?.content ?? text;
+}
 
 router.post("/narrate", async (req, res) => {
   const parsed = NarrateSchema.safeParse(req.body);
@@ -19,7 +46,7 @@ router.post("/narrate", async (req, res) => {
     return;
   }
 
-  const { text, cacheKey } = parsed.data;
+  const { text, cacheKey, language } = parsed.data;
   const voice = "shimmer" as const;
 
   try {
@@ -39,12 +66,20 @@ router.post("/narrate", async (req, res) => {
       return;
     }
 
-    req.log.info({ cacheKey, chars: text.length }, "Generating TTS audio");
+    const isNonEnglish = language && language !== "en" && LANG_NAMES[language];
+    let narrationText = text;
+
+    if (isNonEnglish) {
+      req.log.info({ cacheKey, language }, "Translating narration before TTS");
+      narrationText = await translateNarration(text, language);
+    }
+
+    req.log.info({ cacheKey, language, chars: narrationText.length }, "Generating TTS audio");
 
     const response = await openai.audio.speech.create({
       model: "tts-1",
       voice,
-      input: text,
+      input: narrationText,
       response_format: "mp3",
     });
 

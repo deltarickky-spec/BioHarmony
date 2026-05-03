@@ -1,0 +1,14 @@
+import { pgTable, serial, varchar, boolean, text, timestamp } from "drizzle-orm/pg-core";
+
+export const scanRequestsTable = pgTable("scan_requests", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  reportType: varchar("report_type", { length: 50 }).notNull(),
+  language: varchar("language", { length: 10 }).notNull().default("en"),
+  fileName: varchar("file_name", { length: 255 }),
+  whatsapp: boolean("whatsapp").default(false),
+  note: text("note"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
