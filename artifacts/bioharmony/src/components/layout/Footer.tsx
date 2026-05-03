@@ -11,15 +11,18 @@ export function Footer() {
               <span className="font-serif text-2xl font-semibold text-[#BFA14A] tracking-tight">
                 BioHarmony Solutions
               </span>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#F4EFE6]/35 font-sans mt-0.5">
-                Bio-Frequency Analytics
+              <div className="text-[10px] tracking-[0.18em] text-[#F4EFE6]/35 font-sans mt-0.5">
+                BioAnalytics by BioHarmony Solutions
               </div>
             </Link>
             <p className="text-[#F4EFE6]/70 max-w-sm font-medium text-sm leading-relaxed">
-              Frequency-Based Wellness for a Deeper You
+              Complex Scan Data. Clear Human Insight.
             </p>
             <p className="text-[#F4EFE6]/40 mt-4 text-sm max-w-md leading-relaxed">
-              A premium wellness platform where frequency science meets personalized insight.
+              Personalized, easy-to-understand wellness reports for clients and practitioners.
+            </p>
+            <p className="text-[#F4EFE6]/25 mt-3 text-xs italic">
+              Educational wellness insight • Not diagnostic
             </p>
           </div>
 

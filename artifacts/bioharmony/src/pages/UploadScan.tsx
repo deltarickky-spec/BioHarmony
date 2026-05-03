@@ -529,7 +529,7 @@ export default function UploadScan() {
         <div className="relative z-10 max-w-2xl mx-auto">
           <p className="text-[#BFA14A] text-xs uppercase tracking-[0.25em] mb-4">Upload Your Scan</p>
           <h1 className="font-serif text-4xl md:text-5xl text-[#F4EFE6] leading-[1.15] mb-5">
-            Start Your Personalized<br className="hidden sm:block" /> BioHarmony Report
+            Start Your Personalized<br className="hidden sm:block" /> BioAnalytics Report
           </h1>
           <p className="text-[#F4EFE6]/55 text-lg leading-relaxed">
             Upload your scan or submit your voice sample — we'll turn it into a clear, easy-to-understand wellness report.

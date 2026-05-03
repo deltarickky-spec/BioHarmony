@@ -16,7 +16,7 @@ const AUTO_REFRESH_MS = 12_000;
 const PIPELINE_STAGES = [
   { key: "queued",        label: "Request Queued",       desc: "Your submission has been received and is in the queue.",                    icon: "📥" },
   { key: "extracting",    label: "Extracting Data",       desc: "Your scan data is being extracted and prepared for analysis.",              icon: "🔍" },
-  { key: "interpreting",  label: "AI Interpreting",       desc: "BioHarmony's AI engine is analyzing your bio-frequency data.",             icon: "🧠" },
+  { key: "interpreting",  label: "AI Interpreting",       desc: "BioHarmony's AI engine is analyzing your scan data.",                   icon: "🧠" },
   { key: "generating",    label: "Generating Report",     desc: "Your personalized wellness narrative is being written.",                   icon: "✍️" },
   { key: "quality_check", label: "Quality Check",         desc: "Final review to ensure accuracy and BioHarmony standards.",               icon: "✅" },
   { key: "pdf_ready",     label: "PDF Created",           desc: "Your report has been compiled into a beautiful PDF.",                      icon: "📄" },

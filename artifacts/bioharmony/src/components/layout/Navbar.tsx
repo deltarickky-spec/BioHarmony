@@ -106,8 +106,8 @@ export function Navbar() {
               >
                 BioHarmony Solutions
               </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-[#F4EFE6]/40 font-sans">
-                Bio-Frequency Analytics
+              <span className="text-[10px] tracking-[0.18em] text-[#F4EFE6]/40 font-sans">
+                BioAnalytics
               </span>
             </div>
           </Link>

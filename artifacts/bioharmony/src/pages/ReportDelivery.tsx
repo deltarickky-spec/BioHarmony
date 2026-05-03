@@ -488,7 +488,7 @@ export default function ReportDelivery() {
                 </div>
               </div>
               <p className="text-[10px] text-[#F4EFE6]/20 mt-5 leading-relaxed">
-                Score reflects bio-frequency resonance patterns — for educational purposes only. Not a medical assessment.
+                Score reflects scan data patterns — educational wellness insight only. Not a medical assessment.
               </p>
             </section>
 

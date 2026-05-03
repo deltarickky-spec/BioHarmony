@@ -1,0 +1,74 @@
+Update BioHarmony website branding and fix page navigation scroll behavior.
+
+IMPORTANT BRAND STRUCTURE:
+- BioHarmony Solutions = parent company
+- BioAnalytics = AO Scan / report interpretation branch
+- BioAnalytics is “by BioHarmony Solutions”
+
+Use the uploaded BioAnalytics graphic as the brand reference.
+
+Site-wide brand update:
+Replace AO Scan/report interpretation branding so it reads as:
+
+Main AO branch name:
+BioAnalytics
+
+Sub-brand line:
+by BioHarmony Solutions
+
+Primary tagline:
+Complex Scan Data. Clear Human Insight.
+
+Supporting tagline:
+Personalized, easy-to-understand wellness reports for clients and practitioners.
+
+Compliance line:
+Educational wellness insight • Not diagnostic
+
+Where to update:
+- Header / navbar brand area
+- Hero section
+- Upload Scan page
+- Sample Reports page
+- Track My Report page
+- Practitioner Portal
+- Membership page
+- Pet Scans page
+- Admin dashboard headings where appropriate
+- Footer
+- Email templates if visible in admin
+- Report delivery page
+- Any page currently saying “Bio-Frequency Analytics” as the branch name
+
+Do NOT remove BioHarmony Solutions completely.
+Use it as the parent company attribution:
+“BioAnalytics by BioHarmony Solutions”
+
+Keep the premium dark teal, ivory, and gold style.
+Use the uploaded graphic only as visual/branding inspiration unless already available as an image asset.
+
+Also fix page navigation issue:
+When clicking any internal page link or route change, the page currently sometimes opens at the bottom instead of the top.
+
+Add global route-change scroll reset:
+- On every navigation to a new page, automatically scroll to top
+- Use smooth = false / instant scroll
+- Ensure it works for navbar links, footer links, buttons, and mobile menu links
+- Do not affect anchor links if they intentionally scroll to a section
+
+Test these routes:
+/
+/upload-scan
+/sample-reports
+/track-report
+/practitioner-portal
+/membership
+/pet-scans
+/admin
+
+Expected behavior:
+Every new page opens at the top.
+
+Do not redesign the whole website.
+Only update branding and fix scroll-to-top behavior.
+Run tests/build and summarize files changed.

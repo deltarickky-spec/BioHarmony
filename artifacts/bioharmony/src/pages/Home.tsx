@@ -192,7 +192,7 @@ export default function Home() {
             <motion.div variants={fadeInUp}>
               <Card className="h-full border-border/50 shadow-sm hover:shadow-md transition-shadow bg-background">
                 <CardHeader>
-                  <CardTitle className="font-serif text-2xl text-primary">BioHarmony Analytics</CardTitle>
+                  <CardTitle className="font-serif text-2xl text-primary">BioAnalytics</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground leading-relaxed">
@@ -584,13 +584,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BioHarmony Analytics */}
+      {/* BioAnalytics */}
       <section className="py-24 bg-card">
         <div className="container px-4 md:px-6 text-center max-w-4xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-8">
             <h2 className="text-3xl md:text-5xl font-serif text-primary">Clarity Over Confusion</h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              BioHarmony Analytics is our proprietary reporting layer that translates complex AO Scan results into a format you can actually use.
+              BioAnalytics is our proprietary reporting layer — by BioHarmony Solutions — that translates complex scan data into clear, actionable insights you can actually use.
             </p>
             <div className="bg-background rounded-2xl p-8 md:p-12 shadow-sm border border-border mt-12">
               <h3 className="text-2xl font-serif text-foreground mb-4">No confusing charts — just clear, actionable wellness insights.</h3>
