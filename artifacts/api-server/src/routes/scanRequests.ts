@@ -14,6 +14,7 @@ const ScanRequestSchema = z.object({
   language: z.string().min(2).max(10).trim().default("en"),
   fileName: z.string().max(255).trim().optional(),
   whatsapp: z.boolean().optional(),
+  plan: z.enum(["basic", "advanced", "premium"]).optional(),
   note: z.string().max(1000).trim().optional(),
 });
 
@@ -37,6 +38,7 @@ router.post("/scan-requests", async (req, res) => {
         language: data.language,
         fileName: data.fileName,
         whatsapp: data.whatsapp ?? false,
+        plan: data.plan,
         note: data.note,
       })
       .returning({ id: scanRequestsTable.id });

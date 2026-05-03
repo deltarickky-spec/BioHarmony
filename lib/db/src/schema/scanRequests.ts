@@ -9,6 +9,7 @@ export const scanRequestsTable = pgTable("scan_requests", {
   language: varchar("language", { length: 10 }).notNull().default("en"),
   fileName: varchar("file_name", { length: 255 }),
   whatsapp: boolean("whatsapp").default(false),
+  plan: varchar("plan", { length: 20 }),
   note: text("note"),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
