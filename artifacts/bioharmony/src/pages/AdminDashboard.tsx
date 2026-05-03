@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
@@ -87,6 +87,7 @@ interface UnifiedRequest {
   whatsapp?: boolean | null;
   plan?: string | null;
   note?: string | null;
+  adminNote?: string | null;
   status: Status;
   pipelineStage?: PipelineStage | null;
   paymentStatus?: PaymentStatus | null;
@@ -99,13 +100,13 @@ interface UnifiedRequest {
 
 interface RawReportRequest {
   id: number; firstName: string; email: string;
-  reportType: string; note?: string | null; status: string; createdAt: string;
+  reportType: string; note?: string | null; adminNote?: string | null; status: string; createdAt: string;
 }
 
 interface RawScanRequest {
   id: number; name: string; email: string; phone?: string | null;
   reportType: string; language: string; fileName?: string | null;
-  whatsapp?: boolean | null; plan?: string | null; note?: string | null;
+  whatsapp?: boolean | null; plan?: string | null; note?: string | null; adminNote?: string | null;
   status: string; pipelineStage?: string | null; paymentStatus?: string | null;
   pipelinePaused?: boolean | null; pipelineError?: string | null;
   stageEnteredAt?: string | null; deliveredEmailSentAt?: string | null; createdAt: string;
@@ -128,7 +129,7 @@ function normalizePaymentStatus(s: string | null | undefined): PaymentStatus | n
 function normalize(r: RawReportRequest): UnifiedRequest {
   return {
     id: r.id, source: "report", name: r.firstName, email: r.email,
-    reportType: r.reportType, note: r.note,
+    reportType: r.reportType, note: r.note, adminNote: r.adminNote,
     status: normalizeStatus(r.status), createdAt: r.createdAt,
   };
 }
@@ -136,7 +137,7 @@ function normalizeScan(s: RawScanRequest): UnifiedRequest {
   return {
     id: s.id, source: "scan", name: s.name, email: s.email, phone: s.phone,
     reportType: s.reportType, language: s.language, fileName: s.fileName,
-    whatsapp: s.whatsapp, plan: s.plan, note: s.note,
+    whatsapp: s.whatsapp, plan: s.plan, note: s.note, adminNote: s.adminNote,
     status: normalizeStatus(s.status),
     pipelineStage: normalizePipelineStage(s.pipelineStage),
     paymentStatus: normalizePaymentStatus(s.paymentStatus),
@@ -784,6 +785,72 @@ function EmailDeliverySection({
   );
 }
 
+// ── Kathy's Internal Notes ─────────────────────────────────────────────────────
+
+function KathyNotesSection({
+  request, token, onUpdate,
+}: {
+  request: UnifiedRequest;
+  token: string;
+  onUpdate: (id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) => void;
+}) {
+  const [draft, setDraft] = useState(request.adminNote ?? "");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setDraft(request.adminNote ?? "");
+    setSaveState("idle");
+  }, [request.id, request.adminNote]);
+
+  async function save() {
+    const trimmed = draft.trim();
+    const current = (request.adminNote ?? "").trim();
+    if (trimmed === current) return;
+    setSaveState("saving");
+    try {
+      await fetch(`${BASE}/api/admin/requests/${request.source}/${request.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ adminNote: trimmed || null }),
+      });
+      onUpdate(request.id, request.source, { adminNote: trimmed || null });
+      setSaveState("saved");
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => setSaveState("idle"), 3000);
+    } catch {
+      setSaveState("idle");
+    }
+  }
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] font-medium flex items-center gap-1.5">
+          <span>✏️</span> Kathy's Notes
+        </h3>
+        {saveState === "saving" && (
+          <span className="text-[10px] text-[#F4EFE6]/30 animate-pulse">Saving…</span>
+        )}
+        {saveState === "saved" && (
+          <span className="text-[10px] text-green-400/60 flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" /> Saved
+          </span>
+        )}
+      </div>
+      <textarea
+        value={draft}
+        onChange={(e) => { setDraft(e.target.value); setSaveState("idle"); }}
+        onBlur={save}
+        rows={4}
+        placeholder="Internal notes — only visible here, never shown to clients…"
+        className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-[#F4EFE6]/80 placeholder-[#F4EFE6]/20 resize-none focus:outline-none focus:border-[#BFA14A]/40 transition leading-relaxed"
+      />
+      <p className="text-[10px] text-[#F4EFE6]/20 mt-1.5">Saves automatically when you click away.</p>
+    </section>
+  );
+}
+
 // ── Detail Panel ───────────────────────────────────────────────────────────────
 
 function DetailPanel({
@@ -988,6 +1055,10 @@ function DetailPanel({
               ))}
             </div>
           )}
+
+          {/* Kathy's internal notes */}
+          <KathyNotesSection request={request} token={token} onUpdate={onUpdate} />
+
         </div>
       </div>
     </div>

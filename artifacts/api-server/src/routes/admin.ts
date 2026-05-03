@@ -32,6 +32,7 @@ const AdminUpdateSchema = z
     paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
     pipelinePaused: z.boolean().optional(),
     pipelineError: z.string().max(500).nullable().optional(),
+    adminNote: z.string().max(2000).nullable().optional(),
   })
   .refine(
     (d) =>
@@ -39,7 +40,8 @@ const AdminUpdateSchema = z
       d.pipelineStage !== undefined ||
       d.paymentStatus !== undefined ||
       d.pipelinePaused !== undefined ||
-      d.pipelineError !== undefined,
+      d.pipelineError !== undefined ||
+      d.adminNote !== undefined,
     { message: "At least one field is required" },
   );
 
@@ -96,6 +98,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
     if (source === "report") {
       const updateSet = {
         ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.adminNote !== undefined ? { adminNote: data.adminNote } : {}),
       };
       if (Object.keys(updateSet).length > 0) {
         await db.update(reportRequestsTable).set(updateSet).where(eq(reportRequestsTable.id, id));
@@ -122,6 +125,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
           : {}),
         ...(data.pipelinePaused !== undefined ? { pipelinePaused: data.pipelinePaused } : {}),
         ...(data.pipelineError !== undefined ? { pipelineError: data.pipelineError } : {}),
+        ...(data.adminNote !== undefined ? { adminNote: data.adminNote } : {}),
       };
 
       if (Object.keys(updateSet).length > 0) {

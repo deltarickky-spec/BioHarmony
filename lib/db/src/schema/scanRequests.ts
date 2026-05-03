@@ -19,6 +19,7 @@ export const scanRequestsTable = pgTable("scan_requests", {
   bioharmonyScore: integer("bioharmony_score"),
   scoreBreakdown: text("score_breakdown"),
   note: text("note"),
+  adminNote: text("admin_note"),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
