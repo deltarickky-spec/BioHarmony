@@ -20,8 +20,16 @@ import SampleReport from "@/pages/SampleReport";
 import SampleReports from "@/pages/SampleReports";
 import AdminLeads from "@/pages/AdminLeads";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminSettings from "@/pages/AdminSettings";
 import TrackReport from "@/pages/TrackReport";
 import PractitionerPortal from "@/pages/PractitionerPortal";
+import ReportDelivery from "@/pages/ReportDelivery";
+import ClientPortal from "@/pages/ClientPortal";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
+import Disclaimer from "@/pages/Disclaimer";
+import WellnessLibrary from "@/pages/WellnessLibrary";
+import Feedback from "@/pages/Feedback";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +53,13 @@ function Router() {
           <Route path="/sample-reports" component={SampleReports} />
           <Route path="/track-report" component={TrackReport} />
           <Route path="/practitioner-portal" component={PractitionerPortal} />
+          <Route path="/client-portal" component={ClientPortal} />
+          <Route path="/report/:id" component={ReportDelivery} />
+          <Route path="/wellness-library" component={WellnessLibrary} />
+          <Route path="/terms" component={Terms} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/disclaimer" component={Disclaimer} />
+          <Route path="/feedback" component={Feedback} />
           <Route component={NotFound} />
         </Switch>
       </main>
@@ -62,6 +77,7 @@ function App() {
             <Switch>
               <Route path="/admin" component={AdminDashboard} />
               <Route path="/admin/leads" component={AdminLeads} />
+              <Route path="/admin/settings" component={AdminSettings} />
               <Route component={Router} />
             </Switch>
           </WouterRouter>

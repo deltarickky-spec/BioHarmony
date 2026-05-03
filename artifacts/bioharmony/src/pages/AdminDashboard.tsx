@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
   Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign,
-  TrendingUp, Mail, MailCheck
+  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -88,6 +89,9 @@ interface UnifiedRequest {
   plan?: string | null;
   note?: string | null;
   adminNote?: string | null;
+  starred?: boolean;
+  flagged?: boolean;
+  referralSource?: string | null;
   status: Status;
   pipelineStage?: PipelineStage | null;
   paymentStatus?: PaymentStatus | null;
@@ -100,13 +104,16 @@ interface UnifiedRequest {
 
 interface RawReportRequest {
   id: number; firstName: string; email: string;
-  reportType: string; note?: string | null; adminNote?: string | null; status: string; createdAt: string;
+  reportType: string; note?: string | null; adminNote?: string | null;
+  starred?: boolean; flagged?: boolean; referralSource?: string | null;
+  status: string; createdAt: string;
 }
 
 interface RawScanRequest {
   id: number; name: string; email: string; phone?: string | null;
   reportType: string; language: string; fileName?: string | null;
   whatsapp?: boolean | null; plan?: string | null; note?: string | null; adminNote?: string | null;
+  starred?: boolean; flagged?: boolean; referralSource?: string | null;
   status: string; pipelineStage?: string | null; paymentStatus?: string | null;
   pipelinePaused?: boolean | null; pipelineError?: string | null;
   stageEnteredAt?: string | null; deliveredEmailSentAt?: string | null; createdAt: string;
@@ -130,6 +137,8 @@ function normalize(r: RawReportRequest): UnifiedRequest {
   return {
     id: r.id, source: "report", name: r.firstName, email: r.email,
     reportType: r.reportType, note: r.note, adminNote: r.adminNote,
+    starred: r.starred ?? false, flagged: r.flagged ?? false,
+    referralSource: r.referralSource ?? null,
     status: normalizeStatus(r.status), createdAt: r.createdAt,
   };
 }
@@ -138,6 +147,8 @@ function normalizeScan(s: RawScanRequest): UnifiedRequest {
     id: s.id, source: "scan", name: s.name, email: s.email, phone: s.phone,
     reportType: s.reportType, language: s.language, fileName: s.fileName,
     whatsapp: s.whatsapp, plan: s.plan, note: s.note, adminNote: s.adminNote,
+    starred: s.starred ?? false, flagged: s.flagged ?? false,
+    referralSource: s.referralSource ?? null,
     status: normalizeStatus(s.status),
     pipelineStage: normalizePipelineStage(s.pipelineStage),
     paymentStatus: normalizePaymentStatus(s.paymentStatus),
@@ -911,7 +922,24 @@ function DetailPanel({
               {request.paymentStatus && <PaymentBadge status={request.paymentStatus} />}
             </div>
           </div>
-          <button onClick={onClose} className="text-[#F4EFE6]/35 hover:text-[#F4EFE6] transition text-xl ml-4 shrink-0">✕</button>
+          <div className="flex items-center gap-2 ml-4 shrink-0">
+            {/* Star / Flag toggles in drawer header */}
+            <button
+              title={request.starred ? "Unstar" : "Star this client"}
+              onClick={() => quickToggleStar(request)}
+              className={cn("p-1.5 rounded-lg transition border", request.starred ? "border-[#BFA14A]/40 bg-[#BFA14A]/10 text-[#BFA14A]" : "border-white/8 text-white/20 hover:border-[#BFA14A]/30 hover:text-[#BFA14A]/70")}
+            >
+              <Star className={cn("w-3.5 h-3.5", request.starred ? "fill-[#BFA14A]" : "")} />
+            </button>
+            <button
+              title={request.flagged ? "Unflag" : "Flag for review"}
+              onClick={() => quickToggleFlag(request)}
+              className={cn("p-1.5 rounded-lg transition border", request.flagged ? "border-red-700/40 bg-red-900/15 text-red-400" : "border-white/8 text-white/20 hover:border-red-700/30 hover:text-red-400/70")}
+            >
+              <Flag className={cn("w-3.5 h-3.5", request.flagged ? "fill-red-400" : "")} />
+            </button>
+            <button onClick={onClose} className="p-1.5 text-[#F4EFE6]/35 hover:text-[#F4EFE6] transition">✕</button>
+          </div>
         </div>
 
         <div className="flex-1 p-6 space-y-7">
@@ -962,6 +990,7 @@ function DetailPanel({
               {request.fileName && <DetailRow label="File" value={request.fileName} />}
               <DetailRow label="Submitted" value={formatDate(request.createdAt)} />
               <DetailRow label="Request ID" value={`BH-${request.id.toString().padStart(4, "0")}`} />
+              {request.referralSource && <DetailRow label="Referred via" value={request.referralSource} />}
             </div>
           </section>
 
@@ -1114,6 +1143,8 @@ export default function AdminDashboard() {
   const [sourceFilter, setSourceFilter] = useState<"all" | "report" | "scan">("all");
   const [payFilter, setPayFilter] = useState<PaymentStatus | "all">("all");
   const [petOnly, setPetOnly] = useState(false);
+  const [starOnly, setStarOnly] = useState(false);
+  const [flagOnly, setFlagOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UnifiedRequest | null>(null);
   const [globalPaused, setGlobalPaused] = useState(false);
@@ -1199,6 +1230,57 @@ export default function AdminDashboard() {
     } catch { /* optimistic update already applied */ }
   }
 
+  async function quickToggleStar(req: UnifiedRequest) {
+    if (!token) return;
+    const next = !req.starred;
+    handleUpdate(req.id, req.source, { starred: next });
+    try {
+      await fetch(`${BASE}/api/admin/requests/${req.source}/${req.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ starred: next }),
+      });
+    } catch { /* optimistic */ }
+  }
+
+  async function quickToggleFlag(req: UnifiedRequest) {
+    if (!token) return;
+    const next = !req.flagged;
+    handleUpdate(req.id, req.source, { flagged: next });
+    try {
+      await fetch(`${BASE}/api/admin/requests/${req.source}/${req.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ flagged: next }),
+      });
+    } catch { /* optimistic */ }
+  }
+
+  function exportCSV() {
+    const headers = ["ID","Source","Name","Email","Report Type","Plan","Pipeline","Payment","Status","Starred","Flagged","Referral","Submitted"];
+    const rows = filtered.map((r) => [
+      `BH-${r.id.toString().padStart(4,"0")}`,
+      r.source,
+      r.name,
+      r.email,
+      r.reportType,
+      r.plan ?? "",
+      r.pipelineStage ?? "",
+      r.paymentStatus ?? "",
+      r.status,
+      r.starred ? "★" : "",
+      r.flagged ? "⚑" : "",
+      r.referralSource ?? "",
+      new Date(r.createdAt).toLocaleDateString("en-CA"),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `bioharmony-requests-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
   function handleUpdate(id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) {
     setRequests((prev) => prev.map((r) => r.id === id && r.source === source ? { ...r, ...patch } : r));
     if (selected?.id === id && selected?.source === source) {
@@ -1228,6 +1310,8 @@ export default function AdminDashboard() {
     if (sourceFilter !== "all") list = list.filter((r) => r.source === sourceFilter);
     if (payFilter !== "all") list = list.filter((r) => r.paymentStatus === payFilter);
     if (petOnly) list = list.filter((r) => r.reportType === "pet_scan");
+    if (starOnly) list = list.filter((r) => r.starred);
+    if (flagOnly) list = list.filter((r) => r.flagged);
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
@@ -1271,6 +1355,19 @@ export default function AdminDashboard() {
               }
             </button>
 
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-1.5 text-xs text-[#F4EFE6]/35 hover:text-[#4ecdc4]/80 transition px-3 py-1.5 rounded border border-white/8 hover:border-[#4ecdc4]/25"
+              title="Export filtered results to CSV"
+            >
+              <Download className="w-3 h-3" /> Export
+            </button>
+            <Link
+              href="/admin/settings"
+              className="flex items-center gap-1.5 text-xs text-[#F4EFE6]/35 hover:text-[#BFA14A]/80 transition px-3 py-1.5 rounded border border-white/8 hover:border-[#BFA14A]/30"
+            >
+              <Settings className="w-3 h-3" /> Settings
+            </Link>
             <button
               onClick={() => token && fetchData(token)}
               className="flex items-center gap-1.5 text-xs text-[#F4EFE6]/35 hover:text-[#F4EFE6]/70 transition px-3 py-1.5 rounded border border-white/8 hover:border-white/18"
@@ -1385,6 +1482,30 @@ export default function AdminDashboard() {
                 Payment: {payFilter} ✕
               </button>
             )}
+
+            {/* Star / Flag filter chips */}
+            <button
+              onClick={() => { setStarOnly((v) => !v); if (!starOnly) setFlagOnly(false); }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition border",
+                starOnly
+                  ? "bg-[#BFA14A]/12 text-[#BFA14A] border-[#BFA14A]/35"
+                  : "bg-[#0C1919] text-[#F4EFE6]/45 border-white/8 hover:border-white/18 hover:text-[#F4EFE6]/65"
+              )}
+            >
+              <Star className={cn("w-3 h-3", starOnly ? "fill-[#BFA14A]" : "")} /> Starred
+            </button>
+            <button
+              onClick={() => { setFlagOnly((v) => !v); if (!flagOnly) setStarOnly(false); }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition border",
+                flagOnly
+                  ? "bg-red-900/20 text-red-400 border-red-700/35"
+                  : "bg-[#0C1919] text-[#F4EFE6]/45 border-white/8 hover:border-white/18 hover:text-[#F4EFE6]/65"
+              )}
+            >
+              <Flag className={cn("w-3 h-3", flagOnly ? "fill-red-400" : "")} /> Flagged
+            </button>
           </div>
         </div>
 
@@ -1469,7 +1590,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <span className="text-xs text-[#F4EFE6]/35">{formatDate(req.createdAt)}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <StatusBadge status={req.status} />
                         {/* Email delivery indicator — scan delivered rows only */}
                         {req.source === "scan" && req.pipelineStage === "delivered" && (
@@ -1481,7 +1602,28 @@ export default function AdminDashboard() {
                                 <Mail className="w-3.5 h-3.5 text-[#BFA14A]/50 animate-pulse" />
                               </span>
                         )}
-                        <ChevronRight className="w-3.5 h-3.5 text-[#F4EFE6]/20 group-hover:text-[#F4EFE6]/50 transition-colors" />
+                        {/* Star / Flag quick-toggle */}
+                        <button
+                          title={req.starred ? "Unstar" : "Star"}
+                          onClick={(e) => { e.stopPropagation(); quickToggleStar(req); }}
+                          className={cn(
+                            "opacity-0 group-hover:opacity-100 transition-all p-0.5 rounded",
+                            req.starred ? "opacity-100 text-[#BFA14A]" : "text-white/20 hover:text-[#BFA14A]"
+                          )}
+                        >
+                          <Star className={cn("w-3.5 h-3.5", req.starred ? "fill-[#BFA14A]" : "")} />
+                        </button>
+                        <button
+                          title={req.flagged ? "Unflag" : "Flag for review"}
+                          onClick={(e) => { e.stopPropagation(); quickToggleFlag(req); }}
+                          className={cn(
+                            "opacity-0 group-hover:opacity-100 transition-all p-0.5 rounded",
+                            req.flagged ? "opacity-100 text-red-400" : "text-white/20 hover:text-red-400"
+                          )}
+                        >
+                          <Flag className={cn("w-3.5 h-3.5", req.flagged ? "fill-red-400" : "")} />
+                        </button>
+                        <ChevronRight className="w-3.5 h-3.5 text-[#F4EFE6]/20 group-hover:text-[#F4EFE6]/50 transition-colors" onClick={(e) => { e.stopPropagation(); setSelected(req); }} />
                       </div>
                     </div>
 

@@ -310,6 +310,7 @@ export default function UploadScan() {
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
+  const [referralSource, setReferralSource] = useState("");
 
   const isVoice = REPORTS_TYPE_IS_VOICE(reportType);
   const isPetScan = reportType === "pet_scan";
@@ -367,6 +368,7 @@ export default function UploadScan() {
           fileName: selectedFile?.name ?? undefined,
           whatsapp: values.whatsapp,
           plan,
+          referralSource: referralSource || undefined,
           note: isPetScan
             ? [
                 `PET NAME: ${petInfo.petName}`,
@@ -926,6 +928,34 @@ export default function UploadScan() {
                         </FormItem>
                       )} />
                     </Form>
+
+                    {/* How did you hear about us */}
+                    <div className="mt-7">
+                      <p className="text-[#F4EFE6]/55 text-sm mb-3">
+                        How did you hear about us? <span className="text-[#F4EFE6]/25 font-normal">(optional)</span>
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          "Instagram", "Facebook", "TikTok", "YouTube",
+                          "Google Search", "Friend / Referral", "Podcast",
+                          "Practitioner", "Other",
+                        ].map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setReferralSource(referralSource === opt ? "" : opt)}
+                            className={cn(
+                              "px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-150",
+                              referralSource === opt
+                                ? "bg-[#BFA14A]/15 text-[#BFA14A] border-[#BFA14A]/45 shadow-[0_0_10px_rgba(191,161,74,0.2)]"
+                                : "bg-white/[0.03] text-[#F4EFE6]/40 border-white/10 hover:border-white/20 hover:text-[#F4EFE6]/65"
+                            )}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
                     {/* Summary */}
                     <div className="mt-8 bg-white/[0.025] border border-white/8 rounded-2xl px-5 py-5 space-y-2.5">

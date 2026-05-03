@@ -17,6 +17,55 @@ const ScanRequestSchema = z.object({
   whatsapp: z.boolean().optional(),
   plan: z.enum(["basic", "advanced", "premium"]).optional(),
   note: z.string().max(1000).trim().optional(),
+  referralSource: z.string().max(100).trim().optional(),
+});
+
+router.get("/scan-requests/public/:id", async (req, res) => {
+  const cleaned = (req.params["id"] ?? "").trim().toUpperCase().replace(/^BH-?/, "");
+  const numId = parseInt(cleaned, 10);
+  if (isNaN(numId) || numId <= 0) {
+    res.status(400).json({ error: "Invalid request ID format." });
+    return;
+  }
+
+  try {
+    const rows = await db
+      .select()
+      .from(scanRequestsTable)
+      .where(eq(scanRequestsTable.id, numId))
+      .limit(1);
+
+    if (rows.length === 0) {
+      res.status(404).json({ error: "Request not found." });
+      return;
+    }
+
+    const row = rows[0]!;
+
+    if (row.pipelineStage !== "delivered") {
+      res.status(403).json({
+        error: "Report not yet available. Check back once your report has been delivered.",
+        pipelineStage: row.pipelineStage,
+      });
+      return;
+    }
+
+    res.json({
+      requestId: `BH-${row.id.toString().padStart(4, "0")}`,
+      name: row.name,
+      reportType: row.reportType,
+      plan: row.plan ?? "basic",
+      language: row.language,
+      pipelineStage: row.pipelineStage,
+      bioharmonyScore: row.bioharmonyScore ?? null,
+      scoreBreakdown: row.scoreBreakdown ?? null,
+      deliveredEmailSentAt: row.deliveredEmailSentAt ?? null,
+      createdAt: row.createdAt,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to look up public report");
+    res.status(500).json({ error: "Could not retrieve your report. Please try again." });
+  }
 });
 
 router.get("/scan-requests/track", async (req, res) => {
@@ -97,6 +146,7 @@ router.post("/scan-requests", async (req, res) => {
         whatsapp: data.whatsapp ?? false,
         plan: data.plan,
         note: data.note,
+        referralSource: data.referralSource,
       })
       .returning({ id: scanRequestsTable.id });
 

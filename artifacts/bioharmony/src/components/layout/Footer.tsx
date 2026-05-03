@@ -30,7 +30,9 @@ export function Footer() {
                 { href: "/", label: "For You" },
                 { href: "/for-practitioners", label: "For Practitioners" },
                 { href: "/upload-scan", label: "Upload Scan" },
+                { href: "/client-portal", label: "Client Portal" },
                 { href: "/track-report", label: "Track My Report" },
+                { href: "/wellness-library", label: "Wellness Library" },
                 { href: "/membership", label: "Membership" },
                 { href: "/pet-scans", label: "Pet Scans" },
                 { href: "/about", label: "About Kathy" },
@@ -82,6 +84,13 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/8 pt-8 text-center">
+          <div className="flex items-center justify-center gap-5 mb-5">
+            <Link href="/terms" className="text-xs text-[#F4EFE6]/25 hover:text-[#BFA14A]/60 transition">Terms of Service</Link>
+            <span className="text-white/10">·</span>
+            <Link href="/privacy" className="text-xs text-[#F4EFE6]/25 hover:text-[#BFA14A]/60 transition">Privacy Policy</Link>
+            <span className="text-white/10">·</span>
+            <Link href="/disclaimer" className="text-xs text-[#F4EFE6]/25 hover:text-[#BFA14A]/60 transition">Wellness Disclaimer</Link>
+          </div>
           <p className="mb-4 max-w-3xl mx-auto text-xs text-[#F4EFE6]/30 italic leading-relaxed">
             BioHarmony Solutions services are for wellness education and informational purposes only. These services are not intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a qualified healthcare professional for medical advice.
           </p>

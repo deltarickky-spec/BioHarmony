@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -9,6 +9,9 @@ export const reportRequestsTable = pgTable("report_requests", {
   reportType: varchar("report_type", { length: 50 }).notNull(),
   note: text("note"),
   adminNote: text("admin_note"),
+  starred: boolean("starred").notNull().default(false),
+  flagged: boolean("flagged").notNull().default(false),
+  referralSource: varchar("referral_source", { length: 100 }),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

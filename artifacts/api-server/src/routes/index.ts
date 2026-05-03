@@ -6,6 +6,7 @@ import scanRequestsRouter from "./scanRequests";
 import adminRouter from "./admin";
 import narrateRouter from "./narrate";
 import stripeRouter from "./stripe";
+import webhooksRouter from "./webhooks";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(scanRequestsRouter);
 router.use(adminRouter);
 router.use(narrateRouter);
 router.use(stripeRouter);
+router.use(webhooksRouter);
 
 export default router;

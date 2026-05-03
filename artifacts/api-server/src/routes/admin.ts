@@ -33,6 +33,8 @@ const AdminUpdateSchema = z
     pipelinePaused: z.boolean().optional(),
     pipelineError: z.string().max(500).nullable().optional(),
     adminNote: z.string().max(2000).nullable().optional(),
+    starred: z.boolean().optional(),
+    flagged: z.boolean().optional(),
   })
   .refine(
     (d) =>
@@ -41,7 +43,9 @@ const AdminUpdateSchema = z
       d.paymentStatus !== undefined ||
       d.pipelinePaused !== undefined ||
       d.pipelineError !== undefined ||
-      d.adminNote !== undefined,
+      d.adminNote !== undefined ||
+      d.starred !== undefined ||
+      d.flagged !== undefined,
     { message: "At least one field is required" },
   );
 

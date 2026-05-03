@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import {
   Upload, FileText, Download, Star, Zap, Users, Crown,
-  ChevronRight, Lock, CheckCircle, Clock, BarChart3
+  ChevronRight, Lock, CheckCircle, Clock, BarChart3, Palette, ImageIcon, Save
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -186,7 +186,16 @@ function CreditMeter({ used, total, tier }: { used: number; total: number; tier:
 
 export default function PractitionerPortal() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(PRACTITIONER_KEY) === "1");
-  const [activeTab, setActiveTab] = useState<"overview" | "reports" | "plans">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "reports" | "plans" | "brand">("overview");
+  const [brandName, setBrandName] = useState("");
+  const [brandLogo, setBrandLogo] = useState("");
+  const [brandAccent, setBrandAccent] = useState("#BFA14A");
+  const [brandSaved, setBrandSaved] = useState(false);
+
+  function saveBrand() {
+    setBrandSaved(true);
+    setTimeout(() => setBrandSaved(false), 2500);
+  }
 
   if (!authed) return <AuthGate onAuth={() => setAuthed(true)} />;
 
@@ -235,6 +244,7 @@ export default function PractitionerPortal() {
               { id: "overview", label: "Overview", icon: BarChart3 },
               { id: "reports", label: "My Reports", icon: FileText },
               { id: "plans", label: "Plans & Billing", icon: Crown },
+              { id: "brand", label: "Branding", icon: Palette },
             ] as const).map((tab) => (
               <button
                 key={tab.id}
@@ -520,6 +530,151 @@ export default function PractitionerPortal() {
                   {" "}to get started immediately.
                 </p>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === "brand" && (
+            <motion.div key="brand" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }} className="space-y-7">
+
+              {/* Intro */}
+              <div>
+                <h2 className="font-serif text-2xl text-[#F4EFE6] mb-2">White-Label Branding</h2>
+                <p className="text-[#F4EFE6]/45 text-sm leading-relaxed">
+                  Customise how your clients receive their reports. Your logo, business name and accent colour will appear on all delivered PDFs and client portal pages.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+
+                {/* Left — inputs */}
+                <div className="space-y-5">
+
+                  {/* Business name */}
+                  <div>
+                    <label className="block text-xs text-[#F4EFE6]/45 uppercase tracking-wider mb-2">Practice / Business Name</label>
+                    <input
+                      type="text"
+                      value={brandName}
+                      onChange={(e) => setBrandName(e.target.value)}
+                      placeholder="e.g. Harmony Wellness Studio"
+                      className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/50 transition text-sm"
+                    />
+                  </div>
+
+                  {/* Logo URL */}
+                  <div>
+                    <label className="block text-xs text-[#F4EFE6]/45 uppercase tracking-wider mb-2">Logo URL</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={brandLogo}
+                        onChange={(e) => setBrandLogo(e.target.value)}
+                        placeholder="https://your-site.com/logo.png"
+                        className="flex-1 bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/50 transition text-sm"
+                      />
+                      {brandLogo && (
+                        <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/5 overflow-hidden flex items-center justify-center shrink-0">
+                          <img src={brandLogo} alt="logo preview" className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-[#F4EFE6]/25 mt-1.5">PNG or SVG with transparent background works best.</p>
+                  </div>
+
+                  {/* Accent colour */}
+                  <div>
+                    <label className="block text-xs text-[#F4EFE6]/45 uppercase tracking-wider mb-2">Accent Colour</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={brandAccent}
+                        onChange={(e) => setBrandAccent(e.target.value)}
+                        className="w-10 h-10 rounded-lg border border-white/15 cursor-pointer bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={brandAccent}
+                        onChange={(e) => setBrandAccent(e.target.value)}
+                        className="w-28 bg-white/5 border border-white/12 rounded-lg px-3 py-2 text-[#F4EFE6] text-sm font-mono focus:outline-none focus:border-[#BFA14A]/50 transition uppercase"
+                        maxLength={7}
+                      />
+                      {/* Preset swatches */}
+                      <div className="flex gap-1.5">
+                        {["#BFA14A","#0F5C5E","#6366f1","#e85d75","#10b981"].map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            title={c}
+                            onClick={() => setBrandAccent(c)}
+                            className={cn("w-6 h-6 rounded-full border-2 transition", brandAccent.toLowerCase() === c.toLowerCase() ? "border-white/70 scale-110" : "border-transparent hover:border-white/40")}
+                            style={{ background: c }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save */}
+                  <button
+                    type="button"
+                    onClick={saveBrand}
+                    className={cn(
+                      "flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all duration-200",
+                      brandSaved
+                        ? "bg-emerald-900/30 border border-emerald-700/40 text-emerald-300"
+                        : "bg-[#BFA14A] text-[#060D0D] hover:bg-[#d4b456] shadow-[0_0_20px_rgba(191,161,74,0.3)]"
+                    )}
+                  >
+                    {brandSaved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : <><Save className="w-4 h-4" /> Save Branding</>}
+                  </button>
+                </div>
+
+                {/* Right — live preview */}
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30 mb-3">Report Header Preview</p>
+                  <div className="rounded-2xl border border-white/10 bg-[#0C1919] overflow-hidden">
+                    {/* Mock report header */}
+                    <div className="px-6 py-5 border-b border-white/8 flex items-center justify-between" style={{ borderBottomColor: `${brandAccent}22` }}>
+                      <div className="flex items-center gap-3">
+                        {brandLogo ? (
+                          <img src={brandLogo} alt="" className="h-8 w-auto object-contain" onError={() => {}} />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${brandAccent}22`, border: `1px solid ${brandAccent}44` }}>
+                            <ImageIcon className="w-4 h-4" style={{ color: brandAccent }} />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-semibold text-[#F4EFE6]">{brandName || "Your Practice Name"}</p>
+                          <p className="text-[10px] text-[#F4EFE6]/35">Wellness Report</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-[#F4EFE6]/30">Client Copy</p>
+                        <p className="text-[10px] font-mono" style={{ color: brandAccent }}>BH-0001</p>
+                      </div>
+                    </div>
+                    <div className="px-6 py-4 space-y-2">
+                      <div className="h-2 rounded-full bg-white/8 w-3/4" />
+                      <div className="h-2 rounded-full bg-white/5 w-1/2" />
+                      <div className="mt-4 h-1 rounded-full w-full" style={{ background: `${brandAccent}33` }} />
+                    </div>
+                    <div className="px-6 pb-4 flex items-center justify-between">
+                      <p className="text-[10px] text-[#F4EFE6]/20">Non-diagnostic wellness insight only</p>
+                      <div className="text-[10px] px-2 py-0.5 rounded-full text-[#F4EFE6]/30" style={{ background: `${brandAccent}15`, border: `1px solid ${brandAccent}25` }}>
+                        {brandName || "Your Brand"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-white/3 border border-white/6">
+                    <Palette className="w-3.5 h-3.5 text-[#F4EFE6]/30 mt-0.5 shrink-0" />
+                    <p className="text-xs text-[#F4EFE6]/35 leading-relaxed">
+                      White-label delivery is applied to all new reports after saving. Existing delivered reports are not retroactively updated.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
             </motion.div>
           )}
 

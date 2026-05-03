@@ -1,0 +1,175 @@
+Add the remaining SaaS infrastructure features to BioHarmony while keeping the current premium dark design.
+
+Do not rebuild the site. Add these missing business-critical features.
+
+1. USER ACCOUNT PORTAL
+
+Create /client-portal
+
+Clients can:
+- Log in with email + request ID for now
+- View submitted reports
+- Track report status
+- Download completed PDF reports
+- Listen to audio if included
+- Submit another scan
+
+Use mock authentication for now.
+
+2. PRACTITIONER PORTAL UPGRADE
+
+Expand /practitioner-portal so practitioners can:
+- Upload new reports
+- View remaining monthly credits
+- See completed reports
+- Download reports
+- View billing tier
+- Request white-label branding
+- Add their logo/business name for future white-label reports
+
+3. REPORT DELIVERY PAGE
+
+Create /report/:id
+
+This page should show:
+- Client name
+- Report type
+- BioHarmony Intelligence Score placeholder
+- PDF download button
+- Audio section if Premium
+- Language selector
+- Delivery status
+- Disclaimer
+
+4. BIOHARMONY INTELLIGENCE SCORE UI
+
+Add a score component:
+- Overall Score /100
+- Stress Load
+- Energy Balance
+- System Alignment
+- Recovery Capacity
+
+Use mock values for now.
+
+5. REFERRAL SYSTEM
+
+Add referral code field:
+- Customers can enter a referral code
+- Practitioners can have referral codes
+- Store referral_source on requests
+
+Add admin view:
+- Referral source
+- Number of submissions
+- Revenue placeholder
+
+6. TESTIMONIAL REQUEST FLOW
+
+After report is delivered, add:
+“Would you like to leave feedback?”
+
+Fields:
+- Star rating
+- Short testimonial
+- Permission to use testimonial publicly checkbox
+
+Admin can approve testimonials.
+
+7. COUPON / PROMO CODE STRUCTURE
+
+Add promo code support:
+- BETA10
+- FRIEND20
+- PRACTITIONER
+
+For now, apply mock discount calculation.
+
+8. KNOWLEDGE / BLOG LIBRARY
+
+Create /wellness-library
+
+Add categories:
+- AO Scan Education
+- PEMF Therapy
+- Frequency Wellness
+- Pet Wellness
+- Practitioner Education
+
+Use placeholder articles for now.
+
+9. LEGAL PAGES
+
+Create:
+- /terms
+- /privacy
+- /disclaimer
+
+Use wellness-safe placeholder legal language.
+Make clear:
+- educational only
+- non-diagnostic
+- not medical advice
+- consult licensed healthcare provider
+
+10. ADMIN SETTINGS PAGE
+
+Create /admin/settings
+
+Admin can configure:
+- Prices
+- Report plans
+- Pipeline timing
+- Supported languages
+- Delivery options
+- Payment links
+- Admin email
+- WhatsApp placeholder
+- Sage/Hermes webhook URL placeholder
+
+11. WEBHOOK-READY ARCHITECTURE
+
+Add placeholder webhook endpoints:
+
+POST /api/webhooks/payment-success
+POST /api/webhooks/report-generated
+POST /api/webhooks/audio-ready
+POST /api/webhooks/delivery-complete
+POST /api/webhooks/sage-hermes-status
+
+For now, they can log data and update mock DB fields.
+
+12. EMAIL TEMPLATE CENTER
+
+Create admin page section for email templates:
+- Submission received
+- Payment received
+- Report in progress
+- Report ready
+- Report delivered
+- Testimonial request
+- Practitioner welcome
+
+Use editable mock templates.
+
+13. EXPORT / BACKUP
+
+Add admin export buttons:
+- Export report requests CSV
+- Export practitioners CSV
+- Export testimonials CSV
+
+14. MOBILE POLISH
+
+Check all important pages on mobile:
+- Home
+- Upload Scan
+- Track Report
+- Sample Reports
+- Practitioner Portal
+- Admin Dashboard
+
+Fix any spacing, overflow, or unreadable text.
+
+Goal:
+Make BioHarmony feel like a complete AI-run SaaS platform ready to connect to HP Sage/Hermes later.

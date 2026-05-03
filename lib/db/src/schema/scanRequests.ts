@@ -20,6 +20,9 @@ export const scanRequestsTable = pgTable("scan_requests", {
   scoreBreakdown: text("score_breakdown"),
   note: text("note"),
   adminNote: text("admin_note"),
+  starred: boolean("starred").notNull().default(false),
+  flagged: boolean("flagged").notNull().default(false),
+  referralSource: varchar("referral_source", { length: 100 }),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
