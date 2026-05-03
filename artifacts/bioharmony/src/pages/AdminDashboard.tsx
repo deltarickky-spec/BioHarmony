@@ -318,6 +318,10 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
       advanced: { count: 0, total: 0 },
       premium: { count: 0, total: 0 },
     };
+    const byKind = {
+      pet:   { count: 0, total: 0 },
+      human: { count: 0, total: 0 },
+    };
     let grand = 0;
     for (const r of paidScans) {
       const plan = detectPlan(r);
@@ -325,15 +329,21 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
         byPlan[plan].count++;
         byPlan[plan].total += PLAN_PRICES[plan];
         grand += PLAN_PRICES[plan];
+        const kind = r.reportType === "pet_scan" ? "pet" : "human";
+        byKind[kind].count++;
+        byKind[kind].total += PLAN_PRICES[plan];
       }
     }
-    return { byPlan, grand, totalPaid: paidScans.length };
+    return { byPlan, byKind, grand, totalPaid: paidScans.length };
   }, [requests]);
 
   if (revenue.totalPaid === 0) return null;
 
+  const hasPetRevenue = revenue.byKind.pet.count > 0;
+
   return (
     <div className="rounded-xl border border-white/8 bg-[#0C1919] overflow-hidden">
+      {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/8">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-3.5 h-3.5 text-[#BFA14A]" />
@@ -345,6 +355,8 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
           <span className="text-xs text-[#F4EFE6]/25 ml-2">({revenue.totalPaid} paid)</span>
         </div>
       </div>
+
+      {/* Per-plan breakdown */}
       <div className="grid grid-cols-3 divide-x divide-white/8">
         {(["basic", "advanced", "premium"] as const).map((plan) => {
           const { count, total } = revenue.byPlan[plan];
@@ -361,6 +373,45 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
           );
         })}
       </div>
+
+      {/* Pet vs Human breakdown — only when there are pet scan clients */}
+      {hasPetRevenue && (
+        <div className="border-t border-white/8 grid grid-cols-2 divide-x divide-white/8">
+          {/* Pet scans */}
+          <div className="px-5 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🐾</span>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30 leading-none mb-1">Pet Scans</p>
+                <p className="text-xs text-[#F4EFE6]/35">
+                  {revenue.byKind.pet.count} {revenue.byKind.pet.count === 1 ? "client" : "clients"}
+                </p>
+              </div>
+            </div>
+            <span className="text-base font-bold text-[#BFA14A]/80">
+              ${revenue.byKind.pet.total.toLocaleString("en-CA")}
+            </span>
+          </div>
+
+          {/* Human scans */}
+          <div className="px-5 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base">👤</span>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30 leading-none mb-1">Human Scans</p>
+                <p className="text-xs text-[#F4EFE6]/35">
+                  {revenue.byKind.human.count} {revenue.byKind.human.count === 1 ? "client" : "clients"}
+                </p>
+              </div>
+            </div>
+            <span className="text-base font-bold text-[#4ecdc4]/80">
+              {revenue.byKind.human.count > 0
+                ? `$${revenue.byKind.human.total.toLocaleString("en-CA")}`
+                : "—"}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
