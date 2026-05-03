@@ -36,6 +36,7 @@ export default function UploadScan() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,6 +81,10 @@ export default function UploadScan() {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Something went wrong");
       }
+      const data = (await res.json()) as { id?: number };
+      if (data.id) {
+        setRequestId(`BH-${data.id.toString().padStart(4, "0")}`);
+      }
       setIsSubmitted(true);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not submit your request. Please try again.");
@@ -122,28 +127,48 @@ export default function UploadScan() {
                 <div className="w-20 h-20 bg-[#BFA14A]/10 rounded-full flex items-center justify-center mb-2">
                   <CheckCircle className="w-10 h-10 text-[#BFA14A]" />
                 </div>
-                <div>
-                  <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] mb-3">Request Received</p>
-                  <h2 className="text-3xl font-serif text-[#F4EFE6] mb-4">Thank you.</h2>
-                  <p className="text-[#F4EFE6]/70 max-w-md mx-auto text-lg leading-relaxed">
-                    Your request has been received. We'll review your submission and prepare your report within{" "}
+                <div className="w-full max-w-md space-y-4">
+                  <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em]">Request Received</p>
+                  <h2 className="text-3xl font-serif text-[#F4EFE6]">Thank you.</h2>
+                  <p className="text-[#F4EFE6]/70 text-lg leading-relaxed">
+                    We'll review your submission and prepare your report within{" "}
                     <span className="text-[#BFA14A] font-medium">24–48 hours</span>.
                   </p>
+                  {requestId && (
+                    <div className="bg-[#BFA14A]/8 border border-[#BFA14A]/30 rounded-2xl px-6 py-5 text-left">
+                      <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] mb-2">Your Request ID</p>
+                      <p className="text-[#F4EFE6] font-mono text-2xl tracking-widest font-medium mb-1">
+                        {requestId}
+                      </p>
+                      <p className="text-[#F4EFE6]/40 text-sm">
+                        Save this ID — use it to track your report status at any time.
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <Button
-                  asChild
-                  className="rounded-full mt-6 bg-transparent border border-[#BFA14A]/50 text-[#BFA14A] hover:bg-[#BFA14A]/10 px-8 py-6 h-auto"
-                  data-testid="upload-another-scan"
-                >
-                  <button onClick={() => {
-                    setIsSubmitted(false);
-                    form.reset({ preferredLanguage: language, whatsapp: false });
-                    setSelectedFile(null);
-                    setSubmitError("");
-                  }}>
+                <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full max-w-md">
+                  {requestId && (
+                    <Link
+                      href="/track-report"
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#BFA14A] text-[#060D0D] text-sm font-semibold hover:bg-[#d4b456] transition-colors"
+                    >
+                      Track My Report →
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      setIsSubmitted(false);
+                      setRequestId(null);
+                      form.reset({ preferredLanguage: language, whatsapp: false });
+                      setSelectedFile(null);
+                      setSubmitError("");
+                    }}
+                    className="flex-1 py-3.5 rounded-full bg-transparent border border-white/20 text-[#F4EFE6]/60 text-sm hover:border-white/35 hover:text-[#F4EFE6]/80 transition-all"
+                    data-testid="upload-another-scan"
+                  >
                     Upload Another Scan
                   </button>
-                </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-8">

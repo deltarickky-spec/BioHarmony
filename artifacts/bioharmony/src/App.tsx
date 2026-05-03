@@ -20,6 +20,7 @@ import SampleReport from "@/pages/SampleReport";
 import SampleReports from "@/pages/SampleReports";
 import AdminLeads from "@/pages/AdminLeads";
 import AdminDashboard from "@/pages/AdminDashboard";
+import TrackReport from "@/pages/TrackReport";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ function Router() {
           <Route path="/membership" component={Membership} />
           <Route path="/sample-report" component={SampleReport} />
           <Route path="/sample-reports" component={SampleReports} />
+          <Route path="/track-report" component={TrackReport} />
           <Route component={NotFound} />
         </Switch>
       </main>

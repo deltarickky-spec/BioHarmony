@@ -28,6 +28,7 @@ export function RequestReportModal({ open, onClose, reportType }: Props) {
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   function resetAndClose() {
     onClose();
@@ -53,6 +54,10 @@ export function RequestReportModal({ open, onClose, reportType }: Props) {
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Something went wrong");
+      }
+      const data = (await res.json()) as { id?: number };
+      if (data.id) {
+        setRequestId(`BH-${data.id.toString().padStart(4, "0")}`);
       }
       setStatus("success");
     } catch (err) {
@@ -109,21 +114,42 @@ export function RequestReportModal({ open, onClose, reportType }: Props) {
                     <div className="w-14 h-14 rounded-full bg-[#0F5C5E]/30 border border-[#0F5C5E]/40 flex items-center justify-center">
                       <CheckCircle className="w-7 h-7 text-[#0F5C5E]" strokeWidth={1.5} />
                     </div>
-                    <div>
-                      <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] mb-2">Request Received</p>
-                      <h3 className="text-xl font-serif text-[#F4EFE6] mb-3">
+                    <div className="w-full space-y-3">
+                      <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em]">Request Received</p>
+                      <h3 className="text-xl font-serif text-[#F4EFE6]">
                         Thank you, {firstName}
                       </h3>
                       <p className="text-[#F4EFE6]/55 text-sm leading-relaxed">
-                        Kathy will personally review your interest and be in touch at <span className="text-[#F4EFE6]/80">{email}</span> within 1–2 business days.
+                        Kathy will personally review your interest and be in touch at{" "}
+                        <span className="text-[#F4EFE6]/80">{email}</span> within 1–2 business days.
                       </p>
+                      {requestId && (
+                        <div className="bg-[#BFA14A]/8 border border-[#BFA14A]/25 rounded-xl px-4 py-3 mt-1">
+                          <p className="text-[#BFA14A] text-xs uppercase tracking-[0.15em] mb-1">Your Request ID</p>
+                          <p className="text-[#F4EFE6] font-mono text-lg tracking-wider font-medium">{requestId}</p>
+                          <p className="text-[#F4EFE6]/40 text-xs mt-1">
+                            Use this ID to track your report status
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={resetAndClose}
-                      className="mt-2 text-sm text-[#F4EFE6]/40 hover:text-[#F4EFE6]/70 transition-colors duration-150"
-                    >
-                      Close
-                    </button>
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      {requestId && (
+                        <a
+                          href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/track-report`}
+                          onClick={resetAndClose}
+                          className="w-full py-2.5 rounded-full border border-[#BFA14A]/30 text-[#BFA14A] text-sm hover:bg-[#BFA14A]/10 transition-colors text-center"
+                        >
+                          Track My Report →
+                        </a>
+                      )}
+                      <button
+                        onClick={resetAndClose}
+                        className="text-sm text-[#F4EFE6]/35 hover:text-[#F4EFE6]/60 transition-colors duration-150"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div key="form" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>
