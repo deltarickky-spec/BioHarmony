@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import kathyAvatar from "@/assets/kathy-owens.jpg";
+import kathyAvatar from "@/assets/kathy-clinic.jpg";
 
 export function Footer() {
   return (

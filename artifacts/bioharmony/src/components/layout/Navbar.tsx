@@ -4,7 +4,7 @@ import { Menu, X, Globe, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import logoSrc from "@/assets/logo-concept-1.png";
-import kathyAvatar from "@/assets/kathy-owens.jpg";
+import kathyAvatar from "@/assets/kathy-clinic.jpg";
 import { LANGUAGES, useLanguage, type Language } from "@/contexts/LanguageContext";
 
 function LangDropdown() {

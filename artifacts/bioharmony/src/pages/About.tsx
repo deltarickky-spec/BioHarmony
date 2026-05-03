@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import kathyPortrait from "@/assets/kathy-owens-desk.png";
+import kathyPortrait from "@/assets/kathy-clinic.jpg";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
