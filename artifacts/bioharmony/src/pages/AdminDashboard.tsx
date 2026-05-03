@@ -991,6 +991,7 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [sourceFilter, setSourceFilter] = useState<"all" | "report" | "scan">("all");
   const [payFilter, setPayFilter] = useState<PaymentStatus | "all">("all");
+  const [petOnly, setPetOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UnifiedRequest | null>(null);
   const [globalPaused, setGlobalPaused] = useState(false);
@@ -1097,19 +1098,23 @@ export default function AdminDashboard() {
     return { total, autoRunning, waitingPay, errors, paid, delivered, ...byStatus };
   }, [requests]);
 
+  const petCount = useMemo(() => requests.filter((r) => r.reportType === "pet_scan").length, [requests]);
+
   const filtered = useMemo(() => {
     let list = requests;
     if (statusFilter !== "all") list = list.filter((r) => r.status === statusFilter);
     if (sourceFilter !== "all") list = list.filter((r) => r.source === sourceFilter);
     if (payFilter !== "all") list = list.filter((r) => r.paymentStatus === payFilter);
+    if (petOnly) list = list.filter((r) => r.reportType === "pet_scan");
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
-        (r) => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.reportType.toLowerCase().includes(q)
+        (r) => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.reportType.toLowerCase().includes(q) ||
+          (r.reportType === "pet_scan" && parsePetInfo(r.note)?.petName?.toLowerCase().includes(q))
       );
     }
     return list;
-  }, [requests, statusFilter, sourceFilter, payFilter, search]);
+  }, [requests, statusFilter, sourceFilter, payFilter, petOnly, search]);
 
   if (!token) return <AuthGate onAuth={handleAuth} />;
 
@@ -1219,10 +1224,10 @@ export default function AdminDashboard() {
           />
           <div className="flex gap-2 shrink-0 flex-wrap">
             {(["all", "report", "scan"] as const).map((s) => (
-              <button key={s} onClick={() => setSourceFilter(s)}
+              <button key={s} onClick={() => { setSourceFilter(s); if (s !== "all") setPetOnly(false); }}
                 className={cn(
                   "px-3 py-2 rounded-lg text-xs font-medium transition border",
-                  sourceFilter === s
+                  sourceFilter === s && !petOnly
                     ? "bg-[#BFA14A]/12 text-[#BFA14A] border-[#BFA14A]/35"
                     : "bg-[#0C1919] text-[#F4EFE6]/45 border-white/8 hover:border-white/18 hover:text-[#F4EFE6]/65"
                 )}
@@ -1230,6 +1235,27 @@ export default function AdminDashboard() {
                 {s === "all" ? "All" : s === "report" ? "Reports" : "Scans"}
               </button>
             ))}
+
+            {/* Pet filter chip */}
+            {petCount > 0 && (
+              <button
+                onClick={() => { setPetOnly((v) => !v); setSourceFilter("all"); }}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition border",
+                  petOnly
+                    ? "bg-[#BFA14A]/12 text-[#BFA14A] border-[#BFA14A]/35"
+                    : "bg-[#0C1919] text-[#F4EFE6]/45 border-white/8 hover:border-white/18 hover:text-[#F4EFE6]/65"
+                )}
+              >
+                <span>🐾</span>
+                <span>Pets</span>
+                <span className={cn(
+                  "ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold leading-none",
+                  petOnly ? "bg-[#BFA14A]/20 text-[#BFA14A]" : "bg-white/10 text-[#F4EFE6]/40"
+                )}>{petCount}</span>
+              </button>
+            )}
+
             {payFilter !== "all" && (
               <button onClick={() => setPayFilter("all")}
                 className="px-3 py-2 rounded-lg text-xs font-medium transition border bg-[#BFA14A]/12 text-[#BFA14A] border-[#BFA14A]/35"
