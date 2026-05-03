@@ -304,6 +304,7 @@ export default function UploadScan() {
   const [reportType, setReportType] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<{ name: string; blob?: Blob } | null>(null);
   const [plan, setPlan] = useState<"basic" | "advanced" | "premium">("advanced");
+  const [petInfo, setPetInfo] = useState({ petName: "", species: "", age: "", breed: "" });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -366,7 +367,15 @@ export default function UploadScan() {
           fileName: selectedFile?.name ?? undefined,
           whatsapp: values.whatsapp,
           plan,
-          note: values.note || undefined,
+          note: isPetScan
+            ? [
+                `PET NAME: ${petInfo.petName}`,
+                `SPECIES: ${petInfo.species}`,
+                petInfo.age ? `AGE: ${petInfo.age}` : null,
+                petInfo.breed ? `BREED: ${petInfo.breed}` : null,
+                values.note ? `\nOWNER NOTES: ${values.note}` : null,
+              ].filter(Boolean).join("\n")
+            : (values.note || undefined),
         }),
       });
       if (!res.ok) {
@@ -530,17 +539,17 @@ export default function UploadScan() {
                   </div>
                 )}
 
-                {/* ─── STEP 2: Upload / Record ─── */}
+                {/* ─── STEP 2: Upload / Record / Pet Details ─── */}
                 {step === 2 && (
                   <div>
                     <h2 className="font-serif text-2xl text-[#F4EFE6] mb-2">
-                      {isVoice ? "Record your voice sample" : isPetScan ? "Upload a photo of your pet" : "Upload your scan file"}
+                      {isVoice ? "Record your voice sample" : isPetScan ? "Your pet's details" : "Upload your scan file"}
                     </h2>
                     <p className="text-[#F4EFE6]/40 text-sm mb-7">
                       {isVoice
                         ? "Say your name and speak naturally for 15 seconds"
                         : isPetScan
-                          ? "A clear, recent photo helps Kathy personalize your pet's wellness report"
+                          ? "Upload a photo and tell us a little about your pet"
                           : "Upload your AO Scan export — PDF or XLSX accepted"}
                     </p>
 
@@ -550,37 +559,109 @@ export default function UploadScan() {
                         else setSelectedFile(null);
                       }} />
                     ) : isPetScan ? (
-                      /* ── Pet photo upload zone ── */
-                      <div className="space-y-4">
-                        <div
-                          onClick={handlePetPhotoClick}
-                          className={cn(
-                            "border-2 border-dashed rounded-2xl p-12 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300",
-                            selectedFile
-                              ? "border-[#0F5C5E]/60 bg-[#0F5C5E]/5 shadow-[0_0_30px_rgba(15,92,94,0.2)]"
-                              : "border-[#BFA14A]/25 hover:border-[#BFA14A]/50 hover:shadow-[0_0_24px_rgba(191,161,74,0.12)]"
-                          )}
-                        >
-                          {selectedFile ? (
-                            <>
-                              <CheckCircle className="w-10 h-10 text-[#0F5C5E] mb-4" />
-                              <p className="text-[#BFA14A] font-medium mb-1">{selectedFile.name}</p>
-                              <p className="text-xs text-[#F4EFE6]/40">Click to change photo</p>
-                            </>
-                          ) : (
-                            <>
-                              <Camera className="w-10 h-10 text-[#BFA14A]/70 mb-4" />
-                              <p className="text-[#F4EFE6]/70 font-medium mb-1">Click to upload a photo of your pet</p>
-                              <p className="text-xs text-[#BFA14A]/50 uppercase tracking-widest mt-2">JPG · PNG · HEIC · WEBP</p>
-                            </>
-                          )}
+                      /* ── Pet photo + info ── */
+                      <div className="space-y-6">
+
+                        {/* Photo upload */}
+                        <div>
+                          <p className="text-[#F4EFE6]/50 text-xs uppercase tracking-widest mb-3">Pet Photo</p>
+                          <div
+                            onClick={handlePetPhotoClick}
+                            className={cn(
+                              "border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300",
+                              selectedFile
+                                ? "border-[#0F5C5E]/60 bg-[#0F5C5E]/5 shadow-[0_0_30px_rgba(15,92,94,0.2)]"
+                                : "border-[#BFA14A]/25 hover:border-[#BFA14A]/50 hover:shadow-[0_0_24px_rgba(191,161,74,0.12)]"
+                            )}
+                          >
+                            {selectedFile ? (
+                              <>
+                                <CheckCircle className="w-8 h-8 text-[#0F5C5E] mb-3" />
+                                <p className="text-[#BFA14A] font-medium text-sm mb-0.5">{selectedFile.name}</p>
+                                <p className="text-xs text-[#F4EFE6]/35">Click to change photo</p>
+                              </>
+                            ) : (
+                              <>
+                                <Camera className="w-8 h-8 text-[#BFA14A]/60 mb-3" />
+                                <p className="text-[#F4EFE6]/65 text-sm font-medium mb-1">Upload a photo of your pet</p>
+                                <p className="text-xs text-[#BFA14A]/45 uppercase tracking-widest">JPG · PNG · HEIC · WEBP</p>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/8">
-                          <span className="text-lg shrink-0">🐾</span>
-                          <p className="text-xs text-[#F4EFE6]/45 leading-relaxed">
-                            A clear, recent photo of your pet's face is ideal. The photo is used by Kathy to help personalize the report — it is never shared or used for AI image analysis.
-                          </p>
+
+                        {/* Divider */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-px bg-white/8" />
+                          <span className="text-[10px] text-[#F4EFE6]/25 uppercase tracking-widest">Pet Info</span>
+                          <div className="flex-1 h-px bg-white/8" />
                         </div>
+
+                        {/* Pet name */}
+                        <div>
+                          <label className="block text-xs text-[#F4EFE6]/50 mb-2 uppercase tracking-wider">
+                            Pet's Name <span className="text-[#BFA14A]">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={petInfo.petName}
+                            onChange={(e) => setPetInfo(p => ({ ...p, petName: e.target.value }))}
+                            placeholder="e.g. Bella, Max, Luna"
+                            className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 text-sm focus:outline-none focus:border-[#BFA14A]/50 transition"
+                          />
+                        </div>
+
+                        {/* Species */}
+                        <div>
+                          <label className="block text-xs text-[#F4EFE6]/50 mb-3 uppercase tracking-wider">
+                            Species <span className="text-[#BFA14A]">*</span>
+                          </label>
+                          <div className="grid grid-cols-4 gap-2">
+                            {(["Dog", "Cat", "Horse", "Other"] as const).map((s) => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setPetInfo(p => ({ ...p, species: s }))}
+                                className={cn(
+                                  "py-3 px-2 rounded-xl border text-xs font-medium transition-all text-center",
+                                  petInfo.species === s
+                                    ? "border-[#BFA14A]/50 bg-[#BFA14A]/10 text-[#BFA14A]"
+                                    : "border-white/10 bg-white/[0.03] text-[#F4EFE6]/55 hover:border-white/20 hover:text-[#F4EFE6]/80"
+                                )}
+                              >
+                                <span className="block text-lg mb-1">
+                                  {s === "Dog" ? "🐕" : s === "Cat" ? "🐈" : s === "Horse" ? "🐴" : "🐾"}
+                                </span>
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Age + Breed side by side */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-[#F4EFE6]/50 mb-2 uppercase tracking-wider">Age <span className="text-[#F4EFE6]/25 normal-case font-normal">(optional)</span></label>
+                            <input
+                              type="text"
+                              value={petInfo.age}
+                              onChange={(e) => setPetInfo(p => ({ ...p, age: e.target.value }))}
+                              placeholder="e.g. 3 years"
+                              className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 text-sm focus:outline-none focus:border-[#BFA14A]/50 transition"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-[#F4EFE6]/50 mb-2 uppercase tracking-wider">Breed <span className="text-[#F4EFE6]/25 normal-case font-normal">(optional)</span></label>
+                            <input
+                              type="text"
+                              value={petInfo.breed}
+                              onChange={(e) => setPetInfo(p => ({ ...p, breed: e.target.value }))}
+                              placeholder="e.g. Golden Retriever"
+                              className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 text-sm focus:outline-none focus:border-[#BFA14A]/50 transition"
+                            />
+                          </div>
+                        </div>
+
                       </div>
                     ) : (
                       <div
@@ -612,7 +693,11 @@ export default function UploadScan() {
                       step={2} totalSteps={5}
                       onBack={goBack}
                       onNext={goNext}
-                      nextDisabled={!isVoice && !selectedFile}
+                      nextDisabled={
+                        isPetScan
+                          ? !petInfo.petName.trim() || !petInfo.species
+                          : (!isVoice && !selectedFile)
+                      }
                     />
                   </div>
                 )}
