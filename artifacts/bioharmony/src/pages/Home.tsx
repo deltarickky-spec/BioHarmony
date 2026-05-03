@@ -53,7 +53,7 @@ export default function Home() {
                   <Link href="/contact">Start Your Personalized Scan</Link>
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground italic ml-2 mt-1">Takes 2 minutes • No guesswork • Delivered in 24–48 hours</p>
+              <p className="text-sm text-muted-foreground italic ml-2 mt-1">Takes less than 2 minutes • Delivered in 24–48 hours</p>
               <Link
                 href="/track-report"
                 className="inline-flex items-center gap-1.5 ml-2 mt-1 text-sm text-[#BFA14A]/60 hover:text-[#BFA14A] transition-colors duration-200 group"
@@ -711,28 +711,72 @@ export default function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 bg-card border-t border-border">
-        <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif text-primary">Client Experiences</h2>
+      <section className="py-24 bg-[#040A0A] border-t border-white/8">
+        <div className="container px-4 md:px-6 max-w-5xl mx-auto">
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-14">
+            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans mb-3">Client Experiences</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6]">What Clients Are Saying</h2>
           </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-3 gap-5"
+          >
             {[
-              { quote: "I finally understood what my body was trying to tell me. After years of feeling off, this gave me actual clarity.", name: "Sarah M., Wellness Client" },
-              { quote: "The report made everything make sense. I could see exactly where my body needed support, and for the first time, I knew what to do.", name: "James T., Frequency Wellness Client" },
-              { quote: "This gave me clarity I haven't found anywhere else. The process was simple, and the insights were profound.", name: "Elena R., AO Scan Client" }
-            ].map((test, i) => (
-              <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-                <Card className="h-full bg-background border-border/50 shadow-sm p-6">
-                  <CardContent className="p-0 flex flex-col h-full">
-                    <p className="text-muted-foreground italic flex-grow mb-6">"{test.quote}"</p>
-                    <p className="font-serif text-primary font-medium">— {test.name}</p>
-                  </CardContent>
-                </Card>
+              {
+                quote: "I finally understood what my body was trying to tell me. After years of feeling off, this gave me actual clarity.",
+                name: "Sarah M.",
+                tag: "Wellness Client",
+                stars: 5,
+              },
+              {
+                quote: "The report made everything make sense. I could see exactly where my body needed support, and for the first time, I knew what to do.",
+                name: "James T.",
+                tag: "AO Scan Client",
+                stars: 5,
+              },
+              {
+                quote: "This gave me clarity I haven't found anywhere else. The process was simple, and the insights were profound.",
+                name: "Elena R.",
+                tag: "Frequency Wellness Client",
+                stars: 5,
+              },
+            ].map((t, i) => (
+              <motion.div
+                key={i}
+                variants={fadeInUp}
+                className="flex flex-col bg-white/[0.03] border border-white/8 rounded-2xl p-7 hover:border-[#BFA14A]/20 hover:bg-white/[0.045] transition-all duration-300"
+              >
+                {/* Stars */}
+                <div className="flex gap-1 mb-5">
+                  {Array.from({ length: t.stars }).map((_, s) => (
+                    <span key={s} className="text-[#BFA14A]/70 text-xs">★</span>
+                  ))}
+                </div>
+                {/* Quote */}
+                <p className="font-serif text-[#F4EFE6]/72 text-[15px] leading-relaxed italic flex-grow mb-6">
+                  "{t.quote}"
+                </p>
+                {/* Attribution */}
+                <div className="border-t border-white/8 pt-4 flex items-center justify-between">
+                  <span className="text-sm font-medium text-[#F4EFE6]/65">— {t.name}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-[#BFA14A]/45 font-sans">{t.tag}</span>
+                </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
+
+          {/* Disclaimer */}
+          <motion.p
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="text-center text-[10px] text-[#F4EFE6]/20 font-sans tracking-wider mt-8"
+          >
+            Client experiences are individual and may vary. These are illustrative accounts shared with permission.
+          </motion.p>
+
         </div>
       </section>
 

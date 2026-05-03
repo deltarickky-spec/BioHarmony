@@ -89,10 +89,10 @@ function ClientCard({ name, scanType, date, badge }: {
 
 function SampleBadge() {
   return (
-    <div className="flex items-center gap-2 bg-[#BFA14A]/6 border border-[#BFA14A]/18 rounded-xl px-4 py-3">
-      <Sparkles className="w-3.5 h-3.5 text-[#BFA14A]/50 shrink-0" />
-      <p className="text-[#F4EFE6]/45 text-xs">
-        This is a sample report. Your results will be fully personalized to you.
+    <div className="flex items-center gap-2.5 bg-[#BFA14A]/6 border border-[#BFA14A]/18 rounded-xl px-4 py-3">
+      <Sparkles className="w-3.5 h-3.5 text-[#BFA14A]/60 shrink-0" />
+      <p className="text-[#F4EFE6]/55 text-xs font-medium">
+        This is a sample. Your report will be fully personalized to you.
       </p>
     </div>
   );
