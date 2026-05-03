@@ -341,6 +341,7 @@ export default function UploadScan() {
     setIsLoading(true);
     setSubmitError("");
     try {
+      // Step 1: Create the scan request
       const res = await fetch(`${BASE}/api/scan-requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -361,7 +362,27 @@ export default function UploadScan() {
         throw new Error(data.error ?? "Something went wrong");
       }
       const data = (await res.json()) as { id?: number };
-      if (data.id) setRequestId(`BH-${data.id.toString().padStart(4, "0")}`);
+      const numericId = data.id;
+      if (numericId) {
+        const rid = `BH-${numericId.toString().padStart(4, "0")}`;
+        setRequestId(rid);
+
+        // Step 2: Create Stripe checkout session and redirect
+        const checkoutRes = await fetch(`${BASE}/api/stripe/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scanRequestId: numericId }),
+        });
+        if (checkoutRes.ok) {
+          const checkoutData = (await checkoutRes.json()) as { url?: string };
+          if (checkoutData.url) {
+            // Redirect to Stripe-hosted checkout page
+            window.location.href = checkoutData.url;
+            return; // don't set isSubmitted — we're navigating away
+          }
+        }
+        // Stripe not yet configured — fall through to confirmation screen
+      }
       setIsSubmitted(true);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not submit. Please try again.");
@@ -813,10 +834,10 @@ export default function UploadScan() {
                           "flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold transition-all duration-200",
                           isLoading
                             ? "bg-white/5 text-[#F4EFE6]/25 cursor-not-allowed"
-                            : "bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/20 shadow-[0_0_20px_rgba(191,161,74,0.25)] hover:shadow-[0_0_35px_rgba(191,161,74,0.45)]"
+                            : "bg-[#BFA14A] text-[#060D0D] shadow-[0_0_20px_rgba(191,161,74,0.35)] hover:shadow-[0_0_40px_rgba(191,161,74,0.6)] hover:bg-[#d4b456]"
                         )}
                       >
-                        {isLoading ? "Submitting…" : "Submit My Report"}
+                        {isLoading ? "Redirecting to payment…" : "Continue to Payment"}
                         {!isLoading && <ChevronRight className="w-4 h-4" />}
                       </button>
                     </div>
