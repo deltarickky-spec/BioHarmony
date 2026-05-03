@@ -17,9 +17,9 @@ export default function About() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
 
             <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="order-2 lg:order-1">
-              <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(15,92,94,0.25)] border border-white/10">
+              <div className="aspect-video rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(15,92,94,0.25)] border border-white/10">
                 {kathyPortrait ? (
-                  <img src={kathyPortrait} alt="Kathy Owens, Founder" className="w-full h-full object-cover" />
+                  <img src={kathyPortrait} alt="Kathy Owens, Founder" className="w-full h-full object-cover object-center" />
                 ) : (
                   <div className="w-full h-full bg-white/5 flex items-center justify-center">
                     <span className="text-[#F4EFE6]/30 font-serif text-lg">Portrait</span>
