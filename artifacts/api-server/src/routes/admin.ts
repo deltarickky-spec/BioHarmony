@@ -3,6 +3,11 @@ import { db } from "@workspace/db";
 import { reportRequestsTable, scanRequestsTable } from "@workspace/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
+import {
+  isGlobalPaused,
+  pauseGlobal,
+  resumeGlobal,
+} from "../services/pipelineScheduler";
 
 const router = Router();
 
@@ -24,10 +29,17 @@ const AdminUpdateSchema = z
     status: z.enum(VALID_STATUSES).optional(),
     pipelineStage: z.enum(PIPELINE_STAGES).optional(),
     paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
+    pipelinePaused: z.boolean().optional(),
+    pipelineError: z.string().max(500).nullable().optional(),
   })
   .refine(
-    (d) => d.status !== undefined || d.pipelineStage !== undefined || d.paymentStatus !== undefined,
-    { message: "At least one field (status, pipelineStage, or paymentStatus) is required" },
+    (d) =>
+      d.status !== undefined ||
+      d.pipelineStage !== undefined ||
+      d.paymentStatus !== undefined ||
+      d.pipelinePaused !== undefined ||
+      d.pipelineError !== undefined,
+    { message: "At least one field is required" },
   );
 
 function checkAuth(
@@ -43,9 +55,10 @@ function checkAuth(
   return true;
 }
 
+// ── Data endpoints ─────────────────────────────────────────────────────────────
+
 router.get("/admin/leads", async (req, res) => {
   if (!checkAuth(req, res)) return;
-
   try {
     const [reportRequests, scanRequests] = await Promise.all([
       db.select().from(reportRequestsTable).orderBy(desc(reportRequestsTable.createdAt)),
@@ -76,6 +89,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
   }
 
   const data = parsed.data;
+  const now = new Date();
 
   try {
     if (source === "report") {
@@ -86,11 +100,29 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
         await db.update(reportRequestsTable).set(updateSet).where(eq(reportRequestsTable.id, id));
       }
     } else {
+      // Scan requests — full pipeline control
       const updateSet = {
         ...(data.status !== undefined ? { status: data.status } : {}),
-        ...(data.pipelineStage !== undefined ? { pipelineStage: data.pipelineStage } : {}),
-        ...(data.paymentStatus !== undefined ? { paymentStatus: data.paymentStatus } : {}),
+        ...(data.pipelineStage !== undefined
+          ? {
+              pipelineStage: data.pipelineStage,
+              // Reset stage timer on manual override so scheduler uses fresh timing
+              stageEnteredAt: now,
+            }
+          : {}),
+        ...(data.paymentStatus !== undefined
+          ? {
+              paymentStatus: data.paymentStatus,
+              // Start pipeline timer the moment payment is confirmed
+              ...(["paid", "waived"].includes(data.paymentStatus)
+                ? { stageEnteredAt: now }
+                : {}),
+            }
+          : {}),
+        ...(data.pipelinePaused !== undefined ? { pipelinePaused: data.pipelinePaused } : {}),
+        ...(data.pipelineError !== undefined ? { pipelineError: data.pipelineError } : {}),
       };
+
       if (Object.keys(updateSet).length > 0) {
         await db.update(scanRequestsTable).set(updateSet).where(eq(scanRequestsTable.id, id));
       }
@@ -102,6 +134,36 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
     req.log.error({ err }, "Failed to update request");
     res.status(500).json({ error: "Could not update request" });
   }
+});
+
+// ── Pipeline automation control ────────────────────────────────────────────────
+
+/** Get global pipeline automation status */
+router.get("/admin/pipeline/status", (req, res) => {
+  if (!checkAuth(req, res)) return;
+  res.json({ globalPaused: isGlobalPaused() });
+});
+
+/**
+ * Globally pause the mock pipeline scheduler.
+ * Mock pipeline progression — replace with Sage/Hermes AI processing webhook later.
+ */
+router.post("/admin/pipeline/global-pause", (req, res) => {
+  if (!checkAuth(req, res)) return;
+  pauseGlobal();
+  req.log.info("Global pipeline automation paused by admin");
+  res.json({ success: true, globalPaused: true });
+});
+
+/**
+ * Globally resume the mock pipeline scheduler.
+ * Mock pipeline progression — replace with Sage/Hermes AI processing webhook later.
+ */
+router.post("/admin/pipeline/global-resume", (req, res) => {
+  if (!checkAuth(req, res)) return;
+  resumeGlobal();
+  req.log.info("Global pipeline automation resumed by admin");
+  res.json({ success: true, globalPaused: false });
 });
 
 export { PIPELINE_STAGES, PAYMENT_STATUSES, VALID_STATUSES };

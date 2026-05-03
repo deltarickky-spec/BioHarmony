@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { startPipelineScheduler } from "./services/pipelineScheduler";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,6 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+  // Mock pipeline progression — replace with Sage/Hermes AI processing webhook later.
+  startPipelineScheduler();
 });

@@ -1,84 +1,36 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, CheckCircle2, Circle, Loader2, AlertCircle,
-  CreditCard, FileText, MessageCircle, Clock, Lock
+  CreditCard, FileText, MessageCircle, Clock, Lock, RefreshCw
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const AUTO_REFRESH_INTERVAL_MS = 12_000;
 
 const PIPELINE_STAGES = [
-  {
-    key: "queued",
-    label: "Request Queued",
-    desc: "Your submission has been received and is in the queue.",
-    icon: "📥",
-  },
-  {
-    key: "extracting",
-    label: "Extracting Data",
-    desc: "Your scan data is being extracted and prepared for analysis.",
-    icon: "🔍",
-  },
-  {
-    key: "interpreting",
-    label: "AI Interpreting",
-    desc: "BioHarmony's AI engine is analyzing your bio-frequency data.",
-    icon: "🧠",
-  },
-  {
-    key: "generating",
-    label: "Generating Report",
-    desc: "Your personalized wellness narrative is being written.",
-    icon: "✍️",
-  },
-  {
-    key: "quality_check",
-    label: "Quality Check",
-    desc: "Final review to ensure accuracy and BioHarmony standards.",
-    icon: "✅",
-  },
-  {
-    key: "pdf_ready",
-    label: "PDF Created",
-    desc: "Your report has been compiled into a beautiful PDF.",
-    icon: "📄",
-  },
-  {
-    key: "audio_ready",
-    label: "Audio Narration Ready",
-    desc: "Your audio narration has been generated and attached.",
-    icon: "🎧",
-  },
-  {
-    key: "delivered",
-    label: "Delivered",
-    desc: "Your report has been sent to your chosen delivery method.",
-    icon: "📬",
-  },
+  { key: "queued",        label: "Request Queued",          desc: "Your submission has been received and is in the queue.", icon: "📥" },
+  { key: "extracting",    label: "Extracting Data",          desc: "Your scan data is being extracted and prepared for analysis.", icon: "🔍" },
+  { key: "interpreting",  label: "AI Interpreting",          desc: "BioHarmony's AI engine is analyzing your bio-frequency data.", icon: "🧠" },
+  { key: "generating",    label: "Generating Report",        desc: "Your personalized wellness narrative is being written.", icon: "✍️" },
+  { key: "quality_check", label: "Quality Check",            desc: "Final review to ensure accuracy and BioHarmony standards.", icon: "✅" },
+  { key: "pdf_ready",     label: "PDF Created",              desc: "Your report has been compiled into a beautiful PDF.", icon: "📄" },
+  { key: "audio_ready",   label: "Audio Narration Ready",    desc: "Your audio narration has been generated and attached.", icon: "🎧" },
+  { key: "delivered",     label: "Delivered",                desc: "Your report has been sent to your chosen delivery method.", icon: "📬" },
 ] as const;
 
 type PipelineStageKey = (typeof PIPELINE_STAGES)[number]["key"];
 
 const STAGE_INDEX: Record<PipelineStageKey, number> = {
-  queued: 0,
-  extracting: 1,
-  interpreting: 2,
-  generating: 3,
-  quality_check: 4,
-  pdf_ready: 5,
-  audio_ready: 6,
-  delivered: 7,
+  queued: 0, extracting: 1, interpreting: 2, generating: 3,
+  quality_check: 4, pdf_ready: 5, audio_ready: 6, delivered: 7,
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  basic: "Basic — $55",
-  advanced: "Advanced — $99",
-  premium: "Premium — $149",
+  basic: "Basic — $55", advanced: "Advanced — $99", premium: "Premium — $149",
 };
-
 const LANG_LABELS: Record<string, string> = {
   en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
   de: "German", zh: "Chinese", ar: "Arabic", hi: "Hindi",
@@ -111,6 +63,8 @@ function formatRequestId(raw: string): string | null {
   return `BH-${parseInt(match[1]!, 10).toString().padStart(4, "0")}`;
 }
 
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
 function PaymentBanner({ paymentStatus }: { paymentStatus: string }) {
   if (paymentStatus === "paid" || paymentStatus === "waived") return null;
   if (paymentStatus === "failed") {
@@ -136,8 +90,8 @@ function PaymentBanner({ paymentStatus }: { paymentStatus: string }) {
       <div>
         <p className="text-[#BFA14A] font-semibold text-sm mb-1">Payment Pending</p>
         <p className="text-[#F4EFE6]/55 text-sm leading-relaxed">
-          Your report request is received. Processing will begin once payment is confirmed.
-          We'll reach out shortly with a payment link, or contact us at{" "}
+          Processing will begin once payment is confirmed.
+          Contact us at{" "}
           <a href="mailto:info@bioharmonysolutions.ca" className="text-[#BFA14A] underline underline-offset-2">
             info@bioharmonysolutions.ca
           </a>.
@@ -145,6 +99,17 @@ function PaymentBanner({ paymentStatus }: { paymentStatus: string }) {
       </div>
     </div>
   );
+}
+
+function PaymentStatusBadge({ status }: { status: string }) {
+  const map: Record<string, { style: string; label: string }> = {
+    paid:    { style: "bg-green-900/25 text-green-300 border border-green-700/30",   label: "Payment Confirmed" },
+    pending: { style: "bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/30",  label: "Payment Pending" },
+    failed:  { style: "bg-red-900/25 text-red-300 border border-red-700/30",         label: "Payment Failed" },
+    waived:  { style: "bg-purple-900/25 text-purple-300 border border-purple-700/30", label: "Payment Waived" },
+  };
+  const m = map[status] ?? map.pending!;
+  return <span className={cn("text-xs px-2.5 py-1 rounded-full font-medium", m.style)}>{m.label}</span>;
 }
 
 function PipelineStepper({ stage, plan }: { stage: PipelineStageKey; plan: string }) {
@@ -158,13 +123,12 @@ function PipelineStepper({ stage, plan }: { stage: PipelineStageKey; plan: strin
         const isSkipped = isAudioStage && !isAudioPlan;
         const isDone = isSkipped ? false : i < currentIdx;
         const isCurrent = !isSkipped && i === currentIdx;
-        const isPending = !isDone && !isCurrent;
 
         return (
-          <div key={s.key} className={cn("flex gap-4", isSkipped && "opacity-30")}>
+          <div key={s.key} className={cn("flex gap-4", isSkipped && "opacity-25")}>
             <div className="flex flex-col items-center">
               <div className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all text-base",
+                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all",
                 isDone
                   ? "bg-[#BFA14A]/15 border border-[#BFA14A]/40 shadow-[0_0_12px_rgba(191,161,74,0.2)]"
                   : isCurrent
@@ -183,8 +147,7 @@ function PipelineStepper({ stage, plan }: { stage: PipelineStageKey; plan: strin
                 )}
               </div>
               {i < PIPELINE_STAGES.length - 1 && (
-                <div className={cn(
-                  "w-px flex-1 my-1 min-h-[20px] transition-colors",
+                <div className={cn("w-px flex-1 my-1 min-h-[20px] transition-colors",
                   isDone ? "bg-[#BFA14A]/25" : "bg-white/6"
                 )} />
               )}
@@ -204,12 +167,11 @@ function PipelineStepper({ stage, plan }: { stage: PipelineStageKey; plan: strin
                   </span>
                 )}
                 {isSkipped && (
-                  <span className="text-[10px] text-[#F4EFE6]/25 uppercase tracking-wide">Premium only</span>
+                  <span className="text-[10px] text-[#F4EFE6]/22 uppercase tracking-wide">Premium only</span>
                 )}
               </div>
               {(isDone || isCurrent) && !isSkipped && (
-                <p className={cn(
-                  "text-xs mt-0.5 leading-relaxed",
+                <p className={cn("text-xs mt-0.5 leading-relaxed",
                   isDone ? "text-[#F4EFE6]/30" : "text-[#F4EFE6]/55"
                 )}>
                   {s.desc}
@@ -232,36 +194,53 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PaymentStatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    paid: "bg-green-900/25 text-green-300 border border-green-700/30",
-    pending: "bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/30",
-    failed: "bg-red-900/25 text-red-300 border border-red-700/30",
-    waived: "bg-purple-900/25 text-purple-300 border border-purple-700/30",
-  };
-  const labels: Record<string, string> = {
-    paid: "Payment Confirmed",
-    pending: "Payment Pending",
-    failed: "Payment Failed",
-    waived: "Payment Waived",
-  };
+function LiveBadge({ lastUpdated }: { lastUpdated: Date | null }) {
+  const [secondsAgo, setSecondsAgo] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (lastUpdated) {
+        setSecondsAgo(Math.round((Date.now() - lastUpdated.getTime()) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [lastUpdated]);
+
   return (
-    <span className={cn("text-xs px-2.5 py-1 rounded-full font-medium", styles[status] ?? styles.pending)}>
-      {labels[status] ?? status}
-    </span>
+    <div className="flex items-center gap-2">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ecdc4] opacity-60" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ecdc4]" />
+      </span>
+      <span className="text-[10px] text-[#4ecdc4]/70 uppercase tracking-wider">
+        Live
+        {lastUpdated && secondsAgo > 2 && (
+          <span className="text-[#F4EFE6]/22 normal-case tracking-normal ml-1">
+            · updated {secondsAgo}s ago
+          </span>
+        )}
+      </span>
+    </div>
   );
 }
 
-function ResultCard({ result }: { result: TrackResult }) {
+function ResultCard({
+  result,
+  isLive,
+  lastUpdated,
+  refreshing,
+}: {
+  result: TrackResult;
+  isLive: boolean;
+  lastUpdated: Date | null;
+  refreshing: boolean;
+}) {
   const stageIdx = STAGE_INDEX[result.pipelineStage] ?? 0;
   const isDelivered = result.pipelineStage === "delivered";
-  const totalStages = 8;
-  const progress = Math.round((stageIdx / (totalStages - 1)) * 100);
+  const progress = Math.round((stageIdx / (PIPELINE_STAGES.length - 1)) * 100);
 
   const submittedDate = new Date(result.createdAt).toLocaleDateString("en-CA", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    year: "numeric", month: "long", day: "numeric",
   });
 
   return (
@@ -290,20 +269,23 @@ function ResultCard({ result }: { result: TrackResult }) {
                   Delivered ✓
                 </span>
               )}
+              {isLive && <LiveBadge lastUpdated={lastUpdated} />}
+              {refreshing && (
+                <RefreshCw className="w-3.5 h-3.5 text-[#F4EFE6]/25 animate-spin" />
+              )}
             </div>
           </div>
 
           {/* Progress bar */}
-          <div className="mt-2">
+          <div>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Pipeline Progress</span>
               <span className="text-[10px] text-[#BFA14A]/60 font-mono">{progress}%</span>
             </div>
             <div className="w-full h-1.5 bg-white/6 rounded-full overflow-hidden">
               <motion.div
-                initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
                 className="h-full bg-gradient-to-r from-[#0F5C5E] to-[#BFA14A] rounded-full"
               />
             </div>
@@ -311,18 +293,24 @@ function ResultCard({ result }: { result: TrackResult }) {
         </div>
       </div>
 
-      {/* Two-column */}
+      {/* Two-column layout */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-5">
 
-        {/* Pipeline stepper */}
+        {/* Stepper */}
         <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-6">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[#BFA14A] mb-5 font-medium">Pipeline Progress</p>
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[#BFA14A] font-medium">Pipeline Progress</p>
+            {isLive && (
+              <span className="text-[10px] text-[#F4EFE6]/25 italic">
+                Auto-refreshes every ~{AUTO_REFRESH_INTERVAL_MS / 1000}s
+              </span>
+            )}
+          </div>
           <PipelineStepper stage={result.pipelineStage} plan={result.plan} />
         </div>
 
         {/* Right column */}
         <div className="space-y-4">
-          {/* Details */}
           <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-[0.22em] text-[#BFA14A] mb-3 font-medium">Details</p>
             <DetailRow label="Report Type" value={result.reportType} />
@@ -333,7 +321,6 @@ function ResultCard({ result }: { result: TrackResult }) {
             <DetailRow label="Delivery" value={result.whatsapp ? "WhatsApp + Email" : "Email"} />
           </div>
 
-          {/* Stage note */}
           {!isDelivered && (
             <div className="bg-[#0C1919] border border-[#0F5C5E]/30 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
@@ -360,7 +347,6 @@ function ResultCard({ result }: { result: TrackResult }) {
             </div>
           )}
 
-          {/* Contact */}
           <div className="bg-[#0C1919] border border-white/8 rounded-2xl p-5 text-center">
             <p className="text-xs text-[#F4EFE6]/35 mb-2">Questions about your report?</p>
             <a
@@ -376,21 +362,70 @@ function ResultCard({ result }: { result: TrackResult }) {
   );
 }
 
+// ── Main page ──────────────────────────────────────────────────────────────────
+
 export default function TrackReport() {
   const [email, setEmail] = useState("");
   const [requestId, setRequestId] = useState("");
   const [result, setResult] = useState<TrackResult | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [silentRefreshing, setSilentRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Refs so the interval callback always has current values
+  const emailRef = useRef(email);
+  const requestIdRef = useRef(requestId);
+  useEffect(() => { emailRef.current = email; }, [email]);
+  useEffect(() => { requestIdRef.current = requestId; }, [requestId]);
+
+  const doFetch = useCallback(async (silent = false) => {
+    const formatted = formatRequestId(requestIdRef.current);
+    if (!formatted) return;
+    const numId = parseInt(formatted.replace("BH-", ""), 10);
+    try {
+      if (silent) setSilentRefreshing(true);
+      else setLoading(true);
+
+      const resp = await fetch(
+        `${BASE}/api/scan-requests/track?id=${numId}&email=${encodeURIComponent(emailRef.current.trim())}`,
+      );
+      if (resp.ok) {
+        const data = (await resp.json()) as TrackResult;
+        setResult(data);
+        setLastUpdated(new Date());
+      }
+    } catch { /* silent network errors during auto-refresh */ }
+    finally {
+      if (silent) setSilentRefreshing(false);
+      else setLoading(false);
+    }
+  }, []);
+
+  // Auto-refresh while report is actively progressing through the pipeline
+  const isLive = !!(
+    result &&
+    result.pipelineStage !== "delivered" &&
+    (result.paymentStatus === "paid" || result.paymentStatus === "waived")
+  );
+
+  useEffect(() => {
+    if (!isLive) return;
+    const interval = setInterval(() => {
+      doFetch(true).catch(() => {});
+    }, AUTO_REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [isLive, doFetch]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setResult(null);
+    setLastUpdated(null);
 
     const formatted = formatRequestId(requestId);
     if (!formatted) {
-      setError('Invalid Request ID format. Use the format BH-0042 (found in your confirmation screen or email).');
+      setError("Invalid Request ID format. Use the format BH-0042 (found in your confirmation screen or email).");
       return;
     }
 
@@ -400,14 +435,13 @@ export default function TrackReport() {
       const resp = await fetch(
         `${BASE}/api/scan-requests/track?id=${numId}&email=${encodeURIComponent(email.trim())}`,
       );
-      const data = await resp.json() as { error?: string } & Partial<TrackResult>;
-
+      const data = (await resp.json()) as { error?: string } & Partial<TrackResult>;
       if (!resp.ok) {
         setError(data.error ?? "Could not find your request. Please check your ID and email.");
         return;
       }
-
       setResult(data as TrackResult);
+      setLastUpdated(new Date());
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
@@ -434,7 +468,7 @@ export default function TrackReport() {
         </div>
       </section>
 
-      {/* Lookup Form */}
+      {/* Form */}
       <section className="py-14">
         <div className="max-w-lg mx-auto px-6">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
@@ -490,11 +524,10 @@ export default function TrackReport() {
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#0F5C5E] border border-[#BFA14A]/20 text-[#F4EFE6] text-sm font-medium shadow-[0_0_20px_rgba(191,161,74,0.2)] hover:shadow-[0_0_32px_rgba(191,161,74,0.35)] disabled:opacity-60 transition-all duration-200"
               >
-                {loading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" />Looking up your request…</>
-                ) : (
-                  <><Search className="w-4 h-4" />Check Report Status</>
-                )}
+                {loading
+                  ? <><Loader2 className="w-4 h-4 animate-spin" />Looking up your request…</>
+                  : <><Search className="w-4 h-4" />Check Report Status</>
+                }
               </button>
             </form>
 
@@ -535,7 +568,12 @@ export default function TrackReport() {
                 <span className="text-[10px] uppercase tracking-[0.25em] text-[#F4EFE6]/25">Your Report</span>
                 <div className="h-px flex-1 bg-white/8" />
               </div>
-              <ResultCard result={result} />
+              <ResultCard
+                result={result}
+                isLive={isLive}
+                lastUpdated={lastUpdated}
+                refreshing={silentRefreshing}
+              />
             </div>
           </section>
         )}

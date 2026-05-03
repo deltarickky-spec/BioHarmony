@@ -1,9 +1,14 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard, Zap, RotateCcw } from "lucide-react";
+import {
+  RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
+  Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity
+} from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_PASSWORD_KEY = "bh_admin_token";
+
+// ── Constants ──────────────────────────────────────────────────────────────────
 
 const VALID_STATUSES = ["new", "in_review", "in_progress", "completed", "delivered"] as const;
 type Status = (typeof VALID_STATUSES)[number];
@@ -17,10 +22,7 @@ type PipelineStage = (typeof PIPELINE_STAGES)[number];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "waived"] as const;
 type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-const STATUS_LABELS: Record<Status, string> = {
-  new: "New", in_review: "In Review", in_progress: "In Progress",
-  completed: "Completed", delivered: "Delivered",
-};
+type AutoStatus = "auto" | "waiting" | "paused" | "error" | "done" | "manual";
 
 const PIPELINE_LABELS: Record<PipelineStage, string> = {
   queued: "Queued", extracting: "Extracting", interpreting: "Interpreting",
@@ -52,6 +54,11 @@ const PAYMENT_STYLES: Record<PaymentStatus, string> = {
   waived: "bg-purple-900/25 text-purple-300 border border-purple-700/25",
 };
 
+const STATUS_LABELS: Record<Status, string> = {
+  new: "New", in_review: "In Review", in_progress: "In Progress",
+  completed: "Completed", delivered: "Delivered",
+};
+
 const STATUS_STYLES: Record<Status, string> = {
   new: "bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/25",
   in_review: "bg-blue-900/25 text-blue-300 border border-blue-700/25",
@@ -64,6 +71,8 @@ const STATUS_NEXT: Record<Status, Status[]> = {
   new: ["in_review", "in_progress"], in_review: ["in_progress", "completed"],
   in_progress: ["completed"], completed: ["delivered"], delivered: [],
 };
+
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface UnifiedRequest {
   id: number;
@@ -80,6 +89,9 @@ interface UnifiedRequest {
   status: Status;
   pipelineStage?: PipelineStage | null;
   paymentStatus?: PaymentStatus | null;
+  pipelinePaused?: boolean | null;
+  pipelineError?: string | null;
+  stageEnteredAt?: string | null;
   createdAt: string;
 }
 
@@ -93,24 +105,22 @@ interface RawScanRequest {
   reportType: string; language: string; fileName?: string | null;
   whatsapp?: boolean | null; plan?: string | null; note?: string | null;
   status: string; pipelineStage?: string | null; paymentStatus?: string | null;
-  createdAt: string;
+  pipelinePaused?: boolean | null; pipelineError?: string | null;
+  stageEnteredAt?: string | null; createdAt: string;
 }
+
+// ── Normalizers ────────────────────────────────────────────────────────────────
 
 function normalizeStatus(s: string): Status {
-  if (VALID_STATUSES.includes(s as Status)) return s as Status;
-  return "new";
+  return VALID_STATUSES.includes(s as Status) ? (s as Status) : "new";
 }
-
 function normalizePipelineStage(s: string | null | undefined): PipelineStage | null {
   if (!s) return null;
-  if (PIPELINE_STAGES.includes(s as PipelineStage)) return s as PipelineStage;
-  return null;
+  return PIPELINE_STAGES.includes(s as PipelineStage) ? (s as PipelineStage) : null;
 }
-
 function normalizePaymentStatus(s: string | null | undefined): PaymentStatus | null {
   if (!s) return null;
-  if (PAYMENT_STATUSES.includes(s as PaymentStatus)) return s as PaymentStatus;
-  return null;
+  return PAYMENT_STATUSES.includes(s as PaymentStatus) ? (s as PaymentStatus) : null;
 }
 
 function normalize(r: RawReportRequest): UnifiedRequest {
@@ -120,7 +130,6 @@ function normalize(r: RawReportRequest): UnifiedRequest {
     status: normalizeStatus(r.status), createdAt: r.createdAt,
   };
 }
-
 function normalizeScan(s: RawScanRequest): UnifiedRequest {
   return {
     id: s.id, source: "scan", name: s.name, email: s.email, phone: s.phone,
@@ -129,9 +138,25 @@ function normalizeScan(s: RawScanRequest): UnifiedRequest {
     status: normalizeStatus(s.status),
     pipelineStage: normalizePipelineStage(s.pipelineStage),
     paymentStatus: normalizePaymentStatus(s.paymentStatus),
+    pipelinePaused: s.pipelinePaused ?? false,
+    pipelineError: s.pipelineError ?? null,
+    stageEnteredAt: s.stageEnteredAt ?? null,
     createdAt: s.createdAt,
   };
 }
+
+// ── Automation status helper ───────────────────────────────────────────────────
+
+function getAutoStatus(req: UnifiedRequest): AutoStatus {
+  if (req.source !== "scan") return "manual";
+  if (req.pipelineStage === "delivered") return "done";
+  if (req.pipelineError) return "error";
+  if (req.pipelinePaused) return "paused";
+  if (req.paymentStatus === "paid" || req.paymentStatus === "waived") return "auto";
+  return "waiting";
+}
+
+// ── Utility ────────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-CA", {
@@ -139,6 +164,15 @@ function formatDate(iso: string) {
     hour: "2-digit", minute: "2-digit",
   });
 }
+
+function stageElapsed(enteredAt: string | null | undefined): string | null {
+  if (!enteredAt) return null;
+  const secs = Math.round((Date.now() - new Date(enteredAt).getTime()) / 1000);
+  if (secs < 60) return `${secs}s`;
+  return `${Math.round(secs / 60)}m`;
+}
+
+// ── Badge components ───────────────────────────────────────────────────────────
 
 function PipelineBadge({ stage }: { stage: PipelineStage | null | undefined }) {
   if (!stage) return <span className="text-xs text-[#F4EFE6]/20">—</span>;
@@ -148,7 +182,6 @@ function PipelineBadge({ stage }: { stage: PipelineStage | null | undefined }) {
     </span>
   );
 }
-
 function PaymentBadge({ status }: { status: PaymentStatus | null | undefined }) {
   if (!status) return <span className="text-xs text-[#F4EFE6]/20">—</span>;
   const labels: Record<PaymentStatus, string> = {
@@ -160,13 +193,45 @@ function PaymentBadge({ status }: { status: PaymentStatus | null | undefined }) 
     </span>
   );
 }
-
 function StatusBadge({ status }: { status: Status }) {
   return (
     <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", STATUS_STYLES[status])}>
       {STATUS_LABELS[status]}
     </span>
   );
+}
+
+function AutoStatusDot({ autoStatus }: { autoStatus: AutoStatus }) {
+  if (autoStatus === "manual") return null;
+  const map: Record<AutoStatus, { dot: string; title: string }> = {
+    auto:    { dot: "bg-[#4ecdc4] animate-pulse shadow-[0_0_6px_rgba(78,205,196,0.7)]", title: "Auto-running" },
+    waiting: { dot: "bg-[#BFA14A]",                                                      title: "Awaiting payment" },
+    paused:  { dot: "bg-white/30",                                                        title: "Paused" },
+    error:   { dot: "bg-red-500 animate-pulse",                                           title: "Error" },
+    done:    { dot: "bg-green-400",                                                        title: "Delivered" },
+    manual:  { dot: "",                                                                    title: "" },
+  };
+  const m = map[autoStatus];
+  return (
+    <span
+      title={m.title}
+      className={cn("inline-block w-2 h-2 rounded-full shrink-0 mr-1", m.dot)}
+    />
+  );
+}
+
+function AutoStatusLabel({ autoStatus }: { autoStatus: AutoStatus }) {
+  const map: Record<AutoStatus, { label: string; style: string } | null> = {
+    auto:    { label: "Auto", style: "text-[#4ecdc4]/70" },
+    waiting: { label: "Awaiting Payment", style: "text-[#BFA14A]/70" },
+    paused:  { label: "Paused", style: "text-[#F4EFE6]/35" },
+    error:   { label: "Error", style: "text-red-400/80" },
+    done:    null,
+    manual:  null,
+  };
+  const m = map[autoStatus];
+  if (!m) return null;
+  return <span className={cn("text-[10px] font-medium", m.style)}>{m.label}</span>;
 }
 
 function StatCard({ label, value, color, onClick, active }: {
@@ -196,6 +261,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+// ── Pipeline Panel ─────────────────────────────────────────────────────────────
+
 function PipelinePanel({
   request, token, onUpdate,
 }: {
@@ -205,7 +272,7 @@ function PipelinePanel({
 }) {
   const [busy, setBusy] = useState(false);
 
-  async function patch(payload: Record<string, string>) {
+  const patchRequest = useCallback(async (payload: Record<string, unknown>) => {
     setBusy(true);
     onUpdate(request.id, request.source, payload as Partial<UnifiedRequest>);
     try {
@@ -214,22 +281,58 @@ function PipelinePanel({
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
-    } catch { /* optimistic — already updated */ }
+    } catch { /* optimistic update already applied */ }
     setBusy(false);
-  }
+  }, [request.id, request.source, token, onUpdate]);
 
   if (request.source !== "scan") return null;
 
   const currentStage = request.pipelineStage ?? "queued";
   const nextStage = PIPELINE_NEXT[currentStage];
   const stageIdx = PIPELINE_STAGES.indexOf(currentStage);
+  const autoStatus = getAutoStatus(request);
+  const elapsed = stageElapsed(request.stageEnteredAt);
+  const isPaused = !!request.pipelinePaused;
+  const hasError = !!request.pipelineError;
 
   return (
-    <section className="space-y-3">
-      <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] font-medium">AI Pipeline</h3>
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] font-medium">AI Pipeline</h3>
+        <div className="flex items-center gap-1.5">
+          <AutoStatusDot autoStatus={autoStatus} />
+          <AutoStatusLabel autoStatus={autoStatus} />
+        </div>
+      </div>
 
-      {/* Mini progress */}
-      <div className="space-y-2">
+      {/* Error banner */}
+      {hasError && (
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-red-900/15 border border-red-700/25">
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-xs text-red-300 font-medium mb-0.5">Pipeline Error</p>
+            <p className="text-xs text-red-300/70">{request.pipelineError}</p>
+          </div>
+          <button
+            disabled={busy}
+            onClick={() => patchRequest({ pipelineError: null })}
+            title="Clear error and resume"
+            className="text-red-400/50 hover:text-red-300 transition"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Stage timer */}
+      {elapsed && autoStatus === "auto" && (
+        <p className="text-[10px] text-[#F4EFE6]/25 italic">
+          Current stage running for {elapsed}
+        </p>
+      )}
+
+      {/* Stage selector */}
+      <div className="space-y-1.5">
         {PIPELINE_STAGES.map((s, i) => {
           const isDone = i < stageIdx;
           const isCurrent = i === stageIdx;
@@ -237,33 +340,39 @@ function PipelinePanel({
             <button
               key={s}
               disabled={busy}
-              onClick={() => patch({ pipelineStage: s })}
+              onClick={() => patchRequest({ pipelineStage: s })}
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all border",
                 isCurrent
                   ? `${PIPELINE_STYLES[s]} ring-1 ring-inset ring-current/30`
                   : isDone
-                    ? "bg-white/5 text-[#F4EFE6]/50 border-white/8"
-                    : "bg-transparent text-[#F4EFE6]/25 border-white/5 hover:border-white/12 hover:text-[#F4EFE6]/45",
+                    ? "bg-white/4 text-[#F4EFE6]/45 border-white/6"
+                    : "bg-transparent text-[#F4EFE6]/22 border-white/5 hover:border-white/12 hover:text-[#F4EFE6]/45",
               )}
             >
               <span className="flex items-center gap-2">
-                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", isDone ? "bg-[#BFA14A]/50" : isCurrent ? "bg-current animate-pulse" : "bg-white/15")} />
+                <span className={cn(
+                  "w-1.5 h-1.5 rounded-full shrink-0",
+                  isDone ? "bg-[#BFA14A]/40"
+                    : isCurrent
+                      ? autoStatus === "auto" ? "bg-current animate-pulse" : "bg-current"
+                      : "bg-white/12"
+                )} />
                 {PIPELINE_LABELS[s]}
               </span>
-              {isCurrent && <span className="opacity-60 text-[10px]">Current</span>}
+              {isCurrent && <span className="opacity-50 text-[10px]">current</span>}
             </button>
           );
         })}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2 flex-wrap pt-1">
+      {/* Action buttons row */}
+      <div className="flex gap-2 flex-wrap">
         {nextStage && (
           <button
-            disabled={busy}
-            onClick={() => patch({ pipelineStage: nextStage })}
-            className="flex items-center gap-1.5 flex-1 min-w-[120px] py-2 px-3 rounded-lg text-xs font-semibold bg-[#0F5C5E] text-[#F4EFE6] border border-[#4ecdc4]/20 hover:bg-[#0F5C5E]/80 transition disabled:opacity-50"
+            disabled={busy || isPaused || hasError}
+            onClick={() => patchRequest({ pipelineStage: nextStage })}
+            className="flex items-center gap-1.5 flex-1 min-w-[120px] py-2 px-3 rounded-lg text-xs font-semibold bg-[#0F5C5E] text-[#F4EFE6] border border-[#4ecdc4]/20 hover:bg-[#0F5C5E]/80 transition disabled:opacity-40"
           >
             <Zap className="w-3 h-3" />
             Advance → {PIPELINE_LABELS[nextStage]}
@@ -271,29 +380,65 @@ function PipelinePanel({
         )}
         <button
           disabled={busy}
-          onClick={() => patch({ pipelineStage: currentStage })}
+          onClick={() => patchRequest({ pipelineStage: currentStage })}
           title="Re-trigger current stage"
-          className="flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium border border-white/10 text-[#F4EFE6]/50 hover:border-white/20 hover:text-[#F4EFE6]/70 transition disabled:opacity-50"
+          className="flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium border border-white/10 text-[#F4EFE6]/50 hover:border-white/20 hover:text-[#F4EFE6]/70 transition disabled:opacity-40"
         >
           <RotateCcw className="w-3 h-3" />
           Retry
         </button>
       </div>
 
+      {/* Pause / Resume automation */}
+      <div className="border-t border-white/8 pt-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Automation</span>
+          {autoStatus === "auto" && <span className="text-[10px] text-[#4ecdc4]/60">Running</span>}
+          {autoStatus === "paused" && <span className="text-[10px] text-[#F4EFE6]/30">Paused</span>}
+        </div>
+        <div className="flex gap-2">
+          <button
+            disabled={busy || isPaused}
+            onClick={() => patchRequest({ pipelinePaused: true })}
+            className="flex items-center gap-1.5 flex-1 py-2 px-3 rounded-lg text-xs font-medium border border-white/10 text-[#F4EFE6]/45 hover:border-white/22 hover:text-[#F4EFE6]/70 transition disabled:opacity-30"
+          >
+            <Pause className="w-3 h-3" />
+            Pause
+          </button>
+          <button
+            disabled={busy || !isPaused}
+            onClick={() => patchRequest({ pipelinePaused: false })}
+            className="flex items-center gap-1.5 flex-1 py-2 px-3 rounded-lg text-xs font-medium border border-[#4ecdc4]/20 text-[#4ecdc4]/50 hover:border-[#4ecdc4]/35 hover:text-[#4ecdc4]/80 transition disabled:opacity-30"
+          >
+            <Play className="w-3 h-3" />
+            Resume
+          </button>
+          <button
+            disabled={busy}
+            onClick={() => patchRequest({ pipelineStage: "delivered", status: "delivered" })}
+            title="Manually mark as delivered"
+            className="flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium border border-green-700/25 text-green-400/50 hover:border-green-700/40 hover:text-green-300 transition disabled:opacity-30"
+          >
+            <CheckCircle className="w-3 h-3" />
+            Deliver
+          </button>
+        </div>
+      </div>
+
       {/* Payment override */}
       <div className="border-t border-white/8 pt-3">
-        <h4 className="text-xs text-[#F4EFE6]/35 uppercase tracking-wider mb-2">Payment Override</h4>
-        <div className="flex gap-2">
+        <h4 className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider mb-2">Payment Override</h4>
+        <div className="flex gap-1.5 flex-wrap">
           {PAYMENT_STATUSES.map((ps) => (
             <button
               key={ps}
               disabled={busy || request.paymentStatus === ps}
-              onClick={() => patch({ paymentStatus: ps })}
+              onClick={() => patchRequest({ paymentStatus: ps })}
               className={cn(
-                "flex-1 py-1.5 px-2 rounded-lg text-[10px] font-medium border transition-all capitalize",
+                "flex-1 min-w-[60px] py-1.5 px-2 rounded-lg text-[10px] font-medium border transition-all capitalize",
                 request.paymentStatus === ps
                   ? PAYMENT_STYLES[ps]
-                  : "border-white/8 text-[#F4EFE6]/35 hover:border-white/18 hover:text-[#F4EFE6]/60 disabled:cursor-default"
+                  : "border-white/8 text-[#F4EFE6]/30 hover:border-white/18 hover:text-[#F4EFE6]/60 disabled:cursor-default"
               )}
             >
               {ps}
@@ -304,6 +449,8 @@ function PipelinePanel({
     </section>
   );
 }
+
+// ── Detail Panel ───────────────────────────────────────────────────────────────
 
 function DetailPanel({
   request, token, onClose, onUpdate,
@@ -336,6 +483,8 @@ function DetailPanel({
     setBusy(false);
   }
 
+  const autoStatus = getAutoStatus(request);
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -344,7 +493,7 @@ function DetailPanel({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-[#0C1919]/95 backdrop-blur-sm flex items-center justify-between p-6 border-b border-white/10 z-10">
+        <div className="sticky top-0 bg-[#0C1919]/96 backdrop-blur-sm flex items-center justify-between p-6 border-b border-white/10 z-10">
           <div>
             <h2 className="text-lg font-semibold text-[#F4EFE6]">{request.name}</h2>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -361,17 +510,29 @@ function DetailPanel({
               {request.paymentStatus && <PaymentBadge status={request.paymentStatus} />}
             </div>
           </div>
-          <button onClick={onClose} className="text-[#F4EFE6]/35 hover:text-[#F4EFE6] transition text-xl leading-none ml-4 shrink-0">
-            ✕
-          </button>
+          <button onClick={onClose} className="text-[#F4EFE6]/35 hover:text-[#F4EFE6] transition text-xl ml-4 shrink-0">✕</button>
         </div>
 
         <div className="flex-1 p-6 space-y-7">
-          {/* Payment warning */}
-          {request.paymentStatus === "failed" && (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-red-900/20 border border-red-700/30">
+          {/* Automation status banner */}
+          {autoStatus === "error" && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-red-900/15 border border-red-700/25">
               <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-              <p className="text-xs text-red-300">Payment failed — contact client before advancing pipeline.</p>
+              <p className="text-xs text-red-300">Pipeline error — review before advancing.</p>
+            </div>
+          )}
+          {autoStatus === "auto" && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#0F5C5E]/15 border border-[#4ecdc4]/20">
+              <Activity className="w-4 h-4 text-[#4ecdc4] shrink-0" />
+              <p className="text-xs text-[#4ecdc4]/80">
+                Auto-progressing through pipeline. Stage running for {stageElapsed(request.stageEnteredAt) ?? "…"}.
+              </p>
+            </div>
+          )}
+          {autoStatus === "waiting" && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#BFA14A]/8 border border-[#BFA14A]/20">
+              <CreditCard className="w-4 h-4 text-[#BFA14A] shrink-0" />
+              <p className="text-xs text-[#BFA14A]/80">Waiting for payment before pipeline starts.</p>
             </div>
           )}
 
@@ -403,9 +564,7 @@ function DetailPanel({
           {request.note && (
             <section>
               <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Client Notes</h3>
-              <p className="text-sm text-[#F4EFE6]/65 bg-white/5 rounded-lg p-3 border border-white/8 leading-relaxed">
-                {request.note}
-              </p>
+              <p className="text-sm text-[#F4EFE6]/65 bg-white/5 rounded-xl p-3 border border-white/8 leading-relaxed">{request.note}</p>
             </section>
           )}
 
@@ -414,7 +573,7 @@ function DetailPanel({
             <PipelinePanel request={request} token={token} onUpdate={onUpdate} />
           )}
 
-          {/* Status (legacy override) */}
+          {/* Legacy status override */}
           <section>
             <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Status Override</h3>
             <div className="grid grid-cols-2 gap-2">
@@ -431,23 +590,22 @@ function DetailPanel({
                   )}
                 >
                   {STATUS_LABELS[s]}
-                  {request.status === s && <span className="ml-1 opacity-50">●</span>}
+                  {request.status === s && <span className="ml-1 opacity-40">●</span>}
                 </button>
               ))}
             </div>
           </section>
 
-          {/* Next actions */}
           {STATUS_NEXT[request.status].length > 0 && (
             <div className="flex gap-2 flex-wrap">
-              {STATUS_NEXT[request.status].map((nextStatus) => (
+              {STATUS_NEXT[request.status].map((ns) => (
                 <button
-                  key={nextStatus}
+                  key={ns}
                   disabled={busy}
-                  onClick={() => changeStatus(nextStatus)}
+                  onClick={() => changeStatus(ns)}
                   className="flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-semibold bg-[#BFA14A] text-[#060D0D] hover:bg-[#d4b456] transition disabled:opacity-50"
                 >
-                  Mark {STATUS_LABELS[nextStatus]}
+                  Mark {STATUS_LABELS[ns]}
                 </button>
               ))}
             </div>
@@ -458,10 +616,11 @@ function DetailPanel({
   );
 }
 
+// ── Auth Gate ──────────────────────────────────────────────────────────────────
+
 function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
   const [pw, setPw] = useState("");
   const [error, setError] = useState("");
-
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!pw.trim()) return;
@@ -469,7 +628,6 @@ function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
     setError("Wrong password. Try again.");
     setPw("");
   }
-
   return (
     <div className="min-h-screen bg-[#060D0D] flex items-center justify-center">
       <div className="w-full max-w-sm mx-4">
@@ -481,12 +639,9 @@ function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
           <div>
             <label className="block text-xs text-[#F4EFE6]/45 mb-2 uppercase tracking-wider">Password</label>
             <input
-              type="password"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
+              type="password" value={pw} onChange={(e) => setPw(e.target.value)}
               className="w-full bg-white/5 border border-white/12 rounded-lg px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/60 transition"
-              placeholder="Enter admin password"
-              autoFocus
+              placeholder="Enter admin password" autoFocus
             />
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -499,6 +654,8 @@ function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
   );
 }
 
+// ── Main Dashboard ─────────────────────────────────────────────────────────────
+
 export default function AdminDashboard() {
   const [token, setToken] = useState<string | null>(() => sessionStorage.getItem(ADMIN_PASSWORD_KEY));
   const [requests, setRequests] = useState<UnifiedRequest[]>([]);
@@ -509,32 +666,44 @@ export default function AdminDashboard() {
   const [payFilter, setPayFilter] = useState<PaymentStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UnifiedRequest | null>(null);
+  const [globalPaused, setGlobalPaused] = useState(false);
+  const [togglingGlobal, setTogglingGlobal] = useState(false);
 
-  async function fetchData(authToken: string) {
+  const fetchData = useCallback(async (authToken: string) => {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`${BASE}/api/admin/leads`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      if (resp.status === 401) {
+      const [leadsResp, statusResp] = await Promise.all([
+        fetch(`${BASE}/api/admin/leads`, { headers: { Authorization: `Bearer ${authToken}` } }),
+        fetch(`${BASE}/api/admin/pipeline/status`, { headers: { Authorization: `Bearer ${authToken}` } }),
+      ]);
+      if (leadsResp.status === 401) {
         sessionStorage.removeItem(ADMIN_PASSWORD_KEY);
         setToken(null);
         return;
       }
-      if (!resp.ok) throw new Error("Failed to fetch");
-      const data = await resp.json() as { reportRequests?: RawReportRequest[]; scanRequests?: RawScanRequest[] };
+      if (!leadsResp.ok) throw new Error("Failed to fetch");
+
+      const data = await leadsResp.json() as {
+        reportRequests?: RawReportRequest[];
+        scanRequests?: RawScanRequest[];
+      };
       const unified: UnifiedRequest[] = [
         ...(data.reportRequests ?? []).map(normalize),
         ...(data.scanRequests ?? []).map(normalizeScan),
       ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setRequests(unified);
+
+      if (statusResp.ok) {
+        const statusData = await statusResp.json() as { globalPaused: boolean };
+        setGlobalPaused(statusData.globalPaused);
+      }
     } catch {
       setError("Could not load requests. Check your connection.");
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   function handleAuth(pw: string) {
     sessionStorage.setItem(ADMIN_PASSWORD_KEY, pw);
@@ -552,30 +721,41 @@ export default function AdminDashboard() {
     if (token) fetchData(token);
   }, []);
 
+  async function toggleGlobalPipeline() {
+    if (!token) return;
+    setTogglingGlobal(true);
+    const endpoint = globalPaused ? "global-resume" : "global-pause";
+    try {
+      const resp = await fetch(`${BASE}/api/admin/pipeline/${endpoint}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resp.ok) {
+        setGlobalPaused(!globalPaused);
+      }
+    } catch { /* ignore */ }
+    setTogglingGlobal(false);
+  }
+
   function handleUpdate(id: number, source: "report" | "scan", patch: Partial<UnifiedRequest>) {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id && r.source === source ? { ...r, ...patch } : r))
-    );
+    setRequests((prev) => prev.map((r) => r.id === id && r.source === source ? { ...r, ...patch } : r));
     if (selected?.id === id && selected?.source === source) {
-      setSelected((prev) => (prev ? { ...prev, ...patch } : prev));
+      setSelected((prev) => prev ? { ...prev, ...patch } : prev);
     }
   }
 
   const stats = useMemo(() => {
     const total = requests.length;
+    const autoRunning = requests.filter((r) => getAutoStatus(r) === "auto").length;
+    const waitingPay = requests.filter((r) => getAutoStatus(r) === "waiting").length;
+    const errors = requests.filter((r) => getAutoStatus(r) === "error").length;
     const paid = requests.filter((r) => r.paymentStatus === "paid").length;
-    const pendingPay = requests.filter((r) => r.paymentStatus === "pending" || !r.paymentStatus).length;
-    const inPipeline = requests.filter(
-      (r) => r.pipelineStage && r.pipelineStage !== "queued" && r.pipelineStage !== "delivered"
-    ).length;
-    const delivered = requests.filter(
-      (r) => r.pipelineStage === "delivered" || r.status === "delivered"
-    ).length;
+    const delivered = requests.filter((r) => r.pipelineStage === "delivered" || r.status === "delivered").length;
     const byStatus = VALID_STATUSES.reduce((acc, s) => {
       acc[s] = requests.filter((r) => r.status === s).length;
       return acc;
     }, {} as Record<Status, number>);
-    return { total, paid, pendingPay, inPipeline, delivered, ...byStatus };
+    return { total, autoRunning, waitingPay, errors, paid, delivered, ...byStatus };
   }, [requests]);
 
   const filtered = useMemo(() => {
@@ -586,10 +766,7 @@ export default function AdminDashboard() {
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
-        (r) =>
-          r.name.toLowerCase().includes(q) ||
-          r.email.toLowerCase().includes(q) ||
-          r.reportType.toLowerCase().includes(q)
+        (r) => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.reportType.toLowerCase().includes(q)
       );
     }
     return list;
@@ -602,13 +779,32 @@ export default function AdminDashboard() {
 
       {/* Top Bar */}
       <div className="sticky top-0 z-30 bg-[#060D0D]/96 backdrop-blur-md border-b border-white/8">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="text-[#BFA14A] text-xs tracking-[0.25em] uppercase font-medium">BioHarmony</span>
             <span className="text-white/15">·</span>
             <span className="text-[#F4EFE6]/50 text-xs">Operations Center</span>
           </div>
+
           <div className="flex items-center gap-2">
+            {/* Global pipeline toggle */}
+            <button
+              disabled={togglingGlobal}
+              onClick={toggleGlobalPipeline}
+              className={cn(
+                "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border transition",
+                globalPaused
+                  ? "border-[#4ecdc4]/30 text-[#4ecdc4]/60 hover:border-[#4ecdc4]/50 hover:text-[#4ecdc4]"
+                  : "border-[#BFA14A]/25 text-[#BFA14A]/60 hover:border-[#BFA14A]/45 hover:text-[#BFA14A]"
+              )}
+              title={globalPaused ? "Resume all pipeline automation" : "Pause all pipeline automation"}
+            >
+              {globalPaused
+                ? <><Play className="w-3 h-3" />Resume All</>
+                : <><Pause className="w-3 h-3" />Pause All</>
+              }
+            </button>
+
             <button
               onClick={() => token && fetchData(token)}
               className="flex items-center gap-1.5 text-xs text-[#F4EFE6]/35 hover:text-[#F4EFE6]/70 transition px-3 py-1.5 rounded border border-white/8 hover:border-white/18"
@@ -627,29 +823,45 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-7">
 
+        {/* Global pause banner */}
+        {globalPaused && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/12">
+            <Pause className="w-4 h-4 text-[#F4EFE6]/40 shrink-0" />
+            <p className="text-sm text-[#F4EFE6]/60">
+              Pipeline automation is globally paused. No requests will auto-advance until you resume.
+            </p>
+            <button
+              onClick={toggleGlobalPipeline}
+              className="ml-auto text-xs text-[#4ecdc4]/60 hover:text-[#4ecdc4] transition underline underline-offset-2 shrink-0"
+            >
+              Resume
+            </button>
+          </div>
+        )}
+
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <StatCard label="All Requests" value={stats.total} color="text-[#F4EFE6]" onClick={() => setStatusFilter("all")} active={statusFilter === "all"} />
-          <StatCard label="New" value={stats.new} color="text-[#BFA14A]" onClick={() => setStatusFilter("new")} active={statusFilter === "new"} />
-          <StatCard label="In Progress" value={stats.in_progress} color="text-[#4ecdc4]" onClick={() => setStatusFilter("in_progress")} active={statusFilter === "in_progress"} />
-          <StatCard label="In Pipeline" value={stats.inPipeline} color="text-purple-300" />
+          <StatCard label="Auto-Running" value={stats.autoRunning} color="text-[#4ecdc4]" />
+          <StatCard label="Await Payment" value={stats.waitingPay} color="text-[#BFA14A]" onClick={() => setPayFilter(payFilter === "pending" ? "all" : "pending")} active={payFilter === "pending"} />
+          {stats.errors > 0 && (
+            <StatCard label="Errors" value={stats.errors} color="text-red-400" />
+          )}
           <StatCard label="Paid" value={stats.paid} color="text-green-300" onClick={() => setPayFilter(payFilter === "paid" ? "all" : "paid")} active={payFilter === "paid"} />
           <StatCard label="Delivered" value={stats.delivered} color="text-emerald-300" onClick={() => setStatusFilter("delivered")} active={statusFilter === "delivered"} />
         </div>
 
-        {/* Payment alert banner */}
-        {stats.pendingPay > 0 && (
+        {/* Payment alert */}
+        {stats.waitingPay > 0 && payFilter !== "pending" && (
           <div
             className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#BFA14A]/6 border border-[#BFA14A]/20 cursor-pointer"
-            onClick={() => setPayFilter(payFilter === "pending" ? "all" : "pending")}
+            onClick={() => setPayFilter("pending")}
           >
             <CreditCard className="w-4 h-4 text-[#BFA14A] shrink-0" />
             <p className="text-sm text-[#BFA14A]/80">
-              <span className="font-semibold text-[#BFA14A]">{stats.pendingPay} request{stats.pendingPay !== 1 ? "s" : ""}</span>
-              {" "}awaiting payment confirmation.{" "}
-              <span className="text-[#BFA14A]/60 text-xs underline underline-offset-2">
-                {payFilter === "pending" ? "Show all" : "Filter to pending"}
-              </span>
+              <span className="font-semibold text-[#BFA14A]">{stats.waitingPay}</span>
+              {" "}request{stats.waitingPay !== 1 ? "s" : ""} awaiting payment — pipeline will start automatically once confirmed.{" "}
+              <span className="text-[#BFA14A]/55 text-xs underline underline-offset-2">Filter</span>
             </p>
           </div>
         )}
@@ -665,9 +877,7 @@ export default function AdminDashboard() {
           />
           <div className="flex gap-2 shrink-0 flex-wrap">
             {(["all", "report", "scan"] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setSourceFilter(s)}
+              <button key={s} onClick={() => setSourceFilter(s)}
                 className={cn(
                   "px-3 py-2 rounded-lg text-xs font-medium transition border",
                   sourceFilter === s
@@ -679,8 +889,7 @@ export default function AdminDashboard() {
               </button>
             ))}
             {payFilter !== "all" && (
-              <button
-                onClick={() => setPayFilter("all")}
+              <button onClick={() => setPayFilter("all")}
                 className="px-3 py-2 rounded-lg text-xs font-medium transition border bg-[#BFA14A]/12 text-[#BFA14A] border-[#BFA14A]/35"
               >
                 Payment: {payFilter} ✕
@@ -700,58 +909,70 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="rounded-xl border border-white/8 overflow-hidden">
-            <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 px-5 py-3 bg-white/4 border-b border-white/8 text-[10px] uppercase tracking-wider text-[#F4EFE6]/35 font-medium">
+            <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 px-5 py-3 bg-white/4 border-b border-white/8 text-[10px] uppercase tracking-wider text-[#F4EFE6]/30 font-medium">
               <span>Client</span>
               <span>Email</span>
               <span>Report Type</span>
-              <span>Pipeline Stage</span>
+              <span>Pipeline</span>
               <span>Payment</span>
               <span>Submitted</span>
               <span>Status</span>
             </div>
 
             <div className="divide-y divide-white/6">
-              {filtered.map((req) => (
-                <button
-                  key={`${req.source}-${req.id}`}
-                  onClick={() => setSelected(req)}
-                  className="w-full text-left px-5 py-4 hover:bg-white/[0.03] transition-colors group"
-                >
-                  {/* Desktop */}
-                  <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 items-center">
-                    <div>
-                      <span className="text-sm font-medium text-[#F4EFE6]/85 truncate block">{req.name}</span>
-                      <span className="text-[10px] text-[#F4EFE6]/30">BH-{req.id.toString().padStart(4, "0")}</span>
-                    </div>
-                    <span className="text-sm text-[#F4EFE6]/55 truncate">{req.email}</span>
-                    <span className="text-sm text-[#F4EFE6]/65 truncate">{req.reportType}</span>
-                    <PipelineBadge stage={req.pipelineStage} />
-                    <PaymentBadge status={req.paymentStatus} />
-                    <span className="text-xs text-[#F4EFE6]/35">{formatDate(req.createdAt)}</span>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge status={req.status} />
-                      <ChevronRight className="w-3.5 h-3.5 text-[#F4EFE6]/20 group-hover:text-[#F4EFE6]/50 transition-colors" />
-                    </div>
-                  </div>
-
-                  {/* Mobile */}
-                  <div className="lg:hidden space-y-2">
-                    <div className="flex items-start justify-between gap-3">
+              {filtered.map((req) => {
+                const autoStatus = getAutoStatus(req);
+                return (
+                  <button
+                    key={`${req.source}-${req.id}`}
+                    onClick={() => setSelected(req)}
+                    className="w-full text-left px-5 py-4 hover:bg-white/[0.03] transition-colors group"
+                  >
+                    {/* Desktop */}
+                    <div className="hidden lg:grid grid-cols-[1fr_1.3fr_0.9fr_1.2fr_0.7fr_0.8fr_auto] gap-3 items-center">
                       <div>
-                        <div className="text-sm font-medium text-[#F4EFE6]/85">{req.name}</div>
-                        <div className="text-xs text-[#F4EFE6]/40 mt-0.5">{req.email}</div>
+                        <div className="flex items-center gap-1.5">
+                          <AutoStatusDot autoStatus={autoStatus} />
+                          <span className="text-sm font-medium text-[#F4EFE6]/85 truncate">{req.name}</span>
+                        </div>
+                        <span className="text-[10px] text-[#F4EFE6]/25 ml-3.5">BH-{req.id.toString().padStart(4, "0")}</span>
                       </div>
-                      <StatusBadge status={req.status} />
+                      <span className="text-sm text-[#F4EFE6]/55 truncate">{req.email}</span>
+                      <span className="text-sm text-[#F4EFE6]/65 truncate">{req.reportType}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <PipelineBadge stage={req.pipelineStage} />
+                        <AutoStatusLabel autoStatus={autoStatus} />
+                      </div>
+                      <PaymentBadge status={req.paymentStatus} />
+                      <span className="text-xs text-[#F4EFE6]/35">{formatDate(req.createdAt)}</span>
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={req.status} />
+                        <ChevronRight className="w-3.5 h-3.5 text-[#F4EFE6]/20 group-hover:text-[#F4EFE6]/50 transition-colors" />
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-[#F4EFE6]/40">{req.reportType}</span>
-                      {req.pipelineStage && <PipelineBadge stage={req.pipelineStage} />}
-                      {req.paymentStatus && <PaymentBadge status={req.paymentStatus} />}
-                      <span className="text-xs text-[#F4EFE6]/25">{formatDate(req.createdAt)}</span>
+
+                    {/* Mobile */}
+                    <div className="lg:hidden space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <AutoStatusDot autoStatus={autoStatus} />
+                          <div>
+                            <div className="text-sm font-medium text-[#F4EFE6]/85">{req.name}</div>
+                            <div className="text-xs text-[#F4EFE6]/40 mt-0.5">{req.email}</div>
+                          </div>
+                        </div>
+                        <StatusBadge status={req.status} />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-[#F4EFE6]/40">{req.reportType}</span>
+                        {req.pipelineStage && <PipelineBadge stage={req.pipelineStage} />}
+                        {req.paymentStatus && <PaymentBadge status={req.paymentStatus} />}
+                        <AutoStatusLabel autoStatus={autoStatus} />
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
