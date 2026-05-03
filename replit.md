@@ -45,6 +45,29 @@ Admin notification email goes to `info@bioharmonysolutions.ca` (override with `A
 - URL: `/admin/leads` — password protected (default: `bioharmony2025`, override with `ADMIN_PASSWORD` env var)
 - Two tabs: Report Requests (modal) + Scan Uploads (upload form)
 
+### Stripe Payments (PENDING SETUP)
+All payment code is fully implemented and ready — **Stripe just needs to be connected**.
+
+**Plans:** Basic $55 CAD, Advanced $99 CAD, Premium $149 CAD (one-time payments)
+
+**To activate:**
+1. Connect Stripe via the Replit Integrations panel (or add `STRIPE_SECRET_KEY` as a secret manually)
+2. Run the seed script once: `pnpm --filter @workspace/scripts run seed-products`
+   - This creates the 3 products/prices in Stripe; webhooks sync them to the local DB automatically
+
+**Payment flow (already coded):**
+- UploadScan submit → `POST /api/scan-requests` → `POST /api/stripe/checkout` → redirect to Stripe hosted checkout
+- On `checkout.session.completed` webhook → `paymentStatus = paid` → pipeline auto-starts
+
+**Key files:**
+- `artifacts/api-server/src/stripeClient.ts` — Stripe + StripeSync client
+- `artifacts/api-server/src/webhookHandlers.ts` — webhook verification
+- `artifacts/api-server/src/services/paymentHandler.ts` — sets `paymentStatus=paid` on checkout complete
+- `artifacts/api-server/src/routes/stripe.ts` — `POST /api/stripe/checkout`
+- `scripts/src/seed-products.ts` — idempotent product seed script
+
+NOTE: The Replit Stripe integration was dismissed during setup. Reconnect via the Integrations panel or store `sk_test_...` key as a secret.
+
 ### Audio Narration
 - Uses OpenAI TTS (`shimmer` voice) via `POST /api/narrate`
 - Cached in `report_audio` DB table by `cacheKey-language` (e.g. `jane-en`, `jane-es`)
