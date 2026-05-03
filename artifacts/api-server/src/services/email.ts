@@ -1823,7 +1823,13 @@ export function buildTestimonialRequestEmail(data: TestimonialRequestData): Emai
  * Reply-To: info@bioharmonysolutions.ca
  * Domain:   bioharmonysolutions.ca  (verified sending subdomain: mail.bioharmonysolutions.ca)
  */
-export async function sendEmail(payload: EmailPayload): Promise<void> {
+export interface SendEmailResult {
+  sent: boolean;
+  mode: "resend" | "mock";
+  error?: string;
+}
+
+export async function sendEmail(payload: EmailPayload): Promise<SendEmailResult> {
   const apiKey = process.env["RESEND_API_KEY"];
 
   if (apiKey) {
@@ -1838,12 +1844,23 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
     });
 
     if (error) {
-      logger.error({ error }, "Resend delivery failed");
-      throw new Error(`Resend error: ${error.message}`);
+      logger.error({ error, to: payload.to, subject: payload.subject }, "Resend delivery failed — falling back to mock log");
+      // Log mock so the email content is not lost
+      logger.warn(
+        {
+          from: "BioAnalytics by BioHarmony Solutions <reports@mail.bioharmonysolutions.ca>",
+          to: payload.to,
+          subject: payload.subject,
+          preview: payload.text.slice(0, 300),
+          resendError: error.message,
+        },
+        "[EMAIL FALLBACK] Resend failed — email was NOT delivered",
+      );
+      return { sent: false, mode: "resend", error: error.message };
     }
 
     logger.info({ to: payload.to, subject: payload.subject }, "Email sent via Resend");
-    return;
+    return { sent: true, mode: "resend" };
   }
 
   // No RESEND_API_KEY — log as mock email, never crash
@@ -1857,4 +1874,5 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
     },
     "[EMAIL MOCK] Set RESEND_API_KEY secret to enable real delivery via Resend",
   );
+  return { sent: false, mode: "mock" };
 }

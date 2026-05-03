@@ -13,6 +13,19 @@ import {
 } from "../services/pipelineScheduler";
 import { buildPaymentReceivedEmail, sendEmail } from "../services/email";
 
+// ── Email test state (in-memory, resets on restart) ────────────────────────────
+const EMAIL_FROM = "BioAnalytics by BioHarmony Solutions <reports@mail.bioharmonysolutions.ca>";
+const EMAIL_REPLY_TO = "info@bioharmonysolutions.ca";
+const EMAIL_TEST_RECIPIENT = process.env["ADMIN_NOTIFICATION_EMAIL"] ?? "info@bioharmonysolutions.ca";
+
+interface LastEmailTest {
+  sentAt: string;
+  success: boolean;
+  mode: "resend" | "mock";
+  error?: string;
+}
+let lastEmailTest: LastEmailTest | null = null;
+
 const router = Router();
 
 const VALID_STATUSES = ["new", "in_review", "in_progress", "completed", "delivered"] as const;
@@ -284,6 +297,55 @@ router.post("/admin/requests/scan/:id/resend-delivery-email", async (req, res) =
   } catch (err) {
     req.log.error({ err }, "Failed to resend delivery email");
     res.status(500).json({ error: "Could not resend email" });
+  }
+});
+
+// ── Email system status + test ─────────────────────────────────────────────────
+
+router.get("/admin/email-status", (req, res) => {
+  if (!checkAuth(req, res)) return;
+  res.json({
+    keyPresent: !!process.env["RESEND_API_KEY"],
+    fromAddress: EMAIL_FROM,
+    replyTo: EMAIL_REPLY_TO,
+    testRecipient: EMAIL_TEST_RECIPIENT,
+    lastTest: lastEmailTest,
+  });
+});
+
+router.post("/admin/email-test", async (req, res) => {
+  if (!checkAuth(req, res)) return;
+  try {
+    const result = await sendEmail({
+      to: EMAIL_TEST_RECIPIENT,
+      subject: "BioAnalytics Email Test",
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#060D0D;color:#F4EFE6;border-radius:12px">
+          <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#BFA14A;margin-bottom:8px">BioAnalytics by BioHarmony Solutions</p>
+          <h2 style="font-size:22px;margin-bottom:16px;color:#F4EFE6">Email Delivery Confirmed</h2>
+          <p style="color:#F4EFE6;opacity:0.7;line-height:1.6">
+            This confirms BioAnalytics by BioHarmony Solutions email delivery is working through Resend.
+          </p>
+          <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:24px 0"/>
+          <p style="font-size:11px;color:rgba(244,239,230,0.3)">Sent from ${EMAIL_FROM} · Reply-To: ${EMAIL_REPLY_TO}</p>
+        </div>`,
+      text: "This confirms BioAnalytics by BioHarmony Solutions email delivery is working through Resend.",
+    });
+
+    lastEmailTest = {
+      sentAt: new Date().toISOString(),
+      success: result.sent,
+      mode: result.mode,
+      error: result.error,
+    };
+
+    req.log.info({ result, recipient: EMAIL_TEST_RECIPIENT }, "Admin email test triggered");
+    res.json({ success: result.sent, mode: result.mode, error: result.error ?? null, sentAt: lastEmailTest.sentAt });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    lastEmailTest = { sentAt: new Date().toISOString(), success: false, mode: "resend", error: msg };
+    req.log.error({ err }, "Admin email test failed");
+    res.status(500).json({ success: false, error: msg });
   }
 });
 

@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
-import { Settings, DollarSign, Clock, Globe, Mail, Webhook, ChevronRight, Lock, AlertTriangle } from "lucide-react";
+import {
+  Settings, DollarSign, Clock, Globe, Mail, Webhook,
+  Lock, AlertTriangle, Send, CheckCircle2, XCircle, Loader2, RefreshCw,
+} from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_KEY = "bh_admin_token";
+const ADMIN_PASSWORD = "bioharmony2025";
 
 interface SettingRowProps {
   label: string;
@@ -53,15 +57,81 @@ function WebhookRow({ method, path, desc }: { method: string; path: string; desc
   );
 }
 
+interface EmailStatus {
+  keyPresent: boolean;
+  fromAddress: string;
+  replyTo: string;
+  testRecipient: string;
+  lastTest: { sentAt: string; success: boolean; mode: "resend" | "mock"; error?: string } | null;
+}
+
+interface TestResult {
+  success: boolean;
+  mode: "resend" | "mock";
+  error?: string | null;
+  sentAt: string;
+}
+
+function EmailStatusBadge({ ok }: { ok: boolean }) {
+  return ok
+    ? <span className="flex items-center gap-1 text-green-400 text-xs font-medium"><CheckCircle2 className="w-3.5 h-3.5" /> Yes</span>
+    : <span className="flex items-center gap-1 text-red-400/80 text-xs font-medium"><XCircle className="w-3.5 h-3.5" /> No</span>;
+}
+
+function formatTs(iso: string) {
+  return new Date(iso).toLocaleString("en-CA", {
+    month: "short", day: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  });
+}
+
 export default function AdminSettings() {
   const [token, setToken] = useState<string | null>(() => sessionStorage.getItem(ADMIN_KEY));
   const [pw, setPw] = useState("");
   const [pwError, setPwError] = useState("");
 
+  const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
+  const [emailStatusLoading, setEmailStatusLoading] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+
+  async function fetchEmailStatus() {
+    setEmailStatusLoading(true);
+    try {
+      const res = await fetch(`${BASE}/api/admin/email-status`, {
+        headers: { Authorization: `Bearer ${ADMIN_PASSWORD}` },
+      });
+      if (res.ok) setEmailStatus(await res.json() as EmailStatus);
+    } finally {
+      setEmailStatusLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (token) fetchEmailStatus();
+  }, [token]);
+
+  async function sendTestEmail() {
+    setTestLoading(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(`${BASE}/api/admin/email-test`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${ADMIN_PASSWORD}` },
+      });
+      const body = await res.json() as TestResult;
+      setTestResult(body);
+      await fetchEmailStatus();
+    } catch {
+      setTestResult({ success: false, mode: "resend", error: "Connection error", sentAt: new Date().toISOString() });
+    } finally {
+      setTestLoading(false);
+    }
+  }
+
   function handleAuth(e: React.FormEvent) {
     e.preventDefault();
-    const expected = "bioharmony2025";
-    if (pw === expected) {
+    if (pw === ADMIN_PASSWORD) {
       sessionStorage.setItem(ADMIN_KEY, pw);
       setToken(pw);
     } else {
@@ -122,14 +192,117 @@ export default function AdminSettings() {
       <div className="max-w-4xl mx-auto px-4 pt-10 space-y-6">
         <div className="mb-8">
           <h1 className="font-serif text-3xl text-[#F4EFE6] mb-2">Platform Settings</h1>
-          <p className="text-[#F4EFE6]/40 text-sm">Configuration reference for the BioHarmony platform. Live editing coming in a future update.</p>
+          <p className="text-[#F4EFE6]/40 text-sm">Configuration reference for the BioHarmony platform.</p>
         </div>
 
         {/* Notice */}
         <div className="flex items-start gap-3 p-4 rounded-xl bg-[#BFA14A]/6 border border-[#BFA14A]/20">
           <AlertTriangle className="w-4 h-4 text-[#BFA14A] shrink-0 mt-0.5" />
-          <p className="text-sm text-[#BFA14A]/80">Settings are currently read-only. Values reflect the current platform configuration. Live editing will be enabled in a future release.</p>
+          <p className="text-sm text-[#BFA14A]/80">Settings are currently read-only. Values reflect the current platform configuration.</p>
         </div>
+
+        {/* Email Delivery System */}
+        <section className="rounded-2xl border border-white/10 bg-[#0C1919] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/8 bg-white/[0.02]">
+            <div className="flex items-center gap-2.5">
+              <Mail className="w-3.5 h-3.5 text-[#BFA14A]" />
+              <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] font-medium">Email Delivery System</h3>
+            </div>
+            <button
+              onClick={fetchEmailStatus}
+              disabled={emailStatusLoading}
+              className="text-[#F4EFE6]/25 hover:text-[#F4EFE6]/60 transition"
+              title="Refresh status"
+            >
+              <RefreshCw className={cn("w-3.5 h-3.5", emailStatusLoading && "animate-spin")} />
+            </button>
+          </div>
+
+          <div className="px-5">
+            {/* Config rows */}
+            <div className="flex items-start justify-between gap-4 py-3 border-b border-white/6">
+              <p className="text-sm text-[#F4EFE6]/70">Resend API Key</p>
+              {emailStatus
+                ? <EmailStatusBadge ok={emailStatus.keyPresent} />
+                : <span className="text-xs text-[#F4EFE6]/25">Loading…</span>
+              }
+            </div>
+
+            <div className="flex items-start justify-between gap-4 py-3 border-b border-white/6">
+              <div>
+                <p className="text-sm text-[#F4EFE6]/70">Sender Address</p>
+                <p className="text-[10px] text-[#F4EFE6]/30 mt-0.5">Verified Resend domain: mail.bioharmonysolutions.ca</p>
+              </div>
+              <span className="text-xs text-[#F4EFE6]/85 font-medium text-right shrink-0 max-w-[260px] break-all">
+                {emailStatus?.fromAddress ?? "—"}
+              </span>
+            </div>
+
+            <div className="flex items-start justify-between gap-4 py-3 border-b border-white/6">
+              <p className="text-sm text-[#F4EFE6]/70">Reply-To</p>
+              <span className="text-sm text-[#F4EFE6]/85 font-medium shrink-0">
+                {emailStatus?.replyTo ?? "—"}
+              </span>
+            </div>
+
+            <div className="flex items-start justify-between gap-4 py-3 border-b border-white/6">
+              <p className="text-sm text-[#F4EFE6]/70">Test Recipient</p>
+              <span className="text-sm text-[#F4EFE6]/85 font-medium shrink-0">
+                {emailStatus?.testRecipient ?? "—"}
+              </span>
+            </div>
+
+            {/* Last test status */}
+            {(emailStatus?.lastTest ?? testResult) && (() => {
+              const t = testResult ?? emailStatus?.lastTest;
+              if (!t) return null;
+              return (
+                <div className="flex items-start justify-between gap-4 py-3 border-b border-white/6">
+                  <div>
+                    <p className="text-sm text-[#F4EFE6]/70">Last Test Email</p>
+                    <p className="text-[10px] text-[#F4EFE6]/30 mt-0.5">{formatTs(t.sentAt)}</p>
+                    {t.error && <p className="text-[10px] text-red-400/70 mt-0.5">{t.error}</p>}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {t.success
+                      ? <><CheckCircle2 className="w-3.5 h-3.5 text-green-400" /><span className="text-xs text-green-400">Delivered</span></>
+                      : t.mode === "mock"
+                        ? <><XCircle className="w-3.5 h-3.5 text-[#BFA14A]" /><span className="text-xs text-[#BFA14A]">Mock (no key)</span></>
+                        : <><XCircle className="w-3.5 h-3.5 text-red-400/80" /><span className="text-xs text-red-400/80">Failed</span></>
+                    }
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Test button + inline result */}
+            <div className="py-4 flex items-center gap-4">
+              <button
+                onClick={sendTestEmail}
+                disabled={testLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-[#BFA14A] text-[#060D0D] rounded-xl text-xs font-semibold hover:bg-[#d4b456] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {testLoading
+                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending…</>
+                  : <><Send className="w-3.5 h-3.5" /> Send Test Email</>
+                }
+              </button>
+              {testResult && !testLoading && (
+                <span className={cn(
+                  "text-xs flex items-center gap-1",
+                  testResult.success ? "text-green-400" : testResult.mode === "mock" ? "text-[#BFA14A]" : "text-red-400/80"
+                )}>
+                  {testResult.success
+                    ? <><CheckCircle2 className="w-3.5 h-3.5" /> Sent to {emailStatus?.testRecipient}</>
+                    : testResult.mode === "mock"
+                      ? <><XCircle className="w-3.5 h-3.5" /> Mock only — add RESEND_API_KEY</>
+                      : <><XCircle className="w-3.5 h-3.5" /> {testResult.error}</>
+                  }
+                </span>
+              )}
+            </div>
+          </div>
+        </section>
 
         {/* Pricing */}
         <Section title="Report Pricing (CAD)" icon={DollarSign}>
