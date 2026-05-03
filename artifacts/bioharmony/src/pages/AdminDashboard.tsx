@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
   Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign,
-  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download, BarChart2, BellRing
+  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download, BarChart2, BellRing, Tag, Percent
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -97,6 +97,8 @@ interface UnifiedRequest {
   flagged?: boolean;
   referralSource?: string | null;
   paymentReminderSentAt?: string | null;
+  promoCode?: string | null;
+  discountAmount?: number | null;
   status: Status;
   pipelineStage?: PipelineStage | null;
   paymentStatus?: PaymentStatus | null;
@@ -120,6 +122,7 @@ interface RawScanRequest {
   whatsapp?: boolean | null; plan?: string | null; note?: string | null; adminNote?: string | null;
   starred?: boolean; flagged?: boolean; referralSource?: string | null;
   paymentReminderSentAt?: string | null;
+  promoCode?: string | null; discountAmount?: number | null;
   status: string; pipelineStage?: string | null; paymentStatus?: string | null;
   pipelinePaused?: boolean | null; pipelineError?: string | null;
   stageEnteredAt?: string | null; deliveredEmailSentAt?: string | null; createdAt: string;
@@ -156,6 +159,8 @@ function normalizeScan(s: RawScanRequest): UnifiedRequest {
     starred: s.starred ?? false, flagged: s.flagged ?? false,
     referralSource: s.referralSource ?? null,
     paymentReminderSentAt: s.paymentReminderSentAt ?? null,
+    promoCode: s.promoCode ?? null,
+    discountAmount: s.discountAmount ?? null,
     status: normalizeStatus(s.status),
     pipelineStage: normalizePipelineStage(s.pipelineStage),
     paymentStatus: normalizePaymentStatus(s.paymentStatus),
@@ -655,6 +660,152 @@ function ReferralAnalytics({ requests }: { requests: UnifiedRequest[] }) {
               </div>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Promo Code Analytics ───────────────────────────────────────────────────────
+
+const KNOWN_PROMO_CODES = ["WELLNESS20", "FIRST10", "PRACTITIONER"] as const;
+
+function PromoAnalytics({ requests }: { requests: UnifiedRequest[] }) {
+  const [open, setOpen] = useState(false);
+
+  const stats = useMemo(() => {
+    const map: Record<string, { count: number; totalDiscount: number; revenue: number; lastUsed: string | null }> = {};
+    // Initialise all known codes with zeroes so they always show
+    for (const c of KNOWN_PROMO_CODES) {
+      map[c] = { count: 0, totalDiscount: 0, revenue: 0, lastUsed: null };
+    }
+    for (const r of requests) {
+      if (!r.promoCode) continue;
+      const key = r.promoCode.toUpperCase();
+      if (!map[key]) map[key] = { count: 0, totalDiscount: 0, revenue: 0, lastUsed: null };
+      map[key].count++;
+      map[key].totalDiscount += r.discountAmount ?? 0;
+      if (r.paymentStatus === "paid" || r.paymentStatus === "waived") {
+        const gross = r.plan ? (PLAN_PRICES[r.plan] ?? 55) : 55;
+        map[key].revenue += gross - (r.discountAmount ?? 0);
+      }
+      if (!map[key].lastUsed || r.createdAt > map[key].lastUsed!) {
+        map[key].lastUsed = r.createdAt;
+      }
+    }
+    return Object.entries(map)
+      .map(([code, d]) => ({ code, ...d }))
+      .sort((a, b) => b.count - a.count);
+  }, [requests]);
+
+  const totalUses = stats.reduce((s, c) => s + c.count, 0);
+  const totalDiscount = stats.reduce((s, c) => s + c.totalDiscount, 0);
+
+  return (
+    <div className="rounded-xl border border-white/8 bg-[#0C1919]/60 overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Tag className="w-4 h-4 text-[#BFA14A]" />
+          <span className="text-sm font-medium text-[#F4EFE6]/80">Promo Code Usage</span>
+          {totalUses > 0 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#BFA14A]/10 border border-[#BFA14A]/20 text-[#BFA14A]/70">
+              {totalUses} {totalUses === 1 ? "use" : "uses"}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          {totalDiscount > 0 && (
+            <span className="text-xs text-[#F4EFE6]/35">${totalDiscount} total discounts given</span>
+          )}
+          <span className={cn("text-[#F4EFE6]/30 text-xs transition-transform duration-200", open ? "rotate-180" : "")}>▾</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-white/8 p-6 space-y-3">
+
+          {/* Header row */}
+          <div className="grid grid-cols-5 gap-2 text-[10px] uppercase tracking-wider text-[#F4EFE6]/25 px-1 pb-1 border-b border-white/6">
+            <span className="col-span-2">Code</span>
+            <span className="text-right">Uses</span>
+            <span className="text-right">Discounts</span>
+            <span className="text-right">Net Revenue</span>
+          </div>
+
+          {stats.map((c) => {
+            const isKnown = (KNOWN_PROMO_CODES as readonly string[]).includes(c.code);
+            return (
+              <div key={c.code} className={cn(
+                "grid grid-cols-5 gap-2 items-center px-3 py-3 rounded-xl border",
+                c.count > 0
+                  ? "bg-white/[0.025] border-white/8"
+                  : "bg-transparent border-white/4 opacity-50"
+              )}>
+                {/* Code + description */}
+                <div className="col-span-2 flex items-center gap-2 min-w-0">
+                  <div className={cn(
+                    "w-1.5 h-1.5 rounded-full shrink-0",
+                    c.count > 0 ? "bg-[#BFA14A]" : "bg-white/20"
+                  )} />
+                  <div className="min-w-0">
+                    <p className="text-xs font-mono font-semibold text-[#F4EFE6]/80 truncate">{c.code}</p>
+                    <p className="text-[10px] text-[#F4EFE6]/30">
+                      {c.code === "WELLNESS20" ? "20% off" : c.code === "FIRST10" ? "$10 off" : c.code === "PRACTITIONER" ? "30% off" : "custom"}
+                      {isKnown ? " · active" : ""}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Uses */}
+                <div className="text-right">
+                  <p className={cn("text-sm font-bold", c.count > 0 ? "text-[#F4EFE6]/70" : "text-[#F4EFE6]/20")}>
+                    {c.count}
+                  </p>
+                </div>
+
+                {/* Total discount */}
+                <div className="text-right">
+                  <p className={cn("text-sm font-bold", c.totalDiscount > 0 ? "text-red-400/60" : "text-[#F4EFE6]/20")}>
+                    {c.totalDiscount > 0 ? `−$${c.totalDiscount}` : "—"}
+                  </p>
+                </div>
+
+                {/* Net revenue */}
+                <div className="text-right">
+                  <p className={cn("text-sm font-bold", c.revenue > 0 ? "text-emerald-400/70" : "text-[#F4EFE6]/20")}>
+                    {c.revenue > 0 ? `$${c.revenue}` : "—"}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Summary footer */}
+          <div className="pt-3 border-t border-white/6 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Total Uses</p>
+              <p className="text-base font-bold text-[#F4EFE6]/70">{totalUses}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Discounts Given</p>
+              <p className="text-base font-bold text-red-400/60">{totalDiscount > 0 ? `$${totalDiscount}` : "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Net Revenue</p>
+              <p className="text-base font-bold text-emerald-400/70">
+                ${stats.reduce((s, c) => s + c.revenue, 0)}
+              </p>
+            </div>
+          </div>
+
+          {totalUses === 0 && (
+            <p className="text-sm text-[#F4EFE6]/25 text-center py-2">
+              No promo codes used yet. Clients enter codes on the upload form.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -1331,6 +1482,12 @@ function DetailPanel({
               <DetailRow label="Submitted" value={formatDate(request.createdAt)} />
               <DetailRow label="Request ID" value={`BH-${request.id.toString().padStart(4, "0")}`} />
               {request.referralSource && <DetailRow label="Referred via" value={request.referralSource} />}
+              {request.promoCode && (
+                <DetailRow
+                  label="Promo Code"
+                  value={`${request.promoCode}${request.discountAmount != null ? ` (−$${request.discountAmount})` : ""}`}
+                />
+              )}
             </div>
           </section>
 
@@ -1764,6 +1921,9 @@ export default function AdminDashboard() {
 
         {/* Referral analytics */}
         <ReferralAnalytics requests={requests} />
+
+        {/* Promo code analytics */}
+        <PromoAnalytics requests={requests} />
 
         {/* Payment alert */}
         {stats.waitingPay > 0 && payFilter !== "pending" && (

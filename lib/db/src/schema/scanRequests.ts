@@ -24,6 +24,8 @@ export const scanRequestsTable = pgTable("scan_requests", {
   starred: boolean("starred").notNull().default(false),
   flagged: boolean("flagged").notNull().default(false),
   referralSource: varchar("referral_source", { length: 100 }),
+  promoCode: varchar("promo_code", { length: 50 }),
+  discountAmount: integer("discount_amount"),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

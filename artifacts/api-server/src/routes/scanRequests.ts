@@ -18,6 +18,8 @@ const ScanRequestSchema = z.object({
   plan: z.enum(["basic", "advanced", "premium"]).optional(),
   note: z.string().max(1000).trim().optional(),
   referralSource: z.string().max(100).trim().optional(),
+  promoCode: z.string().max(50).trim().optional(),
+  discountAmount: z.number().int().min(0).max(9999).optional(),
 });
 
 router.get("/scan-requests/public/:id", async (req, res) => {
@@ -147,6 +149,8 @@ router.post("/scan-requests", async (req, res) => {
         plan: data.plan,
         note: data.note,
         referralSource: data.referralSource,
+        promoCode: data.promoCode ?? null,
+        discountAmount: data.discountAmount ?? null,
       })
       .returning({ id: scanRequestsTable.id });
 

@@ -7,6 +7,7 @@ import adminRouter from "./admin";
 import narrateRouter from "./narrate";
 import stripeRouter from "./stripe";
 import webhooksRouter from "./webhooks";
+import promoRouter from "./promo";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(adminRouter);
 router.use(narrateRouter);
 router.use(stripeRouter);
 router.use(webhooksRouter);
+router.use(promoRouter);
 
 export default router;

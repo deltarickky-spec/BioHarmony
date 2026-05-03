@@ -312,6 +312,14 @@ export default function UploadScan() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [referralSource, setReferralSource] = useState("");
 
+  // ── Promo code state ──────────────────────────────────────────────────────────
+  const [promoInput, setPromoInput] = useState("");
+  const [promoApplied, setPromoApplied] = useState<{
+    code: string; type: "percent" | "flat"; value: number; label: string; discountAmount: number;
+  } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+
   const isVoice = REPORTS_TYPE_IS_VOICE(reportType);
   const isPetScan = reportType === "pet_scan";
 
@@ -328,6 +336,45 @@ export default function UploadScan() {
 
   const goNext = () => { setDirection(1); setStep(s => s + 1); };
   const goBack = () => { setDirection(-1); setStep(s => s - 1); };
+
+  // ── Promo helpers ─────────────────────────────────────────────────────────────
+
+  const PLAN_PRICES_UPLOAD: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
+
+  function calcDiscountAmount(type: "percent" | "flat", value: number, planId: string): number {
+    const price = PLAN_PRICES_UPLOAD[planId] ?? 99;
+    if (type === "percent") return Math.round((price * value) / 100);
+    return Math.min(value, price);
+  }
+
+  async function applyPromo() {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoLoading(true);
+    setPromoError("");
+    setPromoApplied(null);
+    try {
+      const res = await fetch(`${BASE}/api/promo/validate?code=${encodeURIComponent(code)}`);
+      if (!res.ok) {
+        setPromoError("Invalid promo code. Please check and try again.");
+        setPromoLoading(false);
+        return;
+      }
+      const data = (await res.json()) as { code: string; type: "percent" | "flat"; value: number; label: string };
+      const discountAmount = calcDiscountAmount(data.type, data.value, plan);
+      setPromoApplied({ ...data, discountAmount });
+      setPromoInput("");
+    } catch {
+      setPromoError("Could not validate code. Please try again.");
+    }
+    setPromoLoading(false);
+  }
+
+  function removePromo() {
+    setPromoApplied(null);
+    setPromoError("");
+    setPromoInput("");
+  }
 
   const handleFileClick = () => {
     const input = document.createElement("input");
@@ -369,6 +416,8 @@ export default function UploadScan() {
           whatsapp: values.whatsapp,
           plan,
           referralSource: referralSource || undefined,
+          promoCode: promoApplied?.code ?? undefined,
+          discountAmount: promoApplied?.discountAmount ?? undefined,
           note: isPetScan
             ? [
                 `PET NAME: ${petInfo.petName}`,
@@ -957,12 +1006,60 @@ export default function UploadScan() {
                       </div>
                     </div>
 
+                    {/* Promo code input */}
+                    <div className="mt-7">
+                      <p className="text-[#F4EFE6]/55 text-sm mb-3">
+                        Have a promo code? <span className="text-[#F4EFE6]/25 font-normal">(optional)</span>
+                      </p>
+                      {promoApplied ? (
+                        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[#BFA14A]/8 border border-[#BFA14A]/30">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-5 h-5 rounded-full bg-[#BFA14A]/20 flex items-center justify-center shrink-0">
+                              <CheckCircle className="w-3 h-3 text-[#BFA14A]" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-[#BFA14A]">{promoApplied.code}</p>
+                              <p className="text-[11px] text-[#F4EFE6]/45">{promoApplied.label} — saving ${promoApplied.discountAmount}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removePromo}
+                            className="text-[#F4EFE6]/30 hover:text-[#F4EFE6]/60 text-xs transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoInput}
+                            onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyPromo())}
+                            placeholder="Enter code…"
+                            className="flex-1 bg-white/5 border border-white/12 text-[#F4EFE6] placeholder:text-[#F4EFE6]/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#BFA14A]/40 uppercase tracking-wider"
+                          />
+                          <button
+                            type="button"
+                            onClick={applyPromo}
+                            disabled={promoLoading || !promoInput.trim()}
+                            className="px-5 py-2.5 rounded-xl text-sm font-medium bg-white/5 border border-white/12 text-[#F4EFE6]/50 hover:border-[#BFA14A]/30 hover:text-[#BFA14A] transition-all disabled:opacity-40"
+                          >
+                            {promoLoading ? "…" : "Apply"}
+                          </button>
+                        </div>
+                      )}
+                      {promoError && (
+                        <p className="mt-2 text-xs text-red-400/75">{promoError}</p>
+                      )}
+                    </div>
+
                     {/* Summary */}
                     <div className="mt-8 bg-white/[0.025] border border-white/8 rounded-2xl px-5 py-5 space-y-2.5">
                       <p className="text-[#F4EFE6]/30 text-[10px] uppercase tracking-[0.2em] mb-3">Submission Summary</p>
                       {[
                         { label: "Report Type", value: REPORT_TYPES.find(r => r.value === reportType)?.label ?? reportType },
-                        { label: "Plan", value: `${PLANS.find(p => p.id === plan)?.label} — ${PLANS.find(p => p.id === plan)?.price}` },
                         { label: "Name", value: form.getValues("name") },
                         { label: "Email", value: form.getValues("email") },
                         ...(selectedFile ? [{ label: "File", value: selectedFile.name }] : []),
@@ -972,6 +1069,29 @@ export default function UploadScan() {
                           <span className="text-[#F4EFE6]/65 text-sm text-right truncate max-w-[55%]">{row.value}</span>
                         </div>
                       ))}
+                      {/* Plan + price row with optional discount */}
+                      <div className="flex justify-between gap-4 pt-2 border-t border-white/6">
+                        <span className="text-[#F4EFE6]/30 text-sm">Plan</span>
+                        <div className="text-right">
+                          {promoApplied ? (
+                            <div className="flex items-center gap-2 justify-end">
+                              <span className="text-[#F4EFE6]/30 text-sm line-through">
+                                {PLANS.find(p => p.id === plan)?.price}
+                              </span>
+                              <span className="text-[#BFA14A] text-sm font-semibold">
+                                ${(PLAN_PRICES_UPLOAD[plan] ?? 99) - promoApplied.discountAmount}
+                              </span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#BFA14A]/15 text-[#BFA14A]/80 font-mono">
+                                {promoApplied.code}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[#F4EFE6]/65 text-sm">
+                              {PLANS.find(p => p.id === plan)?.label} — {PLANS.find(p => p.id === plan)?.price}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {submitError && (
