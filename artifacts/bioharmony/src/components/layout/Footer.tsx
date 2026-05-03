@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import kathyAvatar from "@/assets/kathy-owens.jpg";
 
 export function Footer() {
   return (
@@ -50,7 +51,19 @@ export function Footer() {
           <div>
             <h4 className="font-serif font-semibold text-[#F4EFE6]/80 mb-5 text-sm uppercase tracking-wider">Contact</h4>
             <ul className="space-y-3">
-              <li className="text-sm text-[#F4EFE6]/50">Kathy Owens</li>
+              <li>
+                <Link href="/about" className="flex items-center gap-3 group">
+                  <img
+                    src={kathyAvatar}
+                    alt="Kathy Owens"
+                    className="w-10 h-10 rounded-full object-cover object-top border border-white/10 group-hover:border-[#BFA14A]/40 transition-colors"
+                  />
+                  <div>
+                    <p className="text-sm text-[#F4EFE6]/70 group-hover:text-[#BFA14A]/80 transition-colors font-medium">Kathy Owens</p>
+                    <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Founder & Practitioner</p>
+                  </div>
+                </Link>
+              </li>
               <li>
                 <a
                   href="mailto:contact@bioharmonysolutions.com"

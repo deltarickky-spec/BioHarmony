@@ -4,6 +4,7 @@ import { Menu, X, Globe, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import logoSrc from "@/assets/logo-concept-1.png";
+import kathyAvatar from "@/assets/kathy-owens.jpg";
 import { LANGUAGES, useLanguage, type Language } from "@/contexts/LanguageContext";
 
 function LangDropdown() {
@@ -173,7 +174,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-base font-medium py-3 px-2 rounded-lg transition-all duration-200",
+                  "flex items-center gap-3 text-base font-medium py-3 px-2 rounded-lg transition-all duration-200",
                   location === link.href
                     ? "text-[#BFA14A] bg-[#BFA14A]/8"
                     : link.highlight
@@ -183,6 +184,13 @@ export function Navbar() {
                 onClick={() => setIsOpen(false)}
                 data-testid={`mobile-nav-link-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
+                {link.href === "/about" && (
+                  <img
+                    src={kathyAvatar}
+                    alt="Kathy Owens"
+                    className="w-7 h-7 rounded-full object-cover object-top border border-white/15 shrink-0"
+                  />
+                )}
                 {link.label}
               </Link>
             ))}
