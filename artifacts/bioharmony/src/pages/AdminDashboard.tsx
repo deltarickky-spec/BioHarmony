@@ -4,8 +4,12 @@ import { Link } from "wouter";
 import {
   RefreshCw, LogOut, ChevronRight, AlertTriangle, CreditCard,
   Zap, RotateCcw, Pause, Play, X, CheckCircle, Activity, Gift, Ban, DollarSign,
-  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download
+  TrendingUp, Mail, MailCheck, Star, Flag, Settings, Download, BarChart2
 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_PASSWORD_KEY = "bh_admin_token";
@@ -421,6 +425,232 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
                 ? `$${revenue.byKind.human.total.toLocaleString("en-CA")}`
                 : "—"}
             </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Referral Analytics ─────────────────────────────────────────────────────────
+
+const REFERRAL_PALETTE: Record<string, string> = {
+  "Instagram":        "#e1306c",
+  "Facebook":         "#1877f2",
+  "TikTok":           "#69c9d0",
+  "YouTube":          "#ff0000",
+  "Google Search":    "#4285f4",
+  "Friend / Referral":"#BFA14A",
+  "Podcast":          "#a855f7",
+  "Practitioner":     "#0F5C5E",
+  "Other":            "#6b7280",
+  "Direct / Unknown": "#374151",
+};
+
+function getWeekLabel(daysAgo: number) {
+  if (daysAgo === 0) return "This wk";
+  if (daysAgo === 1) return "Last wk";
+  return `${daysAgo}w ago`;
+}
+
+function ReferralAnalytics({ requests }: { requests: UnifiedRequest[] }) {
+  const [open, setOpen] = useState(false);
+
+  const bySource = useMemo(() => {
+    const map: Record<string, { count: number; paid: number; revenue: number }> = {};
+    for (const r of requests) {
+      const key = r.referralSource?.trim() || "Direct / Unknown";
+      if (!map[key]) map[key] = { count: 0, paid: 0, revenue: 0 };
+      map[key].count++;
+      if (r.paymentStatus === "paid" || r.paymentStatus === "waived") {
+        map[key].paid++;
+        map[key].revenue += r.plan ? (PLAN_PRICES[r.plan] ?? 55) : 55;
+      }
+    }
+    return Object.entries(map)
+      .map(([source, d]) => ({
+        source,
+        ...d,
+        convRate: d.count > 0 ? Math.round((d.paid / d.count) * 100) : 0,
+        color: REFERRAL_PALETTE[source] ?? "#6b7280",
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [requests]);
+
+  const pieData = useMemo(
+    () => bySource.filter((s) => s.source !== "Direct / Unknown" || bySource.length === 1),
+    [bySource]
+  );
+
+  // Weekly trend — last 8 weeks bucketed by week number
+  const weeklyData = useMemo(() => {
+    const buckets: { week: string; count: number; revenue: number }[] = Array.from({ length: 8 }, (_, i) => ({
+      week: getWeekLabel(7 - i),
+      count: 0,
+      revenue: 0,
+    }));
+    const now = Date.now();
+    for (const r of requests) {
+      const weeksAgo = Math.floor((now - new Date(r.createdAt).getTime()) / (7 * 86400000));
+      const idx = 7 - weeksAgo;
+      if (idx < 0 || idx > 7) continue;
+      buckets[idx].count++;
+      if (r.paymentStatus === "paid" || r.paymentStatus === "waived") {
+        buckets[idx].revenue += r.plan ? (PLAN_PRICES[r.plan] ?? 55) : 55;
+      }
+    }
+    return buckets;
+  }, [requests]);
+
+  const totalRevenue = bySource.reduce((s, r) => s + r.revenue, 0);
+  const topSource = bySource.find((s) => s.source !== "Direct / Unknown");
+  const maxCount = bySource[0]?.count ?? 1;
+
+  if (requests.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-white/8 bg-[#0C1919]/60 overflow-hidden">
+      {/* Toggle header */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <BarChart2 className="w-4 h-4 text-[#BFA14A]" />
+          <span className="text-sm font-medium text-[#F4EFE6]/80">Referral Analytics</span>
+          {topSource && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#BFA14A]/10 border border-[#BFA14A]/20 text-[#BFA14A]/70">
+              Top: {topSource.source}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          {totalRevenue > 0 && (
+            <span className="text-xs text-[#F4EFE6]/35">${totalRevenue.toLocaleString("en-CA")} tracked revenue</span>
+          )}
+          <span className={cn("text-[#F4EFE6]/30 text-xs transition-transform duration-200", open ? "rotate-180" : "")}>▾</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-white/8 p-6 grid lg:grid-cols-3 gap-8">
+
+          {/* Col 1 — Horizontal bar breakdown */}
+          <div className="lg:col-span-1 space-y-3">
+            <p className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30 mb-4">Source Breakdown</p>
+            {bySource.length === 0 ? (
+              <p className="text-sm text-[#F4EFE6]/25">No referral data yet. The "How did you hear about us?" field on the upload form will populate this.</p>
+            ) : bySource.map((s) => (
+              <div key={s.source}>
+                <div className="flex items-center justify-between mb-1.5 gap-2">
+                  <span className="flex items-center gap-1.5 text-xs text-[#F4EFE6]/70 min-w-0 truncate">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
+                    {s.source}
+                  </span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-[10px] text-emerald-400/60">{s.convRate}%</span>
+                    <span className="text-[10px] text-[#BFA14A]/70 font-medium">${s.revenue}</span>
+                    <span className="text-xs text-[#F4EFE6]/50 w-4 text-right">{s.count}</span>
+                  </div>
+                </div>
+                <div className="w-full h-1.5 bg-white/6 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${Math.max(3, Math.round((s.count / maxCount) * 100))}%`, background: s.color, opacity: 0.65 }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* Legend */}
+            {bySource.length > 0 && (
+              <div className="pt-3 border-t border-white/6 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Sources</p>
+                  <p className="text-base font-bold text-[#F4EFE6]/70">{bySource.length}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Avg Conv.</p>
+                  <p className="text-base font-bold text-emerald-400/70">
+                    {bySource.length > 0 ? Math.round(bySource.reduce((s, r) => s + r.convRate, 0) / bySource.length) : 0}%
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-[#F4EFE6]/30 uppercase tracking-wider">Revenue</p>
+                  <p className="text-base font-bold text-[#BFA14A]/80">${totalRevenue}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Col 2 — Weekly bar chart */}
+          <div className="lg:col-span-1">
+            <p className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30 mb-4">Weekly Submissions</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={weeklyData} barSize={18} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis
+                  dataKey="week"
+                  tick={{ fontSize: 9, fill: "rgba(244,239,230,0.28)" }}
+                  axisLine={false} tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 9, fill: "rgba(244,239,230,0.28)" }}
+                  axisLine={false} tickLine={false} allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{ background: "#0C1919", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, fontSize: 11, color: "#F4EFE6" }}
+                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  formatter={(v, n) => [v, n === "count" ? "Submissions" : "Revenue $"]}
+                />
+                <Bar dataKey="count" name="count" fill="#BFA14A" opacity={0.75} radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Col 3 — Pie chart + top channel card */}
+          <div className="lg:col-span-1">
+            <p className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30 mb-4">Channel Mix</p>
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="count"
+                    nameKey="source"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={48}
+                    outerRadius={78}
+                    paddingAngle={2}
+                    strokeWidth={0}
+                  >
+                    {pieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} opacity={0.8} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: "#0C1919", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, fontSize: 11, color: "#F4EFE6" }}
+                    formatter={(v, n) => [`${v} submissions`, n]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-44 flex items-center justify-center text-[#F4EFE6]/20 text-sm">No channel data yet</div>
+            )}
+
+            {topSource && (
+              <div className="mt-2 flex items-center gap-3 p-3 rounded-xl bg-white/3 border border-white/6">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: topSource.color }} />
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-[#F4EFE6]/65 truncate">{topSource.source}</p>
+                  <p className="text-[10px] text-[#F4EFE6]/35">
+                    {topSource.count} submissions · {topSource.convRate}% conv · ${topSource.revenue} rev
+                  </p>
+                </div>
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-[#BFA14A]/10 text-[#BFA14A]/70 font-medium shrink-0">#1</span>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1416,6 +1646,9 @@ export default function AdminDashboard() {
 
         {/* Revenue summary */}
         <RevenueSummary requests={requests} />
+
+        {/* Referral analytics */}
+        <ReferralAnalytics requests={requests} />
 
         {/* Payment alert */}
         {stats.waitingPay > 0 && payFilter !== "pending" && (
