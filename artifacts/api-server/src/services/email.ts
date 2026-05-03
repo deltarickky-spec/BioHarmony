@@ -1829,7 +1829,7 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
   if (apiKey) {
     const resend = new Resend(apiKey);
     const { error } = await resend.emails.send({
-      from: "BioAnalytics by BioHarmony Solutions <reports@bioharmonysolutions.ca>",
+      from: "BioAnalytics by BioHarmony Solutions <reports@mail.bioharmonysolutions.ca>",
       replyTo: "info@bioharmonysolutions.ca",
       to: [payload.to],
       subject: payload.subject,
@@ -1849,7 +1849,7 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
   // No RESEND_API_KEY — log as mock email, never crash
   logger.info(
     {
-      from: "BioAnalytics by BioHarmony Solutions <reports@bioharmonysolutions.ca>",
+      from: "BioAnalytics by BioHarmony Solutions <reports@mail.bioharmonysolutions.ca>",
       replyTo: "info@bioharmonysolutions.ca",
       to: payload.to,
       subject: payload.subject,
