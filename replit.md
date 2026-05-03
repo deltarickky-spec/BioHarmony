@@ -32,10 +32,12 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 Email notifications are currently **mocked** (logged to server console via pino). The structure is fully ready for a real provider.
 
 **To enable real email delivery:**
-1. Get an API key from [Resend](https://resend.com) (free tier: 3,000 emails/month) or SendGrid
-2. Add the key as a secret: `RESEND_API_KEY` or `SENDGRID_API_KEY`
-3. Set `EMAIL_PROVIDER=resend` or `EMAIL_PROVIDER=sendgrid` as an env var
-4. Implement the provider call in the `sendEmail()` function body in `email.ts`
+- Sign up for a free Resend account at [resend.com](https://resend.com) (3,000 emails/month free)
+- Verify your domain `bioharmonysolutions.ca` in the Resend dashboard
+- Add your API key as a secret named `RESEND_API_KEY`
+- That's it — the code in `email.ts` already checks for this key and sends via Resend automatically
+
+Note: The Replit Resend integration was dismissed during setup. To use their OAuth flow instead of a manual key, reconnect via the Integrations panel.
 
 Admin notification email goes to `info@bioharmonysolutions.ca` (override with `ADMIN_EMAIL` env var).
 

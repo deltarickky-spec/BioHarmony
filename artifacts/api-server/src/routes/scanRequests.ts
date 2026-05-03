@@ -44,6 +44,7 @@ router.post("/scan-requests", async (req, res) => {
     req.log.info({ id: row.id, email: data.email }, "New scan request submitted");
 
     const emailPayload = buildReportNotificationEmail({
+      source: "scan",
       name: data.name,
       email: data.email,
       phone: data.phone,

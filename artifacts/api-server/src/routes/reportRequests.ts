@@ -31,6 +31,7 @@ router.post("/report-requests", async (req, res) => {
     req.log.info({ id: row.id, email: data.email }, "New report request submitted");
 
     const emailPayload = buildReportNotificationEmail({
+      source: "report",
       name: data.firstName,
       email: data.email,
       reportType: data.reportType,
