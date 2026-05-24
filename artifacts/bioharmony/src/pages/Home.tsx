@@ -302,10 +302,10 @@ export default function Home() {
                     <img
                       src={solexBlood}
                       alt="Raw Solex AO Scan blood report"
-                      className="w-full h-full object-cover object-top opacity-60 scale-105"
-                      style={{ filter: "saturate(0.7) brightness(0.85)" }}
+                      className="w-full h-full object-cover object-top opacity-95 scale-105"
+                      style={{ filter: "saturate(1.0) brightness(1.0)" }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A1818]/80"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A1818]/50"></div>
                   </div>
 
                   {/* Mini report thumbnails — 3 across */}
@@ -315,12 +315,12 @@ export default function Home() {
                       { src: solexDigestive, alt: "Digestive findings" },
                       { src: solexEmotional, alt: "Emotional vitals page" },
                     ].map((img, i) => (
-                      <div key={i} className="relative overflow-hidden" style={{ height: "100px" }}>
+                      <div key={i} className="relative overflow-hidden" style={{ height: "120px" }}>
                         <img
                           src={img.src}
                           alt={img.alt}
-                          className="w-full h-full object-cover object-top opacity-55"
-                          style={{ filter: "saturate(0.6) brightness(0.8)" }}
+                          className="w-full h-full object-cover object-top opacity-90"
+                          style={{ filter: "saturate(0.95) brightness(1.0)" }}
                         />
                         {i < 2 && <div className="absolute right-0 top-0 bottom-0 w-px bg-white/8"></div>}
                       </div>
