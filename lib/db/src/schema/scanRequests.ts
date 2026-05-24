@@ -10,7 +10,7 @@ export const scanRequestsTable = pgTable("scan_requests", {
   language: varchar("language", { length: 10 }).notNull().default("en"),
   fileName: varchar("file_name", { length: 255 }),
   whatsapp: boolean("whatsapp").default(false),
-  plan: varchar("plan", { length: 20 }),
+  plan: varchar("plan", { length: 50 }),
   paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("pending"),
   pipelineStage: varchar("pipeline_stage", { length: 30 }).notNull().default("queued"),
   stageEnteredAt: timestamp("stage_entered_at"),

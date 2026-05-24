@@ -7,6 +7,7 @@ import {
   Link2, Copy, ExternalLink, TrendingUp, DollarSign, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getPlanLabel } from "@/lib/pricing";
 
 const PRACTITIONER_KEY = "bh_practitioner_token";
 const PRACTITIONER_PASSWORD = "practitioner2025";
@@ -117,7 +118,7 @@ function AuthGate({ onAuth }: { onAuth: () => void }) {
           <div className="w-14 h-14 rounded-2xl bg-[#BFA14A]/12 border border-[#BFA14A]/25 flex items-center justify-center mx-auto mb-5">
             <Lock className="w-6 h-6 text-[#BFA14A]" />
           </div>
-          <p className="text-[#BFA14A] text-xs uppercase tracking-[0.25em] mb-2">BioHarmony Solutions</p>
+          <p className="text-[#BFA14A] text-xs uppercase tracking-[0.25em] mb-2">BioHarmony Analytics</p>
           <h1 className="text-2xl font-serif text-[#F4EFE6]">Practitioner Portal</h1>
           <p className="text-[#F4EFE6]/40 text-sm mt-2">For licensed wellness practitioners only</p>
         </div>
@@ -648,7 +649,7 @@ export default function PractitionerPortal() {
                           {refDashboard.recentReferrals.map((r, i) => (
                             <div key={i} className="flex sm:grid sm:grid-cols-[1fr_0.8fr_0.8fr_0.8fr] gap-3 items-center px-5 py-3.5 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
                               <span className="text-sm text-[#F4EFE6]/75">{r.reportType}</span>
-                              <span className="text-xs text-[#F4EFE6]/45 capitalize">{r.plan ?? "basic"}</span>
+                              <span className="text-xs text-[#F4EFE6]/45 capitalize">{getPlanLabel(r.plan)}</span>
                               <span className={cn(
                                 "text-xs px-2 py-0.5 rounded-full w-fit border",
                                 r.pipelineStage === "delivered"

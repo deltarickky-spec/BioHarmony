@@ -114,7 +114,7 @@ export async function generateDOCX(data: ReportData): Promise<Blob> {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: "BioHarmony Solutions",
+                            text: "BioHarmony Analytics",
                             color: "F4EFE6",
                             bold: true,
                             size: 36,
@@ -200,7 +200,7 @@ export async function generateDOCX(data: ReportData): Promise<Blob> {
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: "Founder, BioHarmony Solutions", color: TEAL, size: 18, font: "Calibri" }),
+              new TextRun({ text: "Founder, BioHarmony Analytics", color: TEAL, size: 18, font: "Calibri" }),
             ],
           }),
         ],

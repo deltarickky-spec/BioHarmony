@@ -175,23 +175,69 @@ export default function PetScans() {
         </div>
       </section>
 
-      {/* Pricing Card */}
+      {/* Pricing Cards */}
       <section className="py-24 bg-[#0A1818]">
         <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="max-w-md mx-auto">
-            <div className="bg-[#0F5C5E]/20 backdrop-blur-xl border border-[#BFA14A]/30 rounded-2xl p-10 text-center shadow-[0_0_50px_rgba(15,92,94,0.2)]">
-              <h2 className="font-serif text-2xl text-[#F4EFE6] mb-8">Pet Wellness Scan</h2>
-              <div className="text-6xl font-bold text-[#BFA14A] mb-8 drop-shadow-md">
-                $150 <span className="text-xl font-normal text-[#F4EFE6]/50">USD</span>
-              </div>
-              <Button asChild size="lg" className="w-full rounded-full mb-8 bg-[#0F5C5E] text-white shadow-[0_0_20px_rgba(15,92,94,0.5)] hover:shadow-[0_0_30px_rgba(15,92,94,0.7)] transition-all border-none py-6 h-auto text-lg" data-testid="book-pet-scan">
-                <Link href="/contact">Scan Your Pet</Link>
-              </Button>
-              <p className="text-xs text-[#F4EFE6]/40 italic leading-relaxed">
-                All frequency-based wellness assessments. Not a veterinary service. Always consult a licensed veterinarian for medical concerns.
-              </p>
-            </div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
+            <h2 className="font-serif text-3xl md:text-4xl text-[#F4EFE6] mb-3">Pet Scan Pricing</h2>
+            <p className="text-[#F4EFE6]/55 text-sm">Choose the depth that fits your pet's wellness needs.</p>
           </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {[
+              {
+                slug: "pet-vitals",
+                title: "Pet Vitals",
+                price: 75,
+                tag: "Quick wellness snapshot",
+                bullets: [
+                  "Energetic snapshot of blood biology, organs, glands",
+                  "Color-coded system overview",
+                  "Delivered as PDF report",
+                ],
+              },
+              {
+                slug: "pet-comprehensive",
+                title: "Pet Comprehensive",
+                price: 150,
+                tag: "Full energetic profile",
+                popular: true,
+                bullets: [
+                  "Full body system analysis",
+                  "Complete energetic profile",
+                  "30-day pet wellness plan included",
+                ],
+              },
+            ].map((tier) => (
+              <motion.div key={tier.slug} variants={fadeInUp}>
+                <div className={`relative h-full flex flex-col bg-[#0F5C5E]/15 backdrop-blur-xl border ${tier.popular ? "border-[#BFA14A]/55 shadow-[0_0_40px_rgba(191,161,74,0.15)]" : "border-white/10"} rounded-2xl p-8 text-center`}>
+                  {tier.popular && (
+                    <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#BFA14A] text-[#091515] text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full">Most Popular</span>
+                  )}
+                  <p className="text-[#BFA14A] text-[10px] uppercase tracking-widest mb-3">{tier.tag}</p>
+                  <h3 className="font-serif text-2xl text-[#F4EFE6] mb-5">{tier.title}</h3>
+                  <div className="text-5xl font-bold text-[#BFA14A] mb-6 drop-shadow-md">
+                    ${tier.price} <span className="text-base font-normal text-[#F4EFE6]/40">USD</span>
+                  </div>
+                  <ul className="space-y-2.5 text-left text-sm text-[#F4EFE6]/75 mb-8 flex-grow">
+                    {tier.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#BFA14A] shrink-0 mt-1.5" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button asChild size="lg" className={`w-full rounded-full py-5 h-auto text-base border-none transition-all ${tier.popular ? "bg-[#BFA14A] text-[#091515] hover:bg-[#BFA14A]/90" : "bg-[#0F5C5E] text-white hover:bg-[#0F5C5E]/80"}`} data-testid={`book-${tier.slug}`}>
+                    <Link href={`/upload-scan?plan=${tier.slug}&type=pet_scan`}>Book This Scan</Link>
+                  </Button>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <p className="text-center text-xs text-[#F4EFE6]/40 italic leading-relaxed mt-10 max-w-2xl mx-auto">
+            All frequency-based wellness assessments. Not a veterinary service. Always consult a licensed veterinarian for medical concerns. AO Scan is an educational wellness tool, not a medical device.
+          </p>
         </div>
       </section>
 

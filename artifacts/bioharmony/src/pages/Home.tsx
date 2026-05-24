@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
+import { INDIVIDUAL_SCANS, PACKAGE_PLANS, PET_PLANS, PRICING_DISCLAIMER } from "@/lib/pricing";
 import heroBg from "@/assets/hero-bg.png";
 import kathyAvatar from "@/assets/kathy-owens.jpg";
 import pemfVisual from "@/assets/pemf-visual.png";
@@ -564,7 +565,7 @@ export default function Home() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-8">
             <h2 className="text-3xl md:text-5xl font-serif text-primary">Clarity Over Confusion</h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              BioAnalytics is our proprietary reporting layer — by BioHarmony Solutions — that translates complex scan data into clear, actionable insights you can actually use.
+              BioAnalytics is our proprietary reporting layer — by BioHarmony Analytics — that translates complex scan data into clear, actionable insights you can actually use.
             </p>
             <div className="bg-background rounded-2xl p-8 md:p-12 shadow-sm border border-border mt-12">
               <h3 className="text-2xl font-serif text-foreground mb-4">No confusing charts — just clear, actionable wellness insights.</h3>
@@ -638,46 +639,119 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Individual AO Scans Section */}
       <section className="py-24 bg-card border-y border-border">
         <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif text-primary">Simple, Transparent Pricing</h2>
-            <p className="text-muted-foreground mt-4 text-lg">Choose the wellness assessment that's right for you.</p>
-            <p className="text-muted-foreground text-sm mt-2">All pricing listed in USD.</p>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
+            <p className="text-secondary text-xs uppercase tracking-[0.2em] font-sans mb-3">Individual AO Scans</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-primary">7 Specialized Scan Programs</h2>
+            <p className="text-muted-foreground mt-3 text-base max-w-2xl mx-auto">Choose the single scan that matches what you want to learn — from a quick emotional check to a full-body comprehensive analysis.</p>
+            <p className="text-muted-foreground text-xs mt-2">All pricing listed in USD.</p>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
           >
-            {[
-              { name: "Inner Voice Scan", price: "$55", desc: "Emotional wellness insights through voice frequency analysis", popular: false },
-              { name: "Food Sensitivity", price: "$44", desc: "Identify energetic patterns related to food sensitivities", popular: false },
-              { name: "Comprehensive Scan", price: "$99", desc: "Full-spectrum energetic assessment across body systems", popular: true },
-              { name: "Ultimate Experience", price: "$133", desc: "Our most complete wellness journey — all scans included", popular: false }
-            ].map((plan, i) => (
-              <motion.div key={i} variants={fadeInUp}>
-                <Card className={`h-full flex flex-col transition-all duration-300 ${plan.popular ? 'border-secondary shadow-md ring-1 ring-secondary/20 relative' : 'border-border/50 hover:shadow-sm'}`}>
-                  {plan.popular && (
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                      Most Popular
+            {INDIVIDUAL_SCANS.map((plan) => (
+              <motion.div key={plan.id} variants={fadeInUp}>
+                <Card className={`h-full flex flex-col transition-all duration-300 ${plan.flagship ? "border-secondary shadow-md ring-1 ring-secondary/30 relative" : "border-border/50 hover:shadow-sm"}`}>
+                  {plan.flagship && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      ⭐ Flagship
                     </div>
                   )}
-                  <CardHeader className="text-center pb-4">
-                    <CardTitle className="font-serif text-xl text-primary">{plan.name}</CardTitle>
+                  <CardHeader className="text-center pb-3">
+                    <CardTitle className="font-serif text-lg text-primary leading-tight">{plan.label}</CardTitle>
                   </CardHeader>
                   <CardContent className="flex-grow flex flex-col text-center pt-0">
-                    <div className="text-4xl font-bold text-secondary mb-4">{plan.price}</div>
-                    <p className="text-sm text-muted-foreground flex-grow mb-8 px-2">{plan.desc}</p>
-                    <Button asChild className="w-full rounded-full" variant={plan.popular ? "default" : "outline"} data-testid={`pricing-card-${plan.name.replace(/\s+/g, '-').toLowerCase()}`}>
-                      <Link href="/contact">Select & Continue</Link>
+                    <div className="text-3xl font-bold text-secondary mb-3">${plan.price}</div>
+                    <p className="text-xs text-muted-foreground flex-grow mb-5 px-1 leading-relaxed">{plan.shortDesc}</p>
+                    <Button asChild className="w-full rounded-full text-xs" variant={plan.flagship ? "default" : "outline"} size="sm" data-testid={`scan-${plan.id}`}>
+                      <Link href={`/upload-scan?plan=${plan.id}`}>Book This Scan</Link>
                     </Button>
                   </CardContent>
                 </Card>
               </motion.div>
             ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* Packages Section */}
+      <section className="py-24 bg-background border-b border-border">
+        <div className="container px-4 md:px-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
+            <p className="text-secondary text-xs uppercase tracking-[0.2em] font-sans mb-3">Bundled Packages</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-primary">Save with a Package</h2>
+            <p className="text-muted-foreground mt-3 text-base max-w-2xl mx-auto">Combine multiple scans, add expert interpretation, or focus on a specific area of wellness.</p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+          >
+            {PACKAGE_PLANS.map((plan) => (
+              <motion.div key={plan.id} variants={fadeInUp}>
+                <Card className={`h-full flex flex-col transition-all duration-300 ${plan.popular ? "border-secondary shadow-md ring-1 ring-secondary/30 relative" : "border-border/50 hover:shadow-sm"}`}>
+                  {plan.popular && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
+                      ⭐ Most Popular
+                    </div>
+                  )}
+                  <CardHeader className="text-center pb-3">
+                    <CardTitle className="font-serif text-lg text-primary leading-tight">{plan.label}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow flex flex-col text-center pt-0">
+                    <div className="text-3xl font-bold text-secondary mb-3">${plan.price}</div>
+                    <p className="text-xs text-muted-foreground mb-3 px-1 leading-relaxed">{plan.shortDesc}</p>
+                    {plan.includes && (
+                      <ul className="text-[11px] text-muted-foreground/80 space-y-1 mb-5 text-left flex-grow">
+                        {plan.includes.map((inc, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="text-secondary shrink-0">✓</span>
+                            <span>{inc}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Button asChild className="w-full rounded-full text-xs" variant={plan.popular ? "default" : "outline"} size="sm" data-testid={`package-${plan.id}`}>
+                      <Link href={`/upload-scan?plan=${plan.id}`}>Get Started</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Pet Scans subsection */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mt-20">
+            <div className="text-center mb-8">
+              <p className="text-secondary text-xs uppercase tracking-[0.2em] font-sans mb-3">For Your Animal Companions</p>
+              <h3 className="text-2xl md:text-3xl font-serif text-primary">Pet Wellness Scans</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+              {PET_PLANS.map((plan) => (
+                <Card key={plan.id} className="border-border/50 hover:shadow-sm transition-all">
+                  <CardHeader className="text-center pb-3">
+                    <CardTitle className="font-serif text-lg text-primary">{plan.label}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center pt-0">
+                    <div className="text-3xl font-bold text-secondary mb-3">${plan.price}</div>
+                    <p className="text-xs text-muted-foreground mb-5 px-1 leading-relaxed">{plan.shortDesc}</p>
+                    <Button asChild className="w-full rounded-full text-xs" variant="outline" size="sm" data-testid={`pet-${plan.id}`}>
+                      <Link href={`/upload-scan?plan=${plan.id}&type=pet_scan`}>Book Pet Scan</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Disclaimer */}
+          <p className="text-center text-xs text-muted-foreground/70 italic mt-12 max-w-3xl mx-auto leading-relaxed">
+            {PRICING_DISCLAIMER}
+          </p>
         </div>
       </section>
 

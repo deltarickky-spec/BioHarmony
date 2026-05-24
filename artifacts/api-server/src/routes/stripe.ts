@@ -5,14 +5,9 @@ import { scanRequestsTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getUncachableStripeClient } from "../stripeClient";
+import { getPlan } from "../pricing";
 
 const router = Router();
-
-const PLAN_LABELS: Record<string, string> = {
-  basic: "BioHarmony Basic Report — $55",
-  advanced: "BioHarmony Advanced Report — $99",
-  premium: "BioHarmony Premium Report — $149",
-};
 
 const CheckoutSchema = z.object({
   scanRequestId: z.number().int().positive(),
@@ -46,7 +41,8 @@ router.post("/stripe/checkout", async (req, res) => {
     }
 
     const row = rows[0]!;
-    const plan = row.plan ?? "basic";
+    const plan = row.plan ?? "comprehensive";
+    const planDef = getPlan(plan);
 
     // Look up the Stripe price from the synced stripe schema
     const priceResult = await db.execute(
@@ -92,7 +88,7 @@ router.post("/stripe/checkout", async (req, res) => {
       success_url: `${domain}/track-report?id=${requestId}`,
       cancel_url: `${domain}/upload-scan`,
       payment_intent_data: {
-        description: PLAN_LABELS[plan] ?? plan,
+        description: `BioHarmony ${planDef.label} — $${planDef.price}`,
         metadata: {
           scanRequestId: String(scanRequestId),
           requestId,

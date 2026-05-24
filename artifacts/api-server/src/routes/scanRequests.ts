@@ -5,6 +5,7 @@ import { eq, and, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { buildReportNotificationEmail, buildClientConfirmationEmail, buildReferralRewardEmail, sendEmail } from "../services/email";
 import { inferTags } from "../services/tagInference";
+import { ALL_PLAN_IDS } from "../pricing";
 
 const router = Router();
 
@@ -16,7 +17,7 @@ const ScanRequestSchema = z.object({
   language: z.string().min(2).max(10).trim().default("en"),
   fileName: z.string().max(255).trim().optional(),
   whatsapp: z.boolean().optional(),
-  plan: z.enum(["basic", "advanced", "premium"]).optional(),
+  plan: z.string().max(50).refine((v) => ALL_PLAN_IDS.includes(v) || ["basic", "advanced", "premium"].includes(v), { message: "Invalid plan" }).optional(),
   note: z.string().max(1000).trim().optional(),
   referralSource: z.string().max(100).trim().optional(),
   referrerEmail: z.string().email().max(255).trim().optional(),

@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { logger } from "../lib/logger";
+import { getPlanPrice, getPlanLabel, planHasAudio } from "../pricing";
 
 const ADMIN_EMAIL =
   process.env["ADMIN_NOTIFICATION_EMAIL"] ??
@@ -201,7 +202,7 @@ export function buildDeliveredEmail(data: DeliveredEmailData): EmailPayload {
   const subject = "Your BioHarmony Report Is Ready";
   const firstName = data.name.split(" ")[0] ?? data.name;
   const trackUrl = `${SITE_URL}/track-report?id=${encodeURIComponent(data.requestId)}`;
-  const isPremium = data.plan === "premium";
+  const isPremium = planHasAudio(data.plan);
 
   const html = `<!DOCTYPE html>
 <html>
@@ -478,7 +479,7 @@ export function buildPaymentReminderEmail(data: PaymentReminderData): EmailPaylo
                              font-family:Georgia,serif;line-height:1.5;opacity:0.9;">
                     Code <strong style="color:#BFA14A;font-family:monospace;">${data.promoCode}</strong>
                     saves you <strong style="color:#BFA14A;">$${data.discountAmount}</strong>
-                    ${data.plan ? `— your price is <strong style="color:#F4EFE6;">$${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}</strong>` : ""}.
+                    ${data.plan ? `— your price is <strong style="color:#F4EFE6;">$${Math.max(0, getPlanPrice(data.plan) - data.discountAmount)}</strong>` : ""}.
                     This discount is already applied to your order.
                   </p>
                 </td>
@@ -591,7 +592,7 @@ export function buildPaymentReminderEmail(data: PaymentReminderData): EmailPaylo
     `Your report is ready to begin — we're just waiting for your payment to start processing.`,
     ``,
     data.promoCode && data.discountAmount != null
-      ? `Promo code ${data.promoCode} saves you $${data.discountAmount}${data.plan ? ` — your price is $${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}` : ""}.`
+      ? `Promo code ${data.promoCode} saves you $${data.discountAmount}${data.plan ? ` — your price is $${Math.max(0, getPlanPrice(data.plan) - data.discountAmount)}` : ""}.`
       : "",
     `Complete your request here:`,
     data.paymentUrl,
@@ -700,7 +701,7 @@ export function buildClientConfirmationEmail(data: ClientConfirmationData): Emai
                                    font-family:Georgia,serif;line-height:1.5;">
                           Code <strong style="color:#BFA14A;font-family:monospace;">${data.promoCode}</strong>
                           — you saved <strong style="color:#BFA14A;">$${data.discountAmount}</strong>
-                          ${data.plan ? `· Your price: <strong style="color:#F4EFE6;">$${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}</strong>` : ""}
+                          ${data.plan ? `· Your price: <strong style="color:#F4EFE6;">$${Math.max(0, getPlanPrice(data.plan) - data.discountAmount)}</strong>` : ""}
                         </p>
                       </td>
                       <td style="width:36px;text-align:right;vertical-align:middle;">
@@ -802,7 +803,7 @@ export function buildClientConfirmationEmail(data: ClientConfirmationData): Emai
     data.fileName ? `File: ${data.fileName}` : "",
     data.whatsapp ? `Delivery: WhatsApp` : "",
     data.promoCode && data.discountAmount != null
-      ? `Promo Code: ${data.promoCode} (you saved $${data.discountAmount}${data.plan ? ` — price: $${Math.max(0, ({"basic":55,"advanced":99,"premium":149}[data.plan] ?? 99) - data.discountAmount)}` : ""})`
+      ? `Promo Code: ${data.promoCode} (you saved $${data.discountAmount}${data.plan ? ` — price: $${Math.max(0, getPlanPrice(data.plan) - data.discountAmount)}` : ""})`
       : "",
     data.note ? `\nYour note: "${data.note}"` : "",
     ``,
@@ -1030,7 +1031,7 @@ export interface PractitionerCommissionData {
 export function buildPractitionerCommissionEmail(data: PractitionerCommissionData): EmailPayload {
   const subject = `Commission Earned — BioHarmony Report Delivered (+$${data.commissionEarned})`;
   const firstName = data.practitionerName.split(" ")[0] ?? data.practitionerName;
-  const planLabel = data.plan === "premium" ? "Premium" : data.plan === "advanced" ? "Advanced" : "Basic";
+  const planLabel = getPlanLabel(data.plan);
 
   const html = `<!DOCTYPE html>
 <html>
@@ -1290,7 +1291,7 @@ export function buildPaymentReceivedEmail(data: PaymentReceivedData): EmailPaylo
   const subject = "Payment Confirmed — Your BioAnalytics Report Is Being Prepared";
   const firstName = data.name.split(" ")[0] ?? data.name;
   const trackUrl = `${SITE_URL}/track-report?id=${encodeURIComponent(data.requestId)}`;
-  const planLabel = data.plan === "premium" ? "Premium" : data.plan === "advanced" ? "Advanced" : "Basic";
+  const planLabel = getPlanLabel(data.plan);
 
   const html = `<!DOCTYPE html>
 <html>

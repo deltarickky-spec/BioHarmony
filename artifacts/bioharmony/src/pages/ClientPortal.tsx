@@ -85,7 +85,7 @@ export default function ClientPortal() {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Solutions</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Analytics</p>
           <h1 className="font-serif text-4xl text-[#F4EFE6] mb-3">Client Portal</h1>
           <p className="text-[#F4EFE6]/45 text-sm">Access your wellness reports and track your submission status.</p>
         </div>

@@ -13,6 +13,7 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LANGUAGES, useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { INDIVIDUAL_SCANS, PACKAGE_PLANS, PET_PLANS, getPlanPrice } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -23,47 +24,8 @@ const REPORT_TYPES = [
   { value: "pet_scan", label: "Pet Scan", desc: "Wellness scan for your animal companion", icon: "🐾", voice: false },
 ] as const;
 
-const PLANS = [
-  {
-    id: "basic",
-    label: "Basic",
-    price: "$55",
-    popular: false,
-    features: [
-      { label: "Personalized wellness overview", included: true },
-      { label: "Up to 5 focus areas", included: true },
-      { label: "BioHarmony Score", included: false },
-      { label: "Audio narration", included: false },
-      { label: "Priority review", included: false },
-    ],
-  },
-  {
-    id: "advanced",
-    label: "Advanced",
-    price: "$99",
-    popular: true,
-    features: [
-      { label: "In-depth narrative report", included: true },
-      { label: "10+ focus areas covered", included: true },
-      { label: "BioHarmony Score", included: true },
-      { label: "Audio narration", included: false },
-      { label: "Priority review", included: false },
-    ],
-  },
-  {
-    id: "premium",
-    label: "Premium",
-    price: "$149",
-    popular: false,
-    features: [
-      { label: "Comprehensive full report", included: true },
-      { label: "All wellness systems", included: true },
-      { label: "BioHarmony Score", included: true },
-      { label: "Audio narration", included: true },
-      { label: "Priority review", included: true },
-    ],
-  },
-] as const;
+// Plans data is sourced from `@/lib/pricing`. Default plan is the flagship Comprehensive Scan.
+const DEFAULT_PLAN_ID = "comprehensive";
 
 const STEPS = [
   { n: 1, label: "Report Type" },
@@ -301,17 +263,41 @@ export default function UploadScan() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
 
-  const [reportType, setReportType] = useState<string>("");
+  const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const planFromUrl = urlParams.get("plan")?.trim() ?? "";
+  const typeFromUrl = urlParams.get("type")?.trim() ?? "";
+  const refFromUrl = (urlParams.get("ref")?.trim() ?? "").toUpperCase();
+
+  const [reportType, setReportType] = useState<string>(typeFromUrl);
   const [selectedFile, setSelectedFile] = useState<{ name: string; blob?: Blob } | null>(null);
-  const [plan, setPlan] = useState<"basic" | "advanced" | "premium">("advanced");
+  const initialPlan = (() => {
+    const all = [...INDIVIDUAL_SCANS, ...PACKAGE_PLANS, ...PET_PLANS];
+    const match = all.find((p) => p.id === planFromUrl);
+    if (!match) return DEFAULT_PLAN_ID;
+    // Normalize: if user arrived with type=pet_scan, force pet plan; else force non-pet plan.
+    if (typeFromUrl === "pet_scan" && match.kind !== "pet") return "pet-comprehensive";
+    if (typeFromUrl && typeFromUrl !== "pet_scan" && match.kind === "pet") return DEFAULT_PLAN_ID;
+    return match.id;
+  })();
+  const [plan, setPlan] = useState<string>(initialPlan);
+
+  // Keep plan and reportType consistent when reportType changes mid-flow.
+  useEffect(() => {
+    const all = [...INDIVIDUAL_SCANS, ...PACKAGE_PLANS, ...PET_PLANS];
+    const current = all.find((p) => p.id === plan);
+    if (!current) return;
+    if (reportType === "pet_scan" && current.kind !== "pet") {
+      setPlan("pet-comprehensive");
+    } else if (reportType && reportType !== "pet_scan" && current.kind === "pet") {
+      setPlan(DEFAULT_PLAN_ID);
+    }
+  }, [reportType]); // eslint-disable-line react-hooks/exhaustive-deps
   const [petInfo, setPetInfo] = useState({ petName: "", species: "", age: "", breed: "" });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
-  const [, searchStr] = useLocation();
-  const refFromUrl = new URLSearchParams(searchStr).get("ref")?.trim().toUpperCase() ?? "";
   const [referralSource, setReferralSource] = useState("");
   const [referrerEmail, setReferrerEmail] = useState("");
   const [practitionerCode] = useState(refFromUrl);
@@ -343,10 +329,8 @@ export default function UploadScan() {
 
   // ── Promo helpers ─────────────────────────────────────────────────────────────
 
-  const PLAN_PRICES_UPLOAD: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
-
   function calcDiscountAmount(type: "percent" | "flat", value: number, planId: string): number {
-    const price = PLAN_PRICES_UPLOAD[planId] ?? 99;
+    const price = getPlanPrice(planId);
     if (type === "percent") return Math.round((price * value) / 100);
     return Math.min(value, price);
   }
@@ -901,59 +885,69 @@ export default function UploadScan() {
                 {step === 4 && (
                   <div>
                     <h2 className="font-serif text-2xl text-[#F4EFE6] mb-2">Select your plan</h2>
-                    <p className="text-[#F4EFE6]/40 text-sm mb-7">All plans include a fully personalized report delivered within 24–48 hours.</p>
+                    <p className="text-[#F4EFE6]/40 text-sm mb-6">All plans include a fully personalized report delivered within 24–48 hours.</p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
-                      {PLANS.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => setPlan(p.id as "basic" | "advanced" | "premium")}
-                          className={cn(
-                            "relative text-left px-5 py-5 rounded-2xl border transition-all duration-200 flex flex-col",
-                            plan === p.id
-                              ? p.popular
-                                ? "border-[#BFA14A]/60 bg-[#BFA14A]/8 shadow-[0_0_30px_rgba(191,161,74,0.2)]"
-                                : "border-[#0F5C5E]/50 bg-[#0F5C5E]/8 shadow-[0_0_24px_rgba(15,92,94,0.2)]"
-                              : "border-white/8 bg-white/[0.025] hover:border-white/16"
-                          )}
-                        >
-                          {p.popular && (
-                            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#BFA14A] text-[#060D0D] text-[9px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full whitespace-nowrap">
-                              Most Popular
-                            </span>
-                          )}
-                          <div className="mt-1 mb-3">
-                            <p className={cn("text-sm font-semibold mb-0.5", plan === p.id ? (p.popular ? "text-[#BFA14A]" : "text-[#0F5C5E]") : "text-[#F4EFE6]/65")}>
+                    {(() => {
+                      const isPet = reportType === "pet_scan";
+                      const groups = isPet
+                        ? [{ title: "Pet Scans", items: PET_PLANS }]
+                        : [
+                            { title: "Individual AO Scans", items: INDIVIDUAL_SCANS },
+                            { title: "Bundled Packages", items: PACKAGE_PLANS },
+                          ];
+
+                      const renderCard = (p: typeof INDIVIDUAL_SCANS[number] | typeof PACKAGE_PLANS[number] | typeof PET_PLANS[number]) => {
+                        const isSelected = plan === p.id;
+                        const isStarred = ("flagship" in p && p.flagship) || ("popular" in p && p.popular);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setPlan(p.id)}
+                            data-testid={`plan-${p.id}`}
+                            className={cn(
+                              "relative text-left px-4 py-4 rounded-2xl border transition-all duration-200 flex flex-col",
+                              isSelected
+                                ? isStarred
+                                  ? "border-[#BFA14A]/60 bg-[#BFA14A]/8 shadow-[0_0_24px_rgba(191,161,74,0.18)]"
+                                  : "border-[#0F5C5E]/50 bg-[#0F5C5E]/8 shadow-[0_0_20px_rgba(15,92,94,0.18)]"
+                                : "border-white/8 bg-white/[0.025] hover:border-white/20"
+                            )}
+                          >
+                            {isStarred && (
+                              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#BFA14A] text-[#060D0D] text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                                {"flagship" in p && p.flagship ? "Flagship" : "Most Popular"}
+                              </span>
+                            )}
+                            <p className={cn("text-sm font-semibold mb-1 leading-tight", isSelected ? (isStarred ? "text-[#BFA14A]" : "text-[#0F5C5E]") : "text-[#F4EFE6]/75")}>
                               {p.label}
                             </p>
-                            <p className={cn("text-2xl font-bold font-serif", plan === p.id ? (p.popular ? "text-[#BFA14A]" : "text-[#F4EFE6]") : "text-[#F4EFE6]/80")}>
-                              {p.price}
+                            <p className={cn("text-xl font-bold font-serif mb-2", isSelected ? "text-[#F4EFE6]" : "text-[#F4EFE6]/85")}>
+                              ${p.price}
                             </p>
-                          </div>
-                          <div className="space-y-1.5 mt-auto">
-                            {p.features.map((f, i) => (
-                              <div key={i} className="flex items-center gap-2">
-                                <div className={cn("w-3 h-3 rounded-full flex items-center justify-center shrink-0", f.included ? "bg-[#0F5C5E]/30" : "bg-transparent")}>
-                                  {f.included
-                                    ? <CheckCircle className="w-3 h-3 text-[#0F5C5E]" />
-                                    : <div className="w-1.5 h-0.5 bg-white/15 rounded" />
-                                  }
-                                </div>
-                                <span className={cn("text-[11px] leading-tight", f.included ? "text-[#F4EFE6]/60" : "text-[#F4EFE6]/20 line-through")}>
-                                  {f.label}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                            <p className="text-[11px] text-[#F4EFE6]/50 leading-snug mt-auto">{p.shortDesc}</p>
+                          </button>
+                        );
+                      };
 
-                    <div className="flex items-center gap-2 mt-5 px-1">
-                      <Info className="w-3.5 h-3.5 text-[#BFA14A]/40 shrink-0" />
-                      <p className="text-[#F4EFE6]/28 text-xs">
-                        Payment will be collected after your report is reviewed. Stripe integration coming soon — no payment required to submit today.
+                      return (
+                        <div className="space-y-7">
+                          {groups.map((g) => (
+                            <div key={g.title}>
+                              <p className="text-[10px] uppercase tracking-[0.22em] text-[#BFA14A]/75 mb-3 font-medium">{g.title}</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {g.items.map(renderCard)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+
+                    <div className="flex items-start gap-2 mt-6 px-1">
+                      <Info className="w-3.5 h-3.5 text-[#BFA14A]/40 shrink-0 mt-0.5" />
+                      <p className="text-[#F4EFE6]/35 text-[11px] italic leading-relaxed">
+                        AO Scan is an educational wellness tool, not a medical device. Results are for informational purposes only and are not intended to diagnose, treat, cure, or prevent any disease. Always consult a qualified healthcare professional for medical advice.
                       </p>
                     </div>
 
@@ -1098,23 +1092,26 @@ export default function UploadScan() {
                       <div className="flex justify-between gap-4 pt-2 border-t border-white/6">
                         <span className="text-[#F4EFE6]/30 text-sm">Plan</span>
                         <div className="text-right">
-                          {promoApplied ? (
-                            <div className="flex items-center gap-2 justify-end">
-                              <span className="text-[#F4EFE6]/30 text-sm line-through">
-                                {PLANS.find(p => p.id === plan)?.price}
+                          {(() => {
+                            const all = [...INDIVIDUAL_SCANS, ...PACKAGE_PLANS, ...PET_PLANS];
+                            const p = all.find((x) => x.id === plan);
+                            const price = getPlanPrice(plan);
+                            return promoApplied ? (
+                              <div className="flex items-center gap-2 justify-end">
+                                <span className="text-[#F4EFE6]/30 text-sm line-through">${price}</span>
+                                <span className="text-[#BFA14A] text-sm font-semibold">
+                                  ${price - promoApplied.discountAmount}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#BFA14A]/15 text-[#BFA14A]/80 font-mono">
+                                  {promoApplied.code}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[#F4EFE6]/65 text-sm">
+                                {p?.label ?? plan} — ${price}
                               </span>
-                              <span className="text-[#BFA14A] text-sm font-semibold">
-                                ${(PLAN_PRICES_UPLOAD[plan] ?? 99) - promoApplied.discountAmount}
-                              </span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#BFA14A]/15 text-[#BFA14A]/80 font-mono">
-                                {promoApplied.code}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-[#F4EFE6]/65 text-sm">
-                              {PLANS.find(p => p.id === plan)?.label} — {PLANS.find(p => p.id === plan)?.price}
-                            </span>
-                          )}
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

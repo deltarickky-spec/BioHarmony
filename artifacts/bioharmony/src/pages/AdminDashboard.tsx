@@ -11,6 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
+import { PLANS, getPlanPrice, getPlanLabel, getPlanLabelWithPrice } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_PASSWORD_KEY = "bh_admin_token";
@@ -323,7 +324,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 // ── Revenue Summary ────────────────────────────────────────────────────────────
 
-const PLAN_PRICES: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
+const PLAN_PRICES: Record<string, number> = Object.fromEntries(PLANS.map((p) => [p.id, p.price]));
 
 const TAG_COLORS: Record<string, string> = {
   stress: "bg-rose-900/30 text-rose-300 border-rose-700/30",
@@ -334,18 +335,21 @@ const TAG_COLORS: Record<string, string> = {
   energy: "bg-[#BFA14A]/10 text-[#BFA14A] border-[#BFA14A]/25",
 };
 const ALL_TAGS = ["stress", "digestion", "sleep", "inflammation", "hormones", "energy"] as const;
-const PLAN_LABELS: Record<string, string> = { basic: "Basic", advanced: "Advanced", premium: "Premium" };
+const PLAN_LABELS: Record<string, string> = Object.fromEntries(PLANS.map((p) => [p.id, p.label]));
 const PLAN_COLORS: Record<string, string> = {
-  basic:    "text-[#4ecdc4]",
-  advanced: "text-[#BFA14A]",
-  premium:  "text-purple-300",
+  individual: "text-[#4ecdc4]",
+  package:    "text-[#BFA14A]",
+  pet:        "text-purple-300",
 };
+const PLAN_KIND: Record<string, "individual" | "package" | "pet"> = Object.fromEntries(PLANS.map((p) => [p.id, p.kind]));
 
 function detectPlan(req: UnifiedRequest): string | null {
-  const raw = (req.plan ?? req.reportType ?? "").toLowerCase();
-  if (raw.includes("premium")) return "premium";
-  if (raw.includes("advanced")) return "advanced";
-  if (raw.includes("basic")) return "basic";
+  const raw = (req.plan ?? "").trim();
+  if (raw && PLAN_PRICES[raw] !== undefined) return raw;
+  // legacy aliases
+  if (raw === "basic") return "vitals";
+  if (raw === "advanced") return "comprehensive";
+  if (raw === "premium") return "ultimate-wellness";
   return null;
 }
 
@@ -354,10 +358,10 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
     const paidScans = requests.filter(
       (r) => r.source === "scan" && (r.paymentStatus === "paid")
     );
-    const byPlan: Record<string, { count: number; total: number }> = {
-      basic: { count: 0, total: 0 },
-      advanced: { count: 0, total: 0 },
-      premium: { count: 0, total: 0 },
+    const byKindGroup: Record<"individual" | "package" | "pet", { count: number; total: number }> = {
+      individual: { count: 0, total: 0 },
+      package:    { count: 0, total: 0 },
+      pet:        { count: 0, total: 0 },
     };
     const byKind = {
       pet:   { count: 0, total: 0 },
@@ -367,15 +371,16 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
     for (const r of paidScans) {
       const plan = detectPlan(r);
       if (plan && PLAN_PRICES[plan] !== undefined) {
-        byPlan[plan].count++;
-        byPlan[plan].total += PLAN_PRICES[plan];
+        const group = PLAN_KIND[plan] ?? "individual";
+        byKindGroup[group].count++;
+        byKindGroup[group].total += PLAN_PRICES[plan];
         grand += PLAN_PRICES[plan];
-        const kind = r.reportType === "pet_scan" ? "pet" : "human";
+        const kind = r.reportType === "pet_scan" || group === "pet" ? "pet" : "human";
         byKind[kind].count++;
         byKind[kind].total += PLAN_PRICES[plan];
       }
     }
-    return { byPlan, byKind, grand, totalPaid: paidScans.length };
+    return { byKindGroup, byKind, grand, totalPaid: paidScans.length };
   }, [requests]);
 
   if (revenue.totalPaid === 0) return null;
@@ -399,16 +404,17 @@ function RevenueSummary({ requests }: { requests: UnifiedRequest[] }) {
 
       {/* Per-plan breakdown */}
       <div className="grid grid-cols-3 divide-x divide-white/8">
-        {(["basic", "advanced", "premium"] as const).map((plan) => {
-          const { count, total } = revenue.byPlan[plan];
+        {(["individual", "package", "pet"] as const).map((group) => {
+          const { count, total } = revenue.byKindGroup[group];
+          const label = group === "individual" ? "Individual Scans" : group === "package" ? "Packages" : "Pet Scans";
           return (
-            <div key={plan} className="px-5 py-4 flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30">{PLAN_LABELS[plan]}</span>
-              <span className={cn("text-lg font-bold", PLAN_COLORS[plan])}>
+            <div key={group} className="px-5 py-4 flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-widest text-[#F4EFE6]/30">{label}</span>
+              <span className={cn("text-lg font-bold", PLAN_COLORS[group])}>
                 {count > 0 ? `$${total.toLocaleString("en-CA")}` : "—"}
               </span>
               <span className="text-[10px] text-[#F4EFE6]/30">
-                {count} {count === 1 ? "client" : "clients"} · ${PLAN_PRICES[plan]} ea
+                {count} {count === 1 ? "scan" : "scans"}
               </span>
             </div>
           );
@@ -489,7 +495,7 @@ function ReferralAnalytics({ requests }: { requests: UnifiedRequest[] }) {
       map[key].count++;
       if (r.paymentStatus === "paid" || r.paymentStatus === "waived") {
         map[key].paid++;
-        map[key].revenue += r.plan ? (PLAN_PRICES[r.plan] ?? 55) : 55;
+        map[key].revenue += getPlanPrice(r.plan);
       }
     }
     return Object.entries(map)
@@ -521,7 +527,7 @@ function ReferralAnalytics({ requests }: { requests: UnifiedRequest[] }) {
       if (idx < 0 || idx > 7) continue;
       buckets[idx].count++;
       if (r.paymentStatus === "paid" || r.paymentStatus === "waived") {
-        buckets[idx].revenue += r.plan ? (PLAN_PRICES[r.plan] ?? 55) : 55;
+        buckets[idx].revenue += getPlanPrice(r.plan);
       }
     }
     return buckets;
@@ -1032,7 +1038,7 @@ function PromoAnalytics({ requests }: { requests: UnifiedRequest[] }) {
       map[key].count++;
       map[key].totalDiscount += r.discountAmount ?? 0;
       if (r.paymentStatus === "paid" || r.paymentStatus === "waived") {
-        const gross = r.plan ? (PLAN_PRICES[r.plan] ?? 55) : 55;
+        const gross = getPlanPrice(r.plan);
         map[key].revenue += gross - (r.discountAmount ?? 0);
       }
       if (!map[key].lastUsed || r.createdAt > map[key].lastUsed!) {
@@ -1715,9 +1721,7 @@ function DetailPanel({
     en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
     de: "German", zh: "Chinese", ar: "Arabic", hi: "Hindi",
   };
-  const planMap: Record<string, string> = {
-    basic: "Basic — $55", advanced: "Advanced — $99", premium: "Premium — $149",
-  };
+  const planMap = (p: string | null) => getPlanLabelWithPrice(p);
 
   async function changeStatus(status: Status) {
     setBusy(true);
@@ -1822,7 +1826,7 @@ function DetailPanel({
             <h3 className="text-xs uppercase tracking-widest text-[#BFA14A] mb-3 font-medium">Submission</h3>
             <div className="space-y-2">
               <DetailRow label="Report Type" value={request.reportType} />
-              {request.plan && <DetailRow label="Plan" value={planMap[request.plan] ?? request.plan} />}
+              {request.plan && <DetailRow label="Plan" value={planMap(request.plan)} />}
               {request.language && <DetailRow label="Language" value={langMap[request.language] ?? request.language} />}
               {request.fileName && <DetailRow label="File" value={request.fileName} />}
               <DetailRow label="Submitted" value={formatDate(request.createdAt)} />
@@ -1971,7 +1975,7 @@ function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
     <div className="min-h-screen bg-[#060D0D] flex items-center justify-center">
       <div className="w-full max-w-sm mx-4">
         <div className="text-center mb-8">
-          <div className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-2">BioHarmony Solutions</div>
+          <div className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-2">BioHarmony Analytics</div>
           <h1 className="text-2xl font-light text-[#F4EFE6]">Admin Dashboard</h1>
         </div>
         <form onSubmit={submit} className="bg-[#0C1919] border border-white/10 rounded-2xl p-8 space-y-5">

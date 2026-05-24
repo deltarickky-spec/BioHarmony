@@ -7,6 +7,7 @@ import {
   Sparkles, CreditCard, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { planHasAudio, planHasScore } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -232,7 +233,7 @@ function EmailGate({ reportId, onVerified }: { reportId: string; onVerified: (em
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#0C1919] border border-[#BFA14A]/30 mb-4">
             <Sparkles className="w-6 h-6 text-[#BFA14A]" />
           </div>
-          <p className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-1">BioHarmony Solutions</p>
+          <p className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-1">BioHarmony Analytics</p>
           <h1 className="font-serif text-2xl text-[#F4EFE6]">Your Report</h1>
         </div>
 
@@ -398,7 +399,8 @@ export default function ReportDelivery() {
   const isPending = data.paymentStatus === "pending";
   const score = data.bioharmonyScore ?? 72;
   const categories = parseScoreBreakdown(data.scoreBreakdown) ?? getMockCategories(score);
-  const isPremium = data.plan === "premium";
+  const isPremium = planHasAudio(data.plan);
+  const showScore = planHasScore(data.plan);
   const reportLabel = REPORT_TYPE_LABELS[data.reportType] ?? data.reportType;
   const tags = data.tags ?? [];
 
@@ -409,7 +411,7 @@ export default function ReportDelivery() {
       <div className="border-b border-white/8 bg-[#060D0D]/95 backdrop-blur-sm px-4 py-5 sticky top-0 z-20">
         <div className="max-w-2xl mx-auto flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs text-[#BFA14A] uppercase tracking-widest mb-1">BioHarmony Solutions</p>
+            <p className="text-xs text-[#BFA14A] uppercase tracking-widest mb-1">BioHarmony Analytics</p>
             <h1 className="font-serif text-xl text-[#F4EFE6] leading-tight">{data.name}</h1>
             <p className="text-[#F4EFE6]/40 text-sm mt-0.5">{reportLabel}</p>
           </div>
@@ -478,19 +480,21 @@ export default function ReportDelivery() {
             className="space-y-6"
           >
 
-            {/* BioHarmony Intelligence Score */}
-            <section className="rounded-2xl border border-white/10 bg-[#0C1919] p-6">
-              <p className="text-xs uppercase tracking-widest text-[#BFA14A] mb-6 font-medium">BioHarmony Intelligence Score</p>
-              <div className="flex flex-col sm:flex-row items-center gap-8">
-                <ScoreRing score={score} size={140} />
-                <div className="flex-1 space-y-4 w-full">
-                  {categories.map((cat, i) => <CategoryBar key={cat.label} cat={cat} delay={i} />)}
+            {/* BioHarmony Intelligence Score (only for plans that include it) */}
+            {showScore && (
+              <section className="rounded-2xl border border-white/10 bg-[#0C1919] p-6">
+                <p className="text-xs uppercase tracking-widest text-[#BFA14A] mb-6 font-medium">BioHarmony Intelligence Score</p>
+                <div className="flex flex-col sm:flex-row items-center gap-8">
+                  <ScoreRing score={score} size={140} />
+                  <div className="flex-1 space-y-4 w-full">
+                    {categories.map((cat, i) => <CategoryBar key={cat.label} cat={cat} delay={i} />)}
+                  </div>
                 </div>
-              </div>
-              <p className="text-[10px] text-[#F4EFE6]/20 mt-5 leading-relaxed">
-                Score reflects scan data patterns — educational wellness insight only. Not a medical assessment.
-              </p>
-            </section>
+                <p className="text-[10px] text-[#F4EFE6]/20 mt-5 leading-relaxed">
+                  Score reflects scan data patterns — educational wellness insight only. Not a medical assessment.
+                </p>
+              </section>
+            )}
 
             {/* Wellness Focus Areas (AI tags) */}
             {tags.length > 0 && (

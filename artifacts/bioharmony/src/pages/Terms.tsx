@@ -10,19 +10,19 @@ export default function Terms() {
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">1. Acceptance of Terms</h2>
-            <p>By accessing or using any service provided by BioHarmony Solutions ("we," "us," or "our"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
+            <p>By accessing or using any service provided by BioHarmony Analytics ("we," "us," or "our"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
           </section>
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">2. Nature of Services</h2>
-            <p className="mb-3">BioHarmony Solutions provides frequency-based wellness education, bio-frequency scan analysis, and personalized wellness reports. All services are intended for <strong className="text-[#F4EFE6]/85">educational and informational purposes only</strong>.</p>
-            <p>Our services are not medical devices, and our reports do not constitute medical diagnoses, treatment plans, or medical advice of any kind. BioHarmony Solutions is a wellness education platform, not a healthcare provider.</p>
+            <p className="mb-3">BioHarmony Analytics provides frequency-based wellness education, bio-frequency scan analysis, and personalized wellness reports. All services are intended for <strong className="text-[#F4EFE6]/85">educational and informational purposes only</strong>.</p>
+            <p>Our services are not medical devices, and our reports do not constitute medical diagnoses, treatment plans, or medical advice of any kind. BioHarmony Analytics is a wellness education platform, not a healthcare provider.</p>
           </section>
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">3. No Medical Advice</h2>
             <p className="mb-3">Nothing on this platform should be construed as medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.</p>
-            <p>Never disregard professional medical advice or delay seeking it because of something you have read or received through BioHarmony Solutions.</p>
+            <p>Never disregard professional medical advice or delay seeking it because of something you have read or received through BioHarmony Analytics.</p>
           </section>
 
           <section>
@@ -43,12 +43,12 @@ export default function Terms() {
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">6. Intellectual Property</h2>
-            <p>All content on this platform — including reports, audio files, educational materials, and brand assets — is the intellectual property of BioHarmony Solutions. Reports are licensed for personal use only and may not be redistributed commercially.</p>
+            <p>All content on this platform — including reports, audio files, educational materials, and brand assets — is the intellectual property of BioHarmony Analytics. Reports are licensed for personal use only and may not be redistributed commercially.</p>
           </section>
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">7. Limitation of Liability</h2>
-            <p>To the maximum extent permitted by law, BioHarmony Solutions shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our services. Our total liability shall not exceed the amount paid for the specific service in question.</p>
+            <p>To the maximum extent permitted by law, BioHarmony Analytics shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our services. Our total liability shall not exceed the amount paid for the specific service in question.</p>
           </section>
 
           <section>
@@ -64,7 +64,7 @@ export default function Terms() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/8 text-xs text-[#F4EFE6]/25 leading-relaxed">
-          BioHarmony Solutions services are for wellness education and informational purposes only. These services are not intended to diagnose, treat, cure, or prevent any disease or medical condition.
+          BioHarmony Analytics services are for wellness education and informational purposes only. These services are not intended to diagnose, treat, cure, or prevent any disease or medical condition.
         </div>
       </div>
     </div>

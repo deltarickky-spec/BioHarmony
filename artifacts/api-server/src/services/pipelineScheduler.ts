@@ -18,6 +18,7 @@ import { db } from "@workspace/db";
 import { scanRequestsTable, practitionersTable } from "@workspace/db/schema";
 import { and, eq, inArray, ilike, isNull, lt } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { getPlanPrice, planHasAudio } from "../pricing";
 import {
   buildDeliveredEmail,
   buildPaymentReminderEmail,
@@ -68,7 +69,7 @@ function getNextStage(current: PipelineStage, plan: string | null): PipelineStag
     case "generating":    return "quality_check";
     case "quality_check": return "pdf_ready";
     case "pdf_ready":
-      return (plan ?? "basic") === "premium" ? "audio_ready" : "delivered";
+      return planHasAudio(plan) ? "audio_ready" : "delivered";
     case "audio_ready":   return "delivered";
     case "delivered":     return null;
     default:              return null;
@@ -303,8 +304,6 @@ async function paymentReminderTick(): Promise<void> {
 
 // ── Practitioner commission email ──────────────────────────────────────────────
 
-const PLAN_PRICES_SCHEDULER: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
-
 /**
  * When a referred client's report is delivered, notify the referring practitioner
  * with their commission breakdown and updated lifetime stats.
@@ -338,13 +337,13 @@ export async function sendPractitionerCommissionEmail(
     const delivered = allScans.filter((s) => s.pipelineStage === "delivered");
     const completedReports = delivered.length;
     const revenueGenerated = delivered.reduce(
-      (sum, s) => sum + (PLAN_PRICES_SCHEDULER[s.plan ?? "basic"] ?? 55),
+      (sum, s) => sum + getPlanPrice(s.plan),
       0,
     );
     const totalEarned = Math.floor((revenueGenerated * practitioner.commissionRate) / 100);
     const pendingPayout = Math.max(0, totalEarned - practitioner.totalPaid);
 
-    const reportValue = PLAN_PRICES_SCHEDULER[plan ?? "basic"] ?? 55;
+    const reportValue = getPlanPrice(plan);
     const commissionEarned = Math.floor((reportValue * practitioner.commissionRate) / 100);
 
     const payload = buildPractitionerCommissionEmail({
@@ -353,7 +352,7 @@ export async function sendPractitionerCommissionEmail(
       referralCode: practitioner.referralCode,
       commissionRate: practitioner.commissionRate,
       reportType,
-      plan: plan ?? "basic",
+      plan: plan ?? "comprehensive",
       reportValue,
       commissionEarned,
       totalEarned,
@@ -395,7 +394,7 @@ export async function sendDeliveryEmail(
       name,
       email,
       requestId,
-      plan: plan ?? "basic",
+      plan: plan ?? "comprehensive",
       whatsapp,
       reportType,
       promoCode: promoCode ?? undefined,

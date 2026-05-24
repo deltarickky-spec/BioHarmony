@@ -238,7 +238,7 @@ export function BioHarmonyReportPDF({ data }: Props) {
   return (
     <Document
       title={`BioHarmony Report — ${clientName}`}
-      author="BioHarmony Solutions"
+      author="BioHarmony Analytics"
       subject="Wellness Interpretation Report"
     >
       <Page size="A4" style={s.page}>
@@ -246,7 +246,7 @@ export function BioHarmonyReportPDF({ data }: Props) {
         {/* Header */}
         <View style={s.header}>
           <View style={s.headerLeft}>
-            <Text style={s.headerBrand}>BioHarmony Solutions</Text>
+            <Text style={s.headerBrand}>BioHarmony Analytics</Text>
             <Text style={s.headerSub}>BIO-FREQUENCY ANALYTICS</Text>
           </View>
           <Text style={s.headerRight}>WELLNESS INTERPRETATION REPORT</Text>
@@ -325,7 +325,7 @@ export function BioHarmonyReportPDF({ data }: Props) {
               <Text style={s.closingText}>"{sections.closing}"</Text>
             </View>
             <Text style={s.signatureName}>— Kathy Owens</Text>
-            <Text style={s.signatureRole}>Founder, BioHarmony Solutions</Text>
+            <Text style={s.signatureRole}>Founder, BioHarmony Analytics</Text>
           </View>
 
         </View>

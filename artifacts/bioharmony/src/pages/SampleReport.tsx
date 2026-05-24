@@ -133,7 +133,7 @@ export default function SampleReport() {
       <section className="py-20 border-b border-white/8">
         <div className="container px-4 md:px-6 max-w-3xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="space-y-5">
-            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">BioAnalytics by BioHarmony Solutions</p>
+            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">BioAnalytics by BioHarmony Analytics</p>
             <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6]">Sample BioAnalytics Report</h1>
             <p className="text-lg text-[#F4EFE6]/55 leading-relaxed max-w-xl mx-auto">
               See how we turn complex scan data into clear, personalized insights you can actually understand.
@@ -190,7 +190,7 @@ export default function SampleReport() {
                 <p className="text-[#F4EFE6]/80 text-[15px] leading-[1.85] font-serif italic">
                   "{content.openingParagraph}"
                 </p>
-                <p className="text-[#BFA14A]/60 text-xs mt-4 font-sans not-italic">— Kathy Owens, BioHarmony Solutions</p>
+                <p className="text-[#BFA14A]/60 text-xs mt-4 font-sans not-italic">— Kathy Owens, BioHarmony Analytics</p>
               </div>
             </motion.div>
 

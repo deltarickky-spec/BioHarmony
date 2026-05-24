@@ -10,7 +10,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">1. Information We Collect</h2>
-            <p className="mb-3">When you use BioHarmony Solutions, we collect information you provide directly to us, including:</p>
+            <p className="mb-3">When you use BioHarmony Analytics, we collect information you provide directly to us, including:</p>
             <ul className="list-disc list-inside space-y-2">
               <li>Name, email address, and phone number</li>
               <li>Scan files and voice samples you upload</li>
@@ -75,13 +75,13 @@ export default function Privacy() {
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">9. Contact Us</h2>
             <p>For privacy-related inquiries, please contact:<br />
-            BioHarmony Solutions — <a href="mailto:contact@bioharmonysolutions.com" className="text-[#BFA14A] hover:underline">contact@bioharmonysolutions.com</a></p>
+            BioHarmony Analytics — <a href="mailto:contact@bioharmonysolutions.com" className="text-[#BFA14A] hover:underline">contact@bioharmonysolutions.com</a></p>
           </section>
 
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/8 text-xs text-[#F4EFE6]/25 leading-relaxed">
-          BioHarmony Solutions is committed to protecting your privacy and handling your data with care and transparency.
+          BioHarmony Analytics is committed to protecting your privacy and handling your data with care and transparency.
         </div>
       </div>
     </div>

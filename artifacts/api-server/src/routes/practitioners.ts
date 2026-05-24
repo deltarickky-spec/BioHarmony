@@ -4,10 +4,9 @@ import { practitionersTable, scanRequestsTable } from "@workspace/db/schema";
 import { eq, ilike, desc } from "drizzle-orm";
 import { z } from "zod";
 import { buildPractitionerWelcomeEmail, sendEmail } from "../services/email";
+import { getPlanPrice } from "../pricing";
 
 const router = Router();
-
-const PLAN_PRICES: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
 
 function checkAuth(
   req: Parameters<Parameters<typeof router.get>[1]>[0],
@@ -32,7 +31,7 @@ async function computeStats(code: string, commissionRate: number) {
   const delivered = scans.filter((s) => s.pipelineStage === "delivered");
   const completedReports = delivered.length;
   const revenueGenerated = delivered.reduce(
-    (sum, s) => sum + (PLAN_PRICES[s.plan ?? "basic"] ?? 55),
+    (sum, s) => sum + getPlanPrice(s.plan),
     0,
   );
   const earnedCommission = Math.floor((revenueGenerated * commissionRate) / 100);

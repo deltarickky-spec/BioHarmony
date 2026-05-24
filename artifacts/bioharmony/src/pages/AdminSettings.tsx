@@ -5,6 +5,7 @@ import {
   Settings, DollarSign, Clock, Globe, Mail, Webhook,
   Lock, AlertTriangle, Send, CheckCircle2, XCircle, Loader2, RefreshCw,
 } from "lucide-react";
+import { INDIVIDUAL_SCANS, PACKAGE_PLANS, PET_PLANS } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_KEY = "bh_admin_token";
@@ -144,7 +145,7 @@ export default function AdminSettings() {
       <div className="min-h-screen bg-[#060D0D] flex items-center justify-center px-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Solutions</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Analytics</p>
             <h1 className="font-serif text-3xl text-[#F4EFE6]">Admin Settings</h1>
           </div>
           <form onSubmit={handleAuth} className="bg-[#0C1919] rounded-2xl border border-white/10 p-8 space-y-4">
@@ -304,11 +305,41 @@ export default function AdminSettings() {
           </div>
         </section>
 
-        {/* Pricing */}
-        <Section title="Report Pricing (CAD)" icon={DollarSign}>
-          <SettingRow label="Basic Plan" value="$55" note="1 PDF report · Standard turnaround" badge="active" />
-          <SettingRow label="Advanced Plan" value="$99" note="PDF + BioHarmony Score · Priority turnaround" badge="active" />
-          <SettingRow label="Premium Plan" value="$149" note="PDF + Score + Audio narration · 24-hour turnaround" badge="active" />
+        {/* Pricing — sourced from central PLANS catalog */}
+        <Section title="Individual Scans (CAD)" icon={DollarSign}>
+          {INDIVIDUAL_SCANS.map((p) => (
+            <SettingRow
+              key={p.id}
+              label={`${p.label}${p.flagship ? " ⭐" : ""}`}
+              value={`$${p.price}`}
+              note={p.shortDesc}
+              badge="active"
+            />
+          ))}
+        </Section>
+
+        <Section title="Packages (CAD)" icon={DollarSign}>
+          {PACKAGE_PLANS.map((p) => (
+            <SettingRow
+              key={p.id}
+              label={`${p.label}${p.popular ? " ⭐" : ""}`}
+              value={`$${p.price}`}
+              note={p.shortDesc}
+              badge="active"
+            />
+          ))}
+        </Section>
+
+        <Section title="Pet Scans (CAD)" icon={DollarSign}>
+          {PET_PLANS.map((p) => (
+            <SettingRow
+              key={p.id}
+              label={p.label}
+              value={`$${p.price}`}
+              note={p.shortDesc}
+              badge="active"
+            />
+          ))}
         </Section>
 
         {/* Pipeline Timing */}

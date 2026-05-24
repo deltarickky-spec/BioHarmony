@@ -12,6 +12,7 @@ import {
   sendPractitionerCommissionEmail,
 } from "../services/pipelineScheduler";
 import { buildPaymentReceivedEmail, sendEmail } from "../services/email";
+import { getPlanPrice } from "../pricing";
 
 // ── Email test state (in-memory, resets on restart) ────────────────────────────
 const EMAIL_FROM = "BioAnalytics by BioHarmony Solutions <reports@mail.bioharmonysolutions.ca>";
@@ -161,8 +162,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
           .limit(1);
         const payRow = payRows[0];
         if (payRow) {
-          const planPrices: Record<string, number> = { basic: 55, advanced: 99, premium: 149 };
-          const basePrice = planPrices[payRow.plan ?? "basic"] ?? 55;
+          const basePrice = getPlanPrice(payRow.plan);
           const discount = payRow.discountAmount ?? 0;
           const amount = data.paymentStatus === "waived" ? 0 : Math.max(0, basePrice - discount);
           sendEmail(buildPaymentReceivedEmail({

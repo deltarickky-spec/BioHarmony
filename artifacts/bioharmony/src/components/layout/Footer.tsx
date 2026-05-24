@@ -12,7 +12,7 @@ export function Footer() {
                 BioHarmony Analytics
               </span>
               <div className="text-[10px] tracking-[0.14em] text-[#F4EFE6]/30 font-sans mt-0.5">
-                a division of BioHarmony Solutions
+                a division of BioHarmony Analytics
               </div>
             </Link>
             <p className="text-[#F4EFE6]/70 max-w-sm font-medium text-sm leading-relaxed">
@@ -94,10 +94,10 @@ export function Footer() {
             <Link href="/disclaimer" className="text-xs text-[#F4EFE6]/25 hover:text-[#BFA14A]/60 transition">Wellness Disclaimer</Link>
           </div>
           <p className="mb-4 max-w-3xl mx-auto text-xs text-[#F4EFE6]/30 italic leading-relaxed">
-            BioHarmony Solutions services are for wellness education and informational purposes only. These services are not intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a qualified healthcare professional for medical advice.
+            BioHarmony Analytics services are for wellness education and informational purposes only. These services are not intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a qualified healthcare professional for medical advice.
           </p>
           <p className="text-xs text-[#F4EFE6]/25">
-            &copy; {new Date().getFullYear()} BioHarmony Solutions. All rights reserved.
+            &copy; {new Date().getFullYear()} BioHarmony Analytics. All rights reserved.
           </p>
         </div>
       </div>

@@ -58,7 +58,7 @@ export default function Contact() {
                 <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans mb-4">Get in Touch</p>
                 <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6] mb-4">Book a Session or Ask a Question</h1>
                 <p className="text-lg text-[#F4EFE6]/60 leading-relaxed">
-                  We look forward to welcoming you to BioHarmony Solutions. Fill out the form and we will confirm your appointment or answer your inquiry.
+                  We look forward to welcoming you to BioHarmony Analytics. Fill out the form and we will confirm your appointment or answer your inquiry.
                 </p>
               </div>
 

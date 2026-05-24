@@ -51,7 +51,7 @@ export default function PEMFTherapy() {
               <h2 className="text-3xl font-serif text-[#F4EFE6]">What to Expect During a Session</h2>
               <div className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-2xl shadow-[0_0_40px_rgba(15,92,94,0.1)]">
                 <p className="text-[#F4EFE6]/60 leading-relaxed mb-4">
-                  A PEMF session at BioHarmony Solutions is designed to be deeply relaxing. You will comfortably lie down on a specialized mat or rest near the device while it delivers the pulsed fields.
+                  A PEMF session at BioHarmony Analytics is designed to be deeply relaxing. You will comfortably lie down on a specialized mat or rest near the device while it delivers the pulsed fields.
                 </p>
                 <p className="text-[#F4EFE6]/60 leading-relaxed">
                   There is no physical discomfort. Most clients report feeling absolutely nothing physically, save for a profound sense of relaxation, grounding, and calm. Sessions typically last between 30 to 60 minutes.

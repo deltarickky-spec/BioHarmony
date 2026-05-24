@@ -99,7 +99,7 @@ export default function Feedback() {
       <div className="max-w-lg mx-auto">
 
         <div className="text-center mb-10">
-          <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Solutions</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Analytics</p>
           <h1 className="font-serif text-4xl text-[#F4EFE6] mb-3">Share Your Experience</h1>
           {requestId && <p className="text-[#F4EFE6]/30 text-sm">{requestId}</p>}
           <p className="text-[#F4EFE6]/45 text-sm mt-2 max-w-sm mx-auto">

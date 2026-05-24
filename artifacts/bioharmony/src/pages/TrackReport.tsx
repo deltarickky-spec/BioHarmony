@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { BioHarmonyScore } from "@/components/BioHarmonyScore";
 import { ReportAudioPlayer } from "@/components/ReportAudioPlayer";
+import { getPlanLabelWithPrice, planHasAudio, planHasScore } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const AUTO_REFRESH_MS = 12_000;
@@ -31,9 +32,6 @@ const STAGE_INDEX: Record<PipelineStageKey, number> = {
   quality_check: 4, pdf_ready: 5, audio_ready: 6, delivered: 7,
 };
 
-const PLAN_LABELS: Record<string, string> = {
-  basic: "Basic — $55", advanced: "Advanced — $99", premium: "Premium — $149",
-};
 const LANG_LABELS: Record<string, string> = {
   en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
   de: "German", zh: "Chinese", ar: "Arabic", hi: "Hindi",
@@ -143,7 +141,7 @@ function LiveBadge({ lastUpdated }: { lastUpdated: Date | null }) {
 // ── Delivered section ──────────────────────────────────────────────────────────
 
 function AudioSection({ result }: { result: TrackResult }) {
-  const isPremium = result.plan === "premium";
+  const isPremium = planHasAudio(result.plan);
 
   const audioScript = [
     `Hello ${result.name}, welcome to your BioHarmony wellness report.`,
@@ -202,7 +200,7 @@ function DeliveredSection({ result }: { result: TrackResult }) {
       })
     : null;
 
-  const showScore = result.bioharmonyScore !== null && result.plan !== "basic";
+  const showScore = result.bioharmonyScore !== null && planHasScore(result.plan);
   const parsedBreakdown = (() => {
     if (!result.scoreBreakdown) return undefined;
     try { return JSON.parse(result.scoreBreakdown) as { label: string; value: number }[]; }
@@ -278,7 +276,7 @@ function DeliveredSection({ result }: { result: TrackResult }) {
                         WhatsApp delivery will also be sent to your registered number.
                       </p>
                     )}
-                    {result.plan === "premium" && (
+                    {planHasAudio(result.plan) && (
                       <p className="text-xs text-[#F4EFE6]/45 mt-1">
                         Your audio narration is available below.
                       </p>
@@ -327,7 +325,7 @@ function DeliveredSection({ result }: { result: TrackResult }) {
 
 function PipelineStepper({ stage, plan }: { stage: PipelineStageKey; plan: string }) {
   const currentIdx = STAGE_INDEX[stage] ?? 0;
-  const isAudioPlan = plan === "premium";
+  const isAudioPlan = planHasAudio(plan);
   return (
     <div className="space-y-0">
       {PIPELINE_STAGES.map((s, i) => {
@@ -484,7 +482,7 @@ function ResultCard({
           <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-[0.22em] text-[#BFA14A] mb-3 font-medium">Details</p>
             <DetailRow label="Report Type" value={result.reportType} />
-            <DetailRow label="Plan" value={PLAN_LABELS[result.plan] ?? result.plan} />
+            <DetailRow label="Plan" value={getPlanLabelWithPrice(result.plan)} />
             <DetailRow label="Language" value={LANG_LABELS[result.language] ?? result.language} />
             <DetailRow label="Submitted" value={submittedDate} />
             {result.fileName && <DetailRow label="File" value={result.fileName} />}
@@ -615,7 +613,7 @@ export default function TrackReport() {
       <section className="py-20 border-b border-white/5">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.3em] mb-4">BioHarmony Solutions</p>
+            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.3em] mb-4">BioHarmony Analytics</p>
             <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6] mb-4 leading-tight">Track Your Report</h1>
             <p className="text-[#F4EFE6]/50 text-lg leading-relaxed">
               Enter your email and Request ID to see exactly where your report is in our AI processing pipeline.
