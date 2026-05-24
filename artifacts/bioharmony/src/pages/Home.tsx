@@ -159,51 +159,25 @@ export default function Home() {
             initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={staggerContainer}
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
           >
-            <motion.div variants={fadeInUp}>
-              <Card className="h-full border-border/50 shadow-sm hover:shadow-md transition-shadow bg-background">
-                <CardHeader>
-                  <CardTitle className="font-serif text-2xl text-primary">AO Scan Assessments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Non-invasive, voice-based frequency wellness assessments that provide comprehensive insights into your body's energetic patterns.
-                  </p>
-                  <Button asChild variant="link" className="px-0 mt-4 text-secondary-foreground" data-testid="learn-ao-scan">
-                    <Link href="/ao-scan">Learn more about AO Scan &rarr;</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <Card className="h-full border-border/50 shadow-sm hover:shadow-md transition-shadow bg-background">
-                <CardHeader>
-                  <CardTitle className="font-serif text-2xl text-primary">PEMF Therapy</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Pulsed Electromagnetic Field therapy supports cellular balance, natural energy, and your body's restorative rhythms.
-                  </p>
-                  <Button asChild variant="link" className="px-0 mt-4 text-secondary-foreground" data-testid="learn-pemf">
-                    <Link href="/pemf-therapy">Learn more about PEMF &rarr;</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <Card className="h-full border-border/50 shadow-sm hover:shadow-md transition-shadow bg-background">
-                <CardHeader>
-                  <CardTitle className="font-serif text-2xl text-primary">BioAnalytics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Our proprietary reporting layer makes complex wellness data easy to understand with client-friendly interpretations.
-                  </p>
-                  <Button asChild variant="link" className="px-0 mt-4 text-secondary-foreground" data-testid="learn-analytics">
-                    <Link href="/bioharmony-analytics">Learn more about Analytics &rarr;</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
+            {[
+              { title: "AO Scan Assessments", desc: "Non-invasive, voice-based frequency wellness assessments that provide comprehensive insights into your body's energetic patterns.", link: "/ao-scan", cta: "Learn more about AO Scan", testId: "learn-ao-scan" },
+              { title: "PEMF Therapy", desc: "Pulsed Electromagnetic Field therapy supports cellular balance, natural energy, and your body's restorative rhythms.", link: "/pemf-therapy", cta: "Learn more about PEMF", testId: "learn-pemf" },
+              { title: "BioHarmony Analytics", desc: "Our proprietary reporting layer makes complex wellness data easy to understand with client-friendly interpretations.", link: "/bioharmony-analytics", cta: "Learn more about Analytics", testId: "learn-analytics" },
+            ].map((item, i) => (
+              <motion.div key={i} variants={fadeInUp}>
+                <Card className="card-glow h-full border border-border/50 bg-background">
+                  <CardHeader>
+                    <CardTitle className="font-serif text-2xl text-primary">{item.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+                    <Button asChild variant="link" className="px-0 mt-4 text-secondary-foreground" data-testid={item.testId}>
+                      <Link href={item.link}>{item.cta} &rarr;</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>

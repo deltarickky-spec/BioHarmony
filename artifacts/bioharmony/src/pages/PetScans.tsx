@@ -2,7 +2,10 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
-import { PawPrint, Activity } from "lucide-react";
+import { PawPrint, Activity, Heart, Zap, Shield } from "lucide-react";
+import dogImg from "@/assets/pet-dog.jpg";
+import catImg from "@/assets/pet-cat.jpg";
+import horseImg from "@/assets/pet-horse.jpg";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -53,25 +56,93 @@ export default function PetScans() {
         </div>
       </section>
 
-      {/* Animal Species Section */}
+      {/* Animal Species Section — Flip Cards */}
       <section className="py-20 bg-[#0A1818]">
         <div className="container px-4 md:px-6">
-          <motion.div 
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+            className="text-center mb-12"
+          >
+            <p className="text-[#BFA14A]/70 text-xs uppercase tracking-[0.2em] font-sans mb-3">Hover to learn more</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6]">Species We Serve</h2>
+          </motion.div>
+          <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
             className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
           >
             {[
-              { label: "Canine Wellness Analysis", icon: PawPrint, desc: "Identify energetic stress patterns, behavioral influences, and nutritional sensitivities unique to dogs." },
-              { label: "Feline Wellness Analysis", icon: PawPrint, desc: "Cats internalize stress differently. Our scans detect subtle frequency shifts that may impact mood, digestion, and vitality." },
-              { label: "Equine Wellness Analysis", icon: Activity, desc: "Performance animals carry significant energetic load. Our assessments support recovery patterns and energetic balance." }
+              {
+                label: "Canine Wellness",
+                species: "Dogs",
+                img: dogImg,
+                icon: PawPrint,
+                color: "#BFA14A",
+                bullets: ["Stress & anxiety patterns", "Nutritional sensitivities", "Behavioral root causes", "Vitality & energy balance"],
+                desc: "Dogs carry emotional stress from their environment. Our frequency scans reveal hidden patterns affecting mood, digestion, and overall vitality.",
+              },
+              {
+                label: "Feline Wellness",
+                species: "Cats",
+                img: catImg,
+                icon: Heart,
+                color: "#0F5C5E",
+                bullets: ["Mood & temperament shifts", "Digestive frequency markers", "Stress internalization", "Energetic sensitivity"],
+                desc: "Cats internalize stress differently than any other animal. Our scans detect subtle frequency shifts that may impact mood, digestion, and vitality.",
+              },
+              {
+                label: "Equine Wellness",
+                species: "Horses",
+                img: horseImg,
+                icon: Zap,
+                color: "#BFA14A",
+                bullets: ["Performance & recovery", "Energetic load patterns", "Musculoskeletal signals", "Emotional balance"],
+                desc: "Performance animals carry significant energetic load. Our assessments support recovery patterns and help identify sources of chronic stress.",
+              },
             ].map((animal, i) => (
-              <motion.div key={i} variants={fadeInUp} whileHover={{ scale: 1.02 }}>
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center h-full flex flex-col items-center hover:border-white/20 transition-colors shadow-lg">
-                  <div className="w-16 h-16 rounded-full bg-[#BFA14A]/10 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(191,161,74,0.15)]">
-                    <animal.icon className="w-8 h-8 text-[#BFA14A]" />
+              <motion.div key={i} variants={fadeInUp}>
+                <div className="flip-card h-[420px] cursor-pointer">
+                  <div className="flip-card-inner">
+                    {/* Front — Photo */}
+                    <div className="flip-card-front">
+                      <img
+                        src={animal.img}
+                        alt={animal.species}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#060D0D]/90 via-[#060D0D]/30 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-7">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: `${animal.color}22`, border: `1px solid ${animal.color}50` }}>
+                            <animal.icon className="w-4 h-4" style={{ color: animal.color }} />
+                          </div>
+                          <p className="text-[10px] uppercase tracking-[0.2em] font-sans" style={{ color: animal.color }}>Wellness Analysis</p>
+                        </div>
+                        <h3 className="font-serif text-2xl text-[#F4EFE6]">{animal.label}</h3>
+                        <p className="text-[#F4EFE6]/50 text-xs mt-1 font-sans">Hover to explore →</p>
+                      </div>
+                    </div>
+                    {/* Back — Info */}
+                    <div className="flip-card-back bg-gradient-to-br from-[#0C1919] to-[#091515] border border-white/10 flex flex-col justify-between p-7">
+                      <div>
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: `${animal.color}18`, border: `1px solid ${animal.color}40` }}>
+                          <animal.icon className="w-5 h-5" style={{ color: animal.color }} />
+                        </div>
+                        <h3 className="font-serif text-2xl text-[#F4EFE6] mb-3">{animal.label}</h3>
+                        <p className="text-[#F4EFE6]/65 text-sm leading-relaxed mb-5">{animal.desc}</p>
+                        <ul className="space-y-2">
+                          {animal.bullets.map((b, j) => (
+                            <li key={j} className="flex items-center gap-2.5 text-sm text-[#F4EFE6]/75">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: animal.color }} />
+                              {b}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Button asChild size="sm" className="mt-5 w-full rounded-full bg-[#0F5C5E] text-white border-none hover:bg-[#0F5C5E]/80 transition-all">
+                        <Link href="/contact">Book a {animal.species} Scan</Link>
+                      </Button>
+                    </div>
                   </div>
-                  <h3 className="font-serif text-xl text-[#F4EFE6] mb-4">{animal.label}</h3>
-                  <p className="text-[#F4EFE6]/70 leading-relaxed text-sm flex-grow">{animal.desc}</p>
                 </div>
               </motion.div>
             ))}

@@ -98,16 +98,18 @@ export function Navbar() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3 group">
-            <img src={logoSrc} alt="BioHarmony Solutions Logo" className="h-9 w-auto opacity-90" />
+            <div className="bg-white rounded-xl p-1.5 shadow-[0_0_12px_rgba(191,161,74,0.25)] group-hover:shadow-[0_0_20px_rgba(191,161,74,0.4)] transition-shadow duration-300">
+              <img src={logoSrc} alt="BioHarmony Analytics Logo" className="h-9 w-auto" />
+            </div>
             <div className="flex flex-col leading-tight">
               <span
                 className="font-serif text-xl font-semibold tracking-tight text-[#BFA14A]"
                 data-testid="logo-text"
               >
-                BioHarmony Solutions
-              </span>
-              <span className="text-[10px] tracking-[0.18em] text-[#F4EFE6]/40 font-sans">
                 BioHarmony Analytics
+              </span>
+              <span className="text-[9px] tracking-[0.14em] text-[#F4EFE6]/35 font-sans">
+                a division of BioHarmony Solutions
               </span>
             </div>
           </Link>

@@ -9,10 +9,10 @@ export function Footer() {
           <div className="md:col-span-2">
             <Link href="/" className="inline-block mb-5">
               <span className="font-serif text-2xl font-semibold text-[#BFA14A] tracking-tight">
-                BioHarmony Solutions
-              </span>
-              <div className="text-[10px] tracking-[0.18em] text-[#F4EFE6]/35 font-sans mt-0.5">
                 BioHarmony Analytics
+              </span>
+              <div className="text-[10px] tracking-[0.14em] text-[#F4EFE6]/30 font-sans mt-0.5">
+                a division of BioHarmony Solutions
               </div>
             </Link>
             <p className="text-[#F4EFE6]/70 max-w-sm font-medium text-sm leading-relaxed">
