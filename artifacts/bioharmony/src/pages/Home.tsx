@@ -877,7 +877,7 @@ export default function Home() {
                 "When your pet isn't acting like themselves, there's always a reason."
               </p>
               <div className="mt-4 mb-4 inline-block bg-white/5 border border-[#BFA14A]/20 rounded-2xl px-8 py-4 shadow-[0_0_20px_rgba(191,161,74,0.08)]">
-                <p className="text-[#F4EFE6]/80 font-medium">Pet Wellness Scan — <span className="text-[#BFA14A]">$55 USD</span></p>
+                <p className="text-[#F4EFE6]/80 font-medium">Pet Wellness Scan — <span className="text-[#BFA14A]">$150 USD</span></p>
               </div>
               <div className="pt-2">
                 <Button asChild className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/20 px-8 py-5 h-auto shadow-[0_0_15px_rgba(191,161,74,0.2)] hover:shadow-[0_0_30px_rgba(191,161,74,0.4)] transition-all duration-300" data-testid="home-pets-cta">

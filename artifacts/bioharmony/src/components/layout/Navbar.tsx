@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Globe, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import logoSrc from "@/assets/logo-concept-1.png";
+import logoSrc from "@/assets/bioharmony-logo.png";
 import kathyAvatar from "@/assets/kathy-clinic.jpg";
 import { LANGUAGES, useLanguage, type Language } from "@/contexts/LanguageContext";
 
@@ -107,7 +107,7 @@ export function Navbar() {
                 BioHarmony Solutions
               </span>
               <span className="text-[10px] tracking-[0.18em] text-[#F4EFE6]/40 font-sans">
-                BioAnalytics
+                BioHarmony Analytics
               </span>
             </div>
           </Link>

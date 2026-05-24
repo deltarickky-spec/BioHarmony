@@ -12,7 +12,7 @@ export function Footer() {
                 BioHarmony Solutions
               </span>
               <div className="text-[10px] tracking-[0.18em] text-[#F4EFE6]/35 font-sans mt-0.5">
-                BioAnalytics by BioHarmony Solutions
+                BioHarmony Analytics
               </div>
             </Link>
             <p className="text-[#F4EFE6]/70 max-w-sm font-medium text-sm leading-relaxed">
@@ -71,13 +71,12 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:contact@bioharmonysolutions.com"
+                  href="mailto:info@bioharmonysolutions.ca"
                   className="text-sm text-[#BFA14A]/70 hover:text-[#BFA14A] transition-colors"
                 >
-                  contact@bioharmonysolutions.com
+                  info@bioharmonysolutions.ca
                 </a>
               </li>
-              <li className="text-sm text-[#F4EFE6]/50">(555) 123-4567</li>
             </ul>
 
             <div className="mt-8">

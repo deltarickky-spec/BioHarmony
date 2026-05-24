@@ -1,0 +1,53 @@
+I have completed a full audit of the BioHarmony Solutions website. There are critical branding errors and broken pages that must be fixed before the site goes live. Fix these in order:
+
+P0 — CRITICAL (Fix First):
+
+1. "BioAnalytics" Naming Error (Every Page)
+   - The text under the logo says "BioAnalytics" on every page header and footer
+   - Change EVERY instance to "BioHarmony Analytics"
+   - Only change the branding/tagline usage, not the word "analytics" inside sentences
+
+2. Broken Pages — 404 NOT FOUND (5 Pages)
+   These pages are linked but don't exist. Create them:
+   - /about-kathy — Kathy Owens bio (30+ year Reiki Master, founder)
+   - /track-my-report — Simple form: "Enter your Request ID to check status"
+   - /terms-of-service — Standard SaaS terms
+   - /privacy-policy — Standard privacy policy
+   - /wellness-disclaimer — "Not medical advice" disclaimer
+   
+   OR remove the broken links from nav/footer if you can't create them yet.
+
+3. Pet Scan Pricing Wrong
+   - Change $55 to $150 on /pet-scans page
+
+4. Missing Premium Service Tier
+   - Add $297 Premium Interpretation Session to /membership and homepage
+   - Description: "1-on-1 live review of your AO Scan results with Kathy Owens, 30+ year wellness practitioner. Personalized wellness roadmap + priority support."
+   - Highest tier above $133 Ultimate Scan
+
+5. Logo Verification
+   - Logo should be: Teal lotus in circle, "BioHarmony" serif, "SOLUTIONS" sans-serif, color #4BA8A8, transparent background
+   - If current logo is old SVG or has black background, replace with official transparent PNG
+
+P1 — Important:
+
+6. Email: Footer shows contact@bioharmonysolutions.com — verify if correct
+7. Services section: "BioAnalytics" → "BioHarmony Analytics"
+8. Ensure all navigation links actually work
+
+VERIFICATION CHECKLIST:
+- Every page loads without 404
+- "BioAnalytics" does NOT appear as a brand name anywhere
+- "BioHarmony Analytics" appears correctly in header/footer
+- Pet scan shows $150
+- $297 Premium tier exists
+- Logo is transparent PNG, teal #4BA8A8
+- All nav and footer links work
+- Site looks good on mobile
+
+BRAND RULES:
+- Parent company = BioHarmony Solutions
+- AO Scan division = BioHarmony Analytics
+- Same logo everywhere
+
+Execute P0 first, then P1. Report back what was changed.

@@ -70,6 +70,11 @@ function Router() {
           <Route path="/privacy" component={Privacy} />
           <Route path="/disclaimer" component={Disclaimer} />
           <Route path="/feedback" component={Feedback} />
+          <Route path="/about-kathy" component={About} />
+          <Route path="/track-my-report" component={TrackReport} />
+          <Route path="/terms-of-service" component={Terms} />
+          <Route path="/privacy-policy" component={Privacy} />
+          <Route path="/wellness-disclaimer" component={Disclaimer} />
           <Route component={NotFound} />
         </Switch>
       </main>

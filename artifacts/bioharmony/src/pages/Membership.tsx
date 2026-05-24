@@ -57,7 +57,7 @@ export default function Membership() {
               },
               { 
                 name: "Elite", price: "$297", period: "/month", 
-                includes: ["Weekly scans", "Full priority support", "Access to client portal", "Dedicated review session with Kathy"],
+                includes: ["1-on-1 live review of your AO Scan results — coming soon", "Session with a wellness practitioner", "Personalized wellness roadmap", "Priority support", "Delivered within 24–48 hours", "Access to client portal"],
                 cta: "Start Elite", popular: false 
               }
             ].map((plan, i) => (

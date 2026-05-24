@@ -111,7 +111,7 @@ export default function PetScans() {
             <div className="bg-[#0F5C5E]/20 backdrop-blur-xl border border-[#BFA14A]/30 rounded-2xl p-10 text-center shadow-[0_0_50px_rgba(15,92,94,0.2)]">
               <h2 className="font-serif text-2xl text-[#F4EFE6] mb-8">Pet Wellness Scan</h2>
               <div className="text-6xl font-bold text-[#BFA14A] mb-8 drop-shadow-md">
-                $55 <span className="text-xl font-normal text-[#F4EFE6]/50">USD</span>
+                $150 <span className="text-xl font-normal text-[#F4EFE6]/50">USD</span>
               </div>
               <Button asChild size="lg" className="w-full rounded-full mb-8 bg-[#0F5C5E] text-white shadow-[0_0_20px_rgba(15,92,94,0.5)] hover:shadow-[0_0_30px_rgba(15,92,94,0.7)] transition-all border-none py-6 h-auto text-lg" data-testid="book-pet-scan">
                 <Link href="/contact">Scan Your Pet</Link>
