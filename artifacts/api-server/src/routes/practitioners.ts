@@ -127,6 +127,10 @@ const UpdateSchema = z.object({
   tier: z.string().max(30).optional(),
   notes: z.string().max(1000).nullable().optional(),
   active: z.boolean().optional(),
+  businessName: z.string().max(150).nullable().optional(),
+  logoUrl: z.string().max(2000).nullable().optional(),
+  credits: z.number().int().min(0).max(10000).optional(),
+  creditsUsed: z.number().int().min(0).max(10000).optional(),
 });
 
 router.patch("/admin/practitioners/:id", async (req, res) => {
@@ -238,6 +242,11 @@ router.get("/practitioners/dashboard/:code", async (req, res) => {
       commissionRate: practitioner.commissionRate,
       tier: practitioner.tier,
       totalPaid: practitioner.totalPaid,
+      businessName: practitioner.businessName,
+      logoUrl: practitioner.logoUrl,
+      credits: practitioner.credits,
+      creditsUsed: practitioner.creditsUsed,
+      creditsRemaining: Math.max(0, practitioner.credits - practitioner.creditsUsed),
       pendingPayout: Math.max(0, stats.earnedCommission - practitioner.totalPaid),
       ...stats,
       recentReferrals: recentScans,

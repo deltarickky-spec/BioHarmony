@@ -10,5 +10,9 @@ export const practitionersTable = pgTable("practitioners", {
   active: boolean("active").notNull().default(true),
   notes: text("notes"),
   totalPaid: integer("total_paid").notNull().default(0),
+  businessName: varchar("business_name", { length: 150 }),
+  logoUrl: text("logo_url"),
+  credits: integer("credits").notNull().default(0),
+  creditsUsed: integer("credits_used").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

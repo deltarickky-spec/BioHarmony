@@ -100,7 +100,7 @@ export default function PetScans() {
               },
             ].map((animal, i) => (
               <motion.div key={i} variants={fadeInUp}>
-                <div className="flip-card h-[420px] cursor-pointer">
+                <div className="flip-card h-[540px] cursor-pointer">
                   <div className="flip-card-inner">
                     {/* Front — Photo */}
                     <div className="flip-card-front">
@@ -122,23 +122,23 @@ export default function PetScans() {
                       </div>
                     </div>
                     {/* Back — Info */}
-                    <div className="flip-card-back bg-gradient-to-br from-[#0C1919] to-[#091515] border border-white/10 flex flex-col justify-between p-7">
-                      <div>
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: `${animal.color}18`, border: `1px solid ${animal.color}40` }}>
+                    <div className="flip-card-back bg-gradient-to-br from-[#0C1919] to-[#091515] border border-white/10 flex flex-col p-6">
+                      <div className="flex-1 overflow-y-auto pr-1">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ background: `${animal.color}18`, border: `1px solid ${animal.color}40` }}>
                           <animal.icon className="w-5 h-5" style={{ color: animal.color }} />
                         </div>
-                        <h3 className="font-serif text-2xl text-[#F4EFE6] mb-3">{animal.label}</h3>
-                        <p className="text-[#F4EFE6]/65 text-sm leading-relaxed mb-5">{animal.desc}</p>
+                        <h3 className="font-serif text-xl text-[#F4EFE6] mb-2">{animal.label}</h3>
+                        <p className="text-[#F4EFE6]/65 text-[13px] leading-relaxed mb-4">{animal.desc}</p>
                         <ul className="space-y-2">
                           {animal.bullets.map((b, j) => (
-                            <li key={j} className="flex items-center gap-2.5 text-sm text-[#F4EFE6]/75">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: animal.color }} />
-                              {b}
+                            <li key={j} className="flex items-start gap-2.5 text-[13px] leading-snug text-[#F4EFE6]/75">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: animal.color }} />
+                              <span>{b}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                      <Button asChild size="sm" className="mt-5 w-full rounded-full bg-[#0F5C5E] text-white border-none hover:bg-[#0F5C5E]/80 transition-all">
+                      <Button asChild size="sm" className="mt-4 w-full rounded-full bg-[#0F5C5E] text-white border-none hover:bg-[#0F5C5E]/80 transition-all shrink-0">
                         <Link href="/contact">Book a {animal.species} Scan</Link>
                       </Button>
                     </div>
