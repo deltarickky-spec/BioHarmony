@@ -12,7 +12,7 @@ export function Footer() {
                 BioHarmony Analytics
               </span>
               <div className="text-[10px] tracking-[0.14em] text-[#F4EFE6]/30 font-sans mt-0.5">
-                a division of BioHarmony Analytics
+                a division of BioHarmony Solutions
               </div>
             </Link>
             <p className="text-[#F4EFE6]/70 max-w-sm font-medium text-sm leading-relaxed">

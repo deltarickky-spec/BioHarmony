@@ -937,25 +937,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Teaser C - Memberships */}
+      {/* Scan-first positioning */}
       <section className="py-24 bg-card border-t border-border">
         <div className="container px-4 md:px-6">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
+          <div className="max-w-2xl mx-auto text-center space-y-4">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-              <h2 className="text-3xl md:text-5xl font-serif text-primary">Ongoing Wellness Support</h2>
-              <p className="text-lg text-muted-foreground mt-4 leading-relaxed">
-                Subscribe for consistent, month-after-month wellness insights.
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Choose the scan or package that fits your wellness journey. No subscriptions required — pay per scan.
               </p>
-              <div className="flex flex-wrap justify-center items-center gap-4 mt-8 mb-8 text-foreground font-medium">
-                <span>Basic $97/mo</span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-primary">Pro $197/mo</span>
-                <span className="text-muted-foreground">•</span>
-                <span>Elite $297/mo</span>
-              </div>
-              <div className="pt-2">
-                <Button asChild variant="outline" className="rounded-full border-primary/20 hover:bg-primary/5" data-testid="home-membership-cta">
-                  <Link href="/membership">View Membership Plans</Link>
+              <div className="pt-6">
+                <Button asChild variant="outline" className="rounded-full border-primary/20 hover:bg-primary/5">
+                  <Link href="/upload-scan">Book Your Scan</Link>
                 </Button>
               </div>
             </motion.div>

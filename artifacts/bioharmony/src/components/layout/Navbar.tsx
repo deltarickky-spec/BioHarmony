@@ -109,7 +109,7 @@ export function Navbar() {
                 BioHarmony Analytics
               </span>
               <span className="text-[9px] tracking-[0.14em] text-[#F4EFE6]/35 font-sans">
-                a division of BioHarmony Analytics
+                a division of BioHarmony Solutions
               </span>
             </div>
           </Link>
