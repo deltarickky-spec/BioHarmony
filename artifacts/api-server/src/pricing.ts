@@ -1,4 +1,4 @@
-/**
+ /**
  * BioHarmony Analytics — central pricing source of truth (backend).
  * Mirrored at artifacts/bioharmony/src/lib/pricing.ts.
  *
