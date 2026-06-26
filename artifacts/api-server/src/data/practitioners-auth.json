@@ -1,0 +1,12 @@
+{
+  "practitioners": [
+    {
+      "id": 1,
+      "email": "admin@bioharmonysolutions.ca",
+      "name": "Admin Practitioner",
+      "passwordHash": "b76e544d37b1388156bb771541644d74:0fc12cf37512e3879cad5fbf5c593cdd006eb7642b9a6551e2b10b5df5227ba1db6b40c7db15dc8fd42fb3e5c66fcd6d60a14377063f4fe10f740354e60eac47",
+      "role": "admin"
+    }
+  ],
+  "nextId": 2
+}

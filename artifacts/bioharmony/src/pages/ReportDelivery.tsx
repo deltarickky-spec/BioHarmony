@@ -7,6 +7,7 @@ import {
   Sparkles, CreditCard, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { planHasAudio, planHasScore } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -318,6 +319,13 @@ export default function ReportDelivery() {
   const [lang, setLang] = useState("en");
   const [showLangPicker, setShowLangPicker] = useState(false);
 
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   const reportId = params.id ?? "";
 
   // Once email is verified (either from URL or gate), fetch data
@@ -403,6 +411,46 @@ export default function ReportDelivery() {
   const showScore = planHasScore(data.plan);
   const reportLabel = REPORT_TYPE_LABELS[data.reportType] ?? data.reportType;
   const tags = data.tags ?? [];
+
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen bg-[#060D0D] text-[#F4EFE6] pb-24">
+        <div className="border-b border-white/8 bg-[#060D0D]/95 backdrop-blur-sm px-4 py-5 sticky top-0 z-20">
+          <div className="max-w-2xl mx-auto flex items-start justify-between gap-4">
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-3 w-40 bg-white/8" />
+              <Skeleton className="h-5 w-56 bg-white/8" />
+              <Skeleton className="h-3 w-24 bg-white/8" />
+            </div>
+            <div className="text-right space-y-2">
+              <Skeleton className="h-3 w-20 ml-auto bg-white/8" />
+              <Skeleton className="h-3 w-16 ml-auto bg-white/8" />
+            </div>
+          </div>
+        </div>
+        <div className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
+          <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-full bg-white/8" />
+              <Skeleton className="h-4 w-32 bg-white/8" />
+            </div>
+            <Skeleton className="h-3 w-full bg-white/8" />
+            <Skeleton className="h-3 w-3/4 bg-white/8" />
+            <Skeleton className="h-10 w-full rounded-xl bg-white/8" />
+          </div>
+          <div className="bg-[#0C1919] border border-white/10 rounded-2xl p-6 space-y-4">
+            <Skeleton className="h-4 w-24 bg-white/8" />
+            <Skeleton className="h-3 w-full bg-white/8" />
+            <Skeleton className="h-3 w-2/3 bg-white/8" />
+            <div className="flex gap-3">
+              <Skeleton className="h-10 flex-1 rounded-xl bg-white/8" />
+              <Skeleton className="h-10 flex-1 rounded-xl bg-white/8" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#060D0D] text-[#F4EFE6] pb-24">
@@ -608,7 +656,7 @@ export default function ReportDelivery() {
             <section className="rounded-xl border border-white/8 bg-white/[0.02] p-5">
               <div className="flex items-start gap-3">
                 <ShieldCheck className="w-4 h-4 text-[#F4EFE6]/20 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-[#F4EFE6]/30 leading-relaxed">
+                <p className="text-[11px] text-[#F4EFE6]/45 leading-relaxed">
                   This report is for wellness education and informational purposes only. It is not a medical diagnosis,
                   treatment plan, or substitute for professional medical advice. Always consult a qualified healthcare
                   provider for health concerns.{" "}

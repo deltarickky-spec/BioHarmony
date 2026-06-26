@@ -1,16 +1,17 @@
- /**
+/**
  * BioHarmony Analytics — central pricing source of truth (backend).
  * Mirrored at artifacts/bioharmony/src/lib/pricing.ts.
  *
  * Any price/label/feature change must be made in BOTH files.
+ * All prices in USD.
  */
 
-export type PlanKind = "individual" | "package" | "pet";
+export type PlanKind = "individual" | "bundle" | "pet" | "membership" | "practitioner";
 
 export interface PlanDef {
   id: string;
   label: string;
-  price: number;           // CAD/USD whole dollars
+  price: number;
   kind: PlanKind;
   popular?: boolean;
   flagship?: boolean;
@@ -20,10 +21,14 @@ export interface PlanDef {
   bestFor?: string;
   deliverable?: string;
   scanTime?: string;
+  period?: string;
+  badge?: string;
+  highlight_features?: string[];
 }
 
-export const PLANS: readonly PlanDef[] = [
-  // ── 7 individual AO Scan programs ────────────────────────────────────────────
+// ─── Client A La Carte Scans ────────────────────────────────────────────────
+
+export const INDIVIDUAL_SCANS: readonly PlanDef[] = [
   {
     id: "inner-voice",
     label: "Inner Voice Scan",
@@ -36,6 +41,17 @@ export const PLANS: readonly PlanDef[] = [
     scanTime: "10–15 seconds recording.",
   },
   {
+    id: "ao-mindsync",
+    label: "AO Mindsync",
+    price: 33,
+    kind: "individual",
+    shortDesc: "Personalized affirmation + 8Hz binaural audio for mindfulness.",
+    longDesc: "Custom audio combining your own voice affirmations with binaural beats centered at 8Hz (meditative frequency).",
+    bestFor: "Mental wellness, stress management, meditation, sleep support.",
+    deliverable: "Personalized MP3 with your voice + binaural tones.",
+    scanTime: "~5 minutes recording + processing.",
+  },
+  {
     id: "vitals",
     label: "Vitals Scan",
     price: 44,
@@ -45,29 +61,6 @@ export const PLANS: readonly PlanDef[] = [
     bestFor: "General wellness overview, first-time clients, annual check-in.",
     deliverable: "Vitals summary report with system-by-system color-coded results.",
     scanTime: "~2–3 minutes.",
-  },
-  {
-    id: "body-system",
-    label: "Body System Scan",
-    price: 66,
-    kind: "individual",
-    shortDesc: "Deep-dive into one specific body system of your choice.",
-    longDesc: "Focuses on a single body system (digestive, cardiovascular, respiratory, lymphatic, etc.) for detailed energetic imbalance analysis.",
-    bestFor: "Clients with specific concerns (digestive, heart, breathing, etc.).",
-    deliverable: "Detailed single-system report with specific findings and recommendations.",
-    scanTime: "~3–5 minutes.",
-  },
-  {
-    id: "comprehensive",
-    label: "Comprehensive Scan",
-    price: 97,
-    kind: "individual",
-    flagship: true,
-    shortDesc: "Our flagship full-body energetic analysis using the Solex 1–9 scale.",
-    longDesc: "Deeply scans thousands of data points across all body systems, chromosomes, and cellular structures from head to toe.",
-    bestFor: "Complete wellness assessment, establishing a baseline.",
-    deliverable: "Full narrative report (14,000+ chars): Executive Summary, System-by-System Analysis, Frequency Resonance Story, Holistic Recommendations, 30-Day Wellness Journey Plan.",
-    scanTime: "~10–15 minutes.",
   },
   {
     id: "dental",
@@ -92,101 +85,29 @@ export const PLANS: readonly PlanDef[] = [
     scanTime: "~5–7 minutes.",
   },
   {
-    id: "ao-mindsync",
-    label: "AO Mindsync",
-    price: 33,
-    kind: "individual",
-    shortDesc: "Personalized affirmation + 8Hz binaural audio for mindfulness.",
-    longDesc: "Custom audio combining your own voice affirmations with binaural beats centered at 8Hz (meditative frequency).",
-    bestFor: "Mental wellness, stress management, meditation, sleep support.",
-    deliverable: "Personalized MP3 with your voice + binaural tones.",
-    scanTime: "~5 minutes recording + processing.",
-  },
-
-  // ── 8 package bundles ────────────────────────────────────────────────────────
-  {
-    id: "quick-wellness",
-    label: "Quick Wellness Check",
-    price: 44,
-    kind: "package",
-    shortDesc: "Vitals Scan only — quick energetic overview.",
-    includes: ["Vitals Scan"],
-    bestFor: "First-time clients wanting a quick overview.",
-    deliverable: "Basic summary report.",
-  },
-  {
-    id: "emotional-balance",
-    label: "Emotional Balance",
-    price: 33,
-    kind: "package",
-    shortDesc: "Inner Voice Scan with emotional frequency report.",
-    includes: ["Inner Voice Scan"],
-    bestFor: "Stress relief, mood support.",
-    deliverable: "Emotional frequency report + personalized balancing audio.",
-  },
-  {
-    id: "body-system-focus",
-    label: "Body System Focus",
+    id: "body-system",
+    label: "Body System Scan",
     price: 66,
-    kind: "package",
-    shortDesc: "Body System Scan (you choose the system).",
-    includes: ["Body System Scan"],
-    bestFor: "Targeted health concerns.",
-    deliverable: "Detailed system-specific report.",
+    kind: "individual",
+    shortDesc: "Deep-dive into one specific body system of your choice.",
+    longDesc: "Focuses on a single body system (digestive, cardiovascular, respiratory, lymphatic, etc.) for detailed energetic imbalance analysis.",
+    bestFor: "Clients with specific concerns (digestive, heart, breathing, etc.).",
+    deliverable: "Detailed single-system report with specific findings and recommendations.",
+    scanTime: "~3–5 minutes.",
   },
   {
-    id: "complete-wellness",
-    label: "Complete Wellness",
+    id: "comprehensive",
+    label: "Comprehensive Scan",
     price: 97,
-    kind: "package",
-    popular: true,
-    shortDesc: "Full Comprehensive Scan — single person, one session.",
-    includes: ["Comprehensive Scan"],
-    bestFor: "Complete baseline assessment, serious wellness tracking.",
-    deliverable: "Full narrative report (all 5 sections, 14,000+ chars). Standard 2–3 business day PDF delivery. No add-ons.",
+    kind: "individual",
+    flagship: true,
+    shortDesc: "Our flagship full-body energetic analysis using the Solex 1–9 scale.",
+    longDesc: "Deeply scans thousands of data points across all body systems, chromosomes, and cellular structures from head to toe.",
+    bestFor: "Complete wellness assessment, establishing a baseline.",
+    deliverable: "Full narrative report (14,000+ chars): Executive Summary, System-by-System Analysis, Frequency Resonance Story, Holistic Recommendations, 30-Day Wellness Journey Plan.",
+    scanTime: "~10–15 minutes.",
   },
-  {
-    id: "oral-health-plus",
-    label: "Oral Health Plus",
-    price: 88,
-    kind: "package",
-    shortDesc: "Dental Scan + TMJ Scan combined.",
-    includes: ["Dental Scan", "TMJ Scan"],
-    bestFor: "Holistic oral health focus.",
-    deliverable: "Combined oral wellness report.",
-  },
-  {
-    id: "mind-body-harmony",
-    label: "Mind-Body Harmony",
-    price: 77,
-    kind: "package",
-    shortDesc: "Inner Voice + Vitals + AO Mindsync.",
-    includes: ["Inner Voice Scan", "Vitals Scan", "AO Mindsync"],
-    bestFor: "Holistic mind-body wellness.",
-    deliverable: "Three reports + personalized audio.",
-  },
-  {
-    id: "ultimate-wellness",
-    label: "Ultimate Wellness",
-    price: 133,
-    kind: "package",
-    shortDesc: "Comprehensive + Inner Voice + Vitals for the full picture.",
-    includes: ["Comprehensive Scan", "Inner Voice Scan", "Vitals Scan"],
-    bestFor: "Complete mind-body picture, premium entry tier.",
-    deliverable: "Full comprehensive report + emotional analysis + balancing audio.",
-  },
-  {
-    id: "premium-interpretation",
-    label: "Premium Interpretation",
-    price: 297,
-    kind: "package",
-    shortDesc: "Comprehensive Scan + 30–45 min 1-on-1 with Kathy Owens.",
-    includes: ["Comprehensive Scan", "Live interpretation session with Kathy"],
-    bestFor: "Clients wanting expert guidance and a personalized action plan.",
-    deliverable: "Full report + live walkthrough + custom wellness roadmap (session scheduled separately).",
-  },
-
-  // ── Pet scans ───────────────────────────────────────────────────────────────
+  // ── Pet scans ─────────────────────────────────────────────────────────────
   {
     id: "pet-vitals",
     label: "Pet Vitals",
@@ -207,15 +128,191 @@ export const PLANS: readonly PlanDef[] = [
   },
 ] as const;
 
-// Legacy slug compatibility — keeps existing DB rows resolvable.
+// ─── Bundles (true savings) ──────────────────────────────────────────────────
+
+export const BUNDLE_PLANS: readonly PlanDef[] = [
+  {
+    id: "oral-health-plus",
+    label: "Oral Health Plus",
+    price: 88,
+    kind: "bundle",
+    shortDesc: "Dental Scan + TMJ Scan combined — save $22.",
+    includes: ["Dental Scan ($55)", "TMJ Scan ($55)"],
+    bestFor: "Holistic oral health, comprehensive jaw & tooth assessment.",
+    deliverable: "Combined oral wellness report with both analyses.",
+  },
+  {
+    id: "mind-body-harmony",
+    label: "Mind-Body Harmony",
+    price: 77,
+    kind: "bundle",
+    shortDesc: "Inner Voice + Vitals + AO Mindsync — save $33.",
+    includes: ["Inner Voice Scan ($33)", "Vitals Scan ($44)", "AO Mindsync ($33)"],
+    bestFor: "Holistic mind-body wellness starting point.",
+    deliverable: "Three reports + personalized balancing audio.",
+  },
+  {
+    id: "ultimate-wellness",
+    label: "Ultimate Wellness",
+    price: 133,
+    kind: "bundle",
+    popular: true,
+    badge: "Best Value",
+    shortDesc: "Comprehensive + Inner Voice + Vitals — save $41.",
+    includes: ["Comprehensive Scan ($97)", "Inner Voice Scan ($33)", "Vitals Scan ($44)"],
+    bestFor: "Complete mind-body picture, premium entry tier.",
+    deliverable: "Full comprehensive report + emotional analysis + balancing audio.",
+  },
+  {
+    id: "premium-interpretation",
+    label: "Premium Interpretation",
+    price: 297,
+    kind: "bundle",
+    shortDesc: "Comprehensive Scan + 30–45 min 1-on-1 with Kathy Owens.",
+    includes: ["Comprehensive Scan ($97)", "Live interpretation session with Kathy"],
+    bestFor: "Clients wanting expert guidance and a personalized action plan.",
+    deliverable: "Full report + live walkthrough + custom wellness roadmap (session scheduled separately).",
+  },
+] as const;
+
+// ─── Client Memberships ──────────────────────────────────────────────────────
+
+export const MEMBERSHIP_PLANS: readonly PlanDef[] = [
+  {
+    id: "membership-access",
+    label: "BioHarmony Access",
+    price: 97,
+    kind: "membership",
+    period: "month",
+    shortDesc: "One scan per month + member-only discounts.",
+    bestFor: "Monthly wellness tracking, existing clients who scan regularly.",
+    deliverable: "1 comprehensive or comparable scan per month",
+    highlight_features: [
+      "1 scan per month (any $97-or-less scan)",
+      "20% off additional a la carte scans",
+      "Access to client portal with history tracking",
+      "Priority email processing",
+      "Monthly wellness tip via email",
+    ],
+  },
+  {
+    id: "membership-pro",
+    label: "BioHarmony Pro",
+    price: 147,
+    kind: "membership",
+    period: "month",
+    badge: "Most Popular",
+    popular: true,
+    shortDesc: "Two scans per month plus deeper savings.",
+    bestFor: "Active wellness self-trackers.",
+    highlight_features: [
+      "2 scans per month (any type, including comprehensive)",
+      "25% off additional a la carte scans",
+      "Access to client portal with trend tracking",
+      "Priority processing (24–48 hr delivery)",
+      "Monthly wellness tip + check-in note",
+    ],
+  },
+  {
+    id: "membership-unlimited",
+    label: "BioHarmony Unlimited",
+    price: 247,
+    kind: "membership",
+    period: "month",
+    shortDesc: "Unlimited scans every month + premium support.",
+    bestFor: "Dedicated wellness optimizers, families.",
+    deliverable: "Unlimited scans, all types",
+    highlight_features: [
+      "Unlimited scans — any type, any time",
+      "30% off pet scans and add-ons",
+      "Access to client portal with lifetime history",
+      "Priority processing + express delivery",
+      "Quarterly 15-min check-in with Kathy",
+      "Free family member onboarding",
+    ],
+  },
+] as const;
+
+// ─── Practitioner Plans (NO scan limits) ─────────────────────────────────────
+
+export const PRACTITIONER_PLANS: readonly PlanDef[] = [
+  {
+    id: "practitioner-solo",
+    label: "Solo Practitioner",
+    price: 49,
+    kind: "practitioner",
+    period: "month",
+    shortDesc: "Unlimited report processing for solo practitioners.",
+    bestFor: "Individual practitioners with their own scan device.",
+    highlight_features: [
+      "Unlimited scan uploads & report processing",
+      "Access to BioHarmony interpretation engine",
+      "Client-ready formatted reports",
+      "Email support",
+      "Standard report delivery (2–3 business days)",
+    ],
+  },
+  {
+    id: "practitioner-growth",
+    label: "Growth Practitioner",
+    price: 79,
+    kind: "practitioner",
+    period: "month",
+    badge: "Most Popular",
+    popular: true,
+    shortDesc: "Unlimited processing + white label branding.",
+    bestFor: "Growing practices who want branded client reports.",
+    highlight_features: [
+      "Unlimited scan uploads & report processing",
+      "White label — your brand on every report",
+      "Faster report delivery (1–2 business days)",
+      "All scan types (Basic + Dental + TMJ)",
+      "Priority email & chat support",
+    ],
+  },
+  {
+    id: "practitioner-elite",
+    label: "Elite Practitioner",
+    price: 149,
+    kind: "practitioner",
+    period: "month",
+    shortDesc: "Everything unlocked — premium, fast, with dedicated support.",
+    bestFor: "High-volume practices, wellness clinics, multi-practitioner setups.",
+    highlight_features: [
+      "Unlimited scan uploads & report processing",
+      "White label — your brand on every report",
+      "Express delivery (same business day)",
+      "All scan types including Dental, TMJ, Pet",
+      "Multi-practitioner accounts (up to 3 users)",
+      "Dedicated account manager",
+      "Custom portal setup with client branding",
+    ],
+  },
+] as const;
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 const LEGACY_PLAN_ALIASES: Record<string, string> = {
   basic: "vitals",
   advanced: "comprehensive",
   premium: "ultimate-wellness",
+  "quick-wellness": "vitals",
+  "emotional-balance": "inner-voice",
+  "body-system-focus": "body-system",
+  "complete-wellness": "comprehensive",
 };
 
-export const ALL_PLAN_IDS = PLANS.map((p) => p.id);
+export const ALL_PLANS: readonly PlanDef[] = [
+  ...INDIVIDUAL_SCANS,
+  ...BUNDLE_PLANS,
+  ...MEMBERSHIP_PLANS,
+  ...PRACTITIONER_PLANS,
+];
+
+export const ALL_PLAN_IDS = ALL_PLANS.map((p) => p.id);
 const VALID_PLAN_IDS = new Set<string>([...ALL_PLAN_IDS, ...Object.keys(LEGACY_PLAN_ALIASES)]);
+
+export const PET_PLANS = INDIVIDUAL_SCANS.filter((p) => p.kind === "pet");
 
 function resolvePlanId(id: string | null | undefined): string {
   if (!id) return "comprehensive";
@@ -224,7 +321,7 @@ function resolvePlanId(id: string | null | undefined): string {
 
 export function getPlan(id: string | null | undefined): PlanDef {
   const resolved = resolvePlanId(id);
-  return PLANS.find((p) => p.id === resolved) ?? PLANS.find((p) => p.id === "comprehensive")!;
+  return ALL_PLANS.find((p) => p.id === resolved) ?? ALL_PLANS.find((p) => p.id === "comprehensive")!;
 }
 
 export function getPlanPrice(id: string | null | undefined): number {
@@ -239,15 +336,9 @@ export function isValidPlanId(id: string): boolean {
   return VALID_PLAN_IDS.has(id);
 }
 
-/** Plans that grant an audio narration (AO Mindsync-equivalent) on delivery. */
 const AUDIO_PLAN_IDS = new Set([
-  "ao-mindsync",
-  "inner-voice",
-  "emotional-balance",
-  "mind-body-harmony",
-  "ultimate-wellness",
-  "premium-interpretation",
-  "premium", // legacy
+  "ao-mindsync", "inner-voice",
+  "mind-body-harmony", "ultimate-wellness", "premium-interpretation",
 ]);
 
 export function planHasAudio(id: string | null | undefined): boolean {
@@ -255,11 +346,9 @@ export function planHasAudio(id: string | null | undefined): boolean {
   return AUDIO_PLAN_IDS.has(resolved) || AUDIO_PLAN_IDS.has(id ?? "");
 }
 
-/** Plans that include a BioHarmony Score (anything richer than a single basic vitals/inner voice). */
 const SCORE_PLAN_IDS = new Set([
-  "comprehensive", "complete-wellness", "ultimate-wellness", "premium-interpretation",
-  "body-system", "body-system-focus", "oral-health-plus",
-  "advanced", "premium", // legacy
+  "comprehensive", "ultimate-wellness", "premium-interpretation",
+  "body-system", "oral-health-plus",
 ]);
 
 export function planHasScore(id: string | null | undefined): boolean {

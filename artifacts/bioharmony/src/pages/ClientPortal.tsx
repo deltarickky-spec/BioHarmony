@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, FileText, Clock, CheckCircle, Download, RefreshCw, ArrowRight, AlertTriangle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -47,16 +48,49 @@ function StatusTimeline({ stage }: { stage: string }) {
   );
 }
 
+function SkeletonCards() {
+  return (
+    <div className="space-y-5">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-[#0C1919] rounded-2xl border border-white/10 p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-9 h-9 rounded-xl bg-white/8" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-3 w-24 bg-white/8" />
+              <Skeleton className="h-3 w-16 bg-white/8" />
+            </div>
+          </div>
+          <Skeleton className="h-3 w-3/4 bg-white/8" />
+          <div className="flex gap-2">
+            <Skeleton className="h-2 w-2.5 rounded-full bg-white/8" />
+            <Skeleton className="h-2 flex-1 bg-white/8" />
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <Skeleton className="h-8 w-28 rounded-xl bg-white/8" />
+            <Skeleton className="h-8 w-28 rounded-xl bg-white/8" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ClientPortal() {
   const [email, setEmail] = useState("");
   const [requestId, setRequestId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
   const [data, setData] = useState<ReportData | null>(null);
 
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     setError("");
     try {
       const res = await fetch(
@@ -72,7 +106,8 @@ export default function ClientPortal() {
     } catch {
       setError("Connection error. Please try again.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
+      setPageLoading(false);
     }
   }
 
@@ -83,14 +118,18 @@ export default function ClientPortal() {
     <div className="min-h-screen bg-[#060D0D] text-[#F4EFE6] py-16 px-4">
       <div className="max-w-xl mx-auto">
 
-        {/* Header */}
-        <div className="text-center mb-12">
-          <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Analytics</p>
-          <h1 className="font-serif text-4xl text-[#F4EFE6] mb-3">Client Portal</h1>
-          <p className="text-[#F4EFE6]/45 text-sm">Access your wellness reports and track your submission status.</p>
-        </div>
+        {pageLoading ? (
+          <SkeletonCards />
+        ) : (
+          <>
+            {/* Header */}
+            <div className="text-center mb-12">
+              <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Analytics</p>
+              <h1 className="font-serif text-4xl text-[#F4EFE6] mb-3">Client Portal</h1>
+              <p className="text-[#F4EFE6]/45 text-sm">Access your wellness reports and track your submission status.</p>
+            </div>
 
-        <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait">
           {!data ? (
             <motion.div key="login" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
               <div className="bg-[#0C1919] rounded-2xl border border-white/10 p-8">
@@ -128,10 +167,10 @@ export default function ClientPortal() {
                     </div>
                   )}
 
-                  <button type="submit" disabled={loading}
+                  <button type="submit" disabled={submitting}
                     className="w-full py-3 bg-[#BFA14A] text-[#060D0D] rounded-xl font-semibold text-sm hover:bg-[#d4b456] transition disabled:opacity-60 flex items-center justify-center gap-2"
                   >
-                    {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</> : <>Access My Report <ArrowRight className="w-4 h-4" /></>}
+                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</> : <>Access My Report <ArrowRight className="w-4 h-4" /></>}
                   </button>
                 </form>
               </div>
@@ -231,6 +270,8 @@ export default function ClientPortal() {
             </motion.div>
           )}
         </AnimatePresence>
+          </>
+        )}
       </div>
     </div>
   );

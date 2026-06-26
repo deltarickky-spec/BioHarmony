@@ -27,6 +27,7 @@ import {
   buildTestimonialRequestEmail,
   sendEmail,
 } from "./email";
+import { generateBioharmonyScore, generateReportNarrative } from "./ollama";
 
 type PipelineStage =
   | "queued"
@@ -152,22 +153,51 @@ async function tick(): Promise<void> {
         "Auto-advancing pipeline stage",
       );
 
-      // Generate BioHarmony score when entering quality_check (after generating stage)
-      let scoreUpdate: { bioharmonyScore?: number; scoreBreakdown?: string } = {};
+      // Generate BioHarmony score via Ollama when entering quality_check (after generating stage)
+      let scoreUpdate: { bioharmonyScore?: number; scoreBreakdown?: string; reportNarrative?: string } = {};
       if (nextStage === "quality_check" && row.bioharmonyScore === null) {
-        const seed = row.id;
-        const score = 55 + ((seed * 7919) % 34);
-        const breakdown = [
-          { label: "Stress Load",       value: 50 + ((seed * 6571) % 40) },
-          { label: "Energy Balance",    value: 55 + ((seed * 9973) % 35) },
-          { label: "System Alignment",  value: 50 + ((seed * 8221) % 40) },
-          { label: "Recovery Capacity", value: 52 + ((seed * 7331) % 38) },
-        ];
-        scoreUpdate = {
-          bioharmonyScore: score,
-          scoreBreakdown: JSON.stringify(breakdown),
-        };
-        logger.info({ id: row.id, score }, "BioHarmony Intelligence Score generated");
+        try {
+          const { score, breakdown } = await generateBioharmonyScore(
+            row.id,
+            row.reportType,
+            row.plan,
+          );
+          scoreUpdate = {
+            bioharmonyScore: score,
+            scoreBreakdown: breakdown,
+          };
+          logger.info({ id: row.id, score }, "BioHarmony Intelligence Score generated via Ollama AI");
+        } catch (err) {
+          logger.error({ err, id: row.id }, "Ollama AI score generation failed — using fallback");
+          // Fallback: deterministic score so pipeline can still advance
+          const seed = row.id;
+          scoreUpdate = {
+            bioharmonyScore: 55 + ((seed * 7919) % 34),
+            scoreBreakdown: JSON.stringify([
+              { label: "Stress Load",       value: 50 + ((seed * 6571) % 40) },
+              { label: "Energy Balance",    value: 55 + ((seed * 9973) % 35) },
+              { label: "System Alignment",  value: 50 + ((seed * 8221) % 40) },
+              { label: "Recovery Capacity", value: 52 + ((seed * 7331) % 38) },
+            ]),
+          };
+        }
+      }
+
+      // Generate report narrative via Ollama when entering pdf_ready
+      if (nextStage === "pdf_ready" && row.bioharmonyScore !== null && !row.reportNarrative) {
+        try {
+          const narrative = await generateReportNarrative(
+            row.id,
+            row.reportType,
+            row.plan,
+            row.bioharmonyScore,
+            row.scoreBreakdown ?? "[]",
+          );
+          scoreUpdate.reportNarrative = narrative;
+          logger.info({ id: row.id }, "Report narrative generated via Ollama AI");
+        } catch (err) {
+          logger.error({ err, id: row.id }, "Ollama narrative generation failed — continuing without narrative");
+        }
       }
 
       // Advance the stage in DB

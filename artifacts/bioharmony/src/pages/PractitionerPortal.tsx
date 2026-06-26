@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { getPlanLabel } from "@/lib/pricing";
 
 const PRACTITIONER_KEY = "bh_practitioner_token";
-const PRACTITIONER_PASSWORD = "practitioner2025";
+// Hardcoded password removed — practitioners authenticate via /api/auth/login
 
 const TIERS = [
   {
@@ -92,17 +92,38 @@ const MOCK_COMPLETED = [
 ] as const;
 
 function AuthGate({ onAuth }: { onAuth: () => void }) {
-  const [pw, setPw] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (pw.trim() === PRACTITIONER_PASSWORD) {
-      sessionStorage.setItem(PRACTITIONER_KEY, "1");
+    setError("");
+    if (!email.trim() || !password.trim()) {
+      setError("Email and password are required.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${apiBase}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "Login failed" }));
+        setError(body.error ?? "Invalid email or password.");
+        return;
+      }
+      const data = await res.json() as { token: string; practitioner: { id: number; email: string; name: string; role: string } };
+      sessionStorage.setItem(PRACTITIONER_KEY, data.token);
       onAuth();
-    } else {
-      setError("Incorrect password. Please try again or contact support.");
-      setPw("");
+    } catch {
+      setError("Connection error. Please check your internet and try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -125,19 +146,33 @@ function AuthGate({ onAuth }: { onAuth: () => void }) {
         <form onSubmit={submit} className="bg-[#0C1919] border border-white/10 rounded-2xl p-8 space-y-5">
           <div className="h-[2px] -mt-8 -mx-8 mb-8 rounded-t-2xl bg-gradient-to-r from-transparent via-[#BFA14A]/35 to-transparent" />
           <div>
-            <label className="block text-xs text-[#F4EFE6]/45 mb-2 uppercase tracking-wider">Access Code</label>
+            <label className="block text-xs text-[#F4EFE6]/45 mb-2 uppercase tracking-wider">Email</label>
             <input
-              type="password"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
               className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/60 transition"
-              placeholder="Enter your practitioner code"
+              placeholder="your@email.com"
               autoFocus
             />
           </div>
+          <div>
+            <label className="block text-xs text-[#F4EFE6]/45 mb-2 uppercase tracking-wider">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              className="w-full bg-white/5 border border-white/12 rounded-xl px-4 py-3 text-[#F4EFE6] placeholder-[#F4EFE6]/25 focus:outline-none focus:border-[#BFA14A]/60 transition"
+              placeholder="Your practitioner password"
+            />
+          </div>
           {error && <p className="text-red-400/80 text-sm">{error}</p>}
-          <button type="submit" className="w-full py-3.5 rounded-xl bg-[#BFA14A] text-[#060D0D] font-semibold hover:bg-[#d4b456] transition text-sm">
-            Enter Portal
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl bg-[#BFA14A] text-[#060D0D] font-semibold hover:bg-[#d4b456] transition text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</> : "Enter Portal"}
           </button>
           <p className="text-center text-xs text-[#F4EFE6]/25">
             Need access?{" "}
@@ -209,7 +244,10 @@ interface ReferralDashboard {
 }
 
 export default function PractitionerPortal() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem(PRACTITIONER_KEY) === "1");
+  const [authed, setAuthed] = useState(() => {
+    const tok = sessionStorage.getItem(PRACTITIONER_KEY);
+    return !!tok && tok.length > 20 && tok.startsWith("ey"); // valid JWT starting chars
+  });
   const [activeTab, setActiveTab] = useState<"overview" | "reports" | "plans" | "brand" | "referrals">("overview");
 
   // Referrals tab state

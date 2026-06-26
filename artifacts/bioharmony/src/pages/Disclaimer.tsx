@@ -69,7 +69,7 @@ export default function Disclaimer() {
 
         </div>
 
-        <div className="mt-16 pt-8 border-t border-white/8 text-xs text-[#F4EFE6]/25 leading-relaxed">
+        <div className="mt-16 pt-8 border-t border-white/8 text-xs text-[#F4EFE6]/45 leading-relaxed">
           © {new Date().getFullYear()} BioHarmony Analytics. This disclaimer applies to all services, reports, and content provided by BioHarmony Analytics. By using our services, you acknowledge that you have read and understood this disclaimer.
         </div>
       </div>

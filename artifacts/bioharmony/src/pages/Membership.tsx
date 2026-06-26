@@ -1,145 +1,119 @@
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { MEMBERSHIP_PLANS } from "@/lib/pricing";
 
 const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
     opacity: 1,
-    transition: { staggerChildren: 0.15 }
-  }
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.4 },
+  }),
 };
 
 export default function Membership() {
+  const [selected, setSelected] = useState<string | null>(null);
+
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative py-24 bg-card border-b border-border overflow-hidden">
-        <div className="container relative z-10 px-4 md:px-6">
-          <motion.div 
-            initial="hidden" animate="visible" variants={fadeInUp}
-            className="max-w-3xl mx-auto text-center space-y-6"
-          >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary leading-tight">
-              Ongoing Wellness Support
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-light">
-              Consistent insight. Month after month.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-background pt-28 pb-20">
+      <div className="container px-4 md:px-6 max-w-5xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-14"
+        >
+          <p className="text-secondary text-xs uppercase tracking-[0.2em] font-sans mb-3">
+            Ongoing Wellness
+          </p>
+          <h1 className="text-3xl md:text-5xl font-serif text-primary mb-4">
+            BioHarmony Membership
+          </h1>
+          <p className="text-muted-foreground text-base max-w-xl mx-auto">
+            Consistent insight, month after month. Get member-only scan discounts and priority processing.
+          </p>
+        </motion.div>
 
-      {/* Pricing Section */}
-      <section className="py-24 bg-background">
-        <div className="container px-4 md:px-6">
-          <motion.div 
-            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto"
-          >
-            {[
-              { 
-                name: "Basic", price: "$97", period: "/month", 
-                includes: ["1 scan per month", "Standard processing", "Access to client portal"],
-                cta: "Start Basic", popular: false 
-              },
-              { 
-                name: "Pro", price: "$197", period: "/month", badge: "Most Popular", 
-                includes: ["2 scans per month", "Priority processing", "Access to client portal", "Monthly wellness check-in note"],
-                cta: "Start Pro", popular: true 
-              },
-              { 
-                name: "Elite", price: "$297", period: "/month", 
-                includes: ["1-on-1 live review of your AO Scan results — coming soon", "Session with a wellness practitioner", "Personalized wellness roadmap", "Priority support", "Delivered within 24–48 hours", "Access to client portal"],
-                cta: "Start Elite", popular: false 
-              }
-            ].map((plan, i) => (
-              <motion.div key={i} variants={fadeInUp}>
-                <Card className={`h-full flex flex-col transition-all duration-300 ${plan.popular ? 'border-secondary shadow-md ring-1 ring-secondary/20 relative scale-105 z-10' : 'border-border/50 hover:shadow-sm'}`}>
-                  {plan.badge && (
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                      {plan.badge}
-                    </div>
-                  )}
-                  <CardHeader className="text-center pb-6 pt-10">
-                    <CardTitle className="font-serif text-2xl text-primary">{plan.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow flex flex-col text-center pt-0">
-                    <div className="text-5xl font-bold text-foreground mb-1">{plan.price}<span className="text-lg text-muted-foreground font-normal">{plan.period}</span></div>
-                    <ul className="text-base text-muted-foreground flex-grow my-8 space-y-4 text-left px-4">
-                      {plan.includes.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-secondary shrink-0"></div>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Button asChild size="lg" className="w-full rounded-full mt-auto" variant={plan.popular ? "default" : "outline"} data-testid={`membership-plan-${plan.name.toLowerCase()}`}>
-                      <Link href="/contact">{plan.cta}</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-          <div className="mt-16 text-center">
-            <p className="text-sm text-muted-foreground">All memberships are billed monthly in USD. Cancel anytime.</p>
-          </div>
+        {/* Membership Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {MEMBERSHIP_PLANS.map((plan, i) => (
+            <motion.div
+              key={plan.id}
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              className="h-full"
+            >
+              <Card
+                className={`h-full flex flex-col border transition-all duration-300 cursor-pointer ${
+                  selected === plan.id
+                    ? "border-secondary shadow-md ring-1 ring-secondary/30"
+                    : plan.popular
+                    ? "border-secondary shadow-md ring-1 ring-secondary/30 relative scale-[1.03] z-10"
+                    : "border-border/50 hover:shadow-sm"
+                }`}
+                onClick={() => setSelected(plan.id)}
+              >
+                {plan.badge && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap z-10 shadow-sm">
+                    {plan.badge}
+                  </div>
+                )}
+                <CardHeader
+                  className={`text-center pb-4 ${plan.popular ? "pt-10" : "pt-8"}`}
+                >
+                  <CardTitle className="font-serif text-xl text-primary">
+                    {plan.label}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col text-center pt-0 px-6 pb-8">
+                  <div className="text-4xl font-bold text-secondary mb-1">
+                    ${plan.price}<span className="text-base text-muted-foreground font-normal">/mo</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 mb-6">
+                    {plan.shortDesc}
+                  </p>
+                  <ul className="text-xs text-muted-foreground/80 flex-grow space-y-3 mb-8 text-left px-2">
+                    {plan.highlight_features?.map((f, j) => (
+                      <li key={j} className="flex items-start gap-2">
+                        <span className="text-secondary shrink-0 mt-0.5">✓</span>
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    asChild
+                    className="w-full rounded-full text-xs mt-auto"
+                    variant={plan.popular ? "default" : "outline"}
+                    size="sm"
+                  >
+                    <a href="/contact">Join {plan.label}</a>
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
-      </section>
 
-      {/* FAQ Accordion */}
-      <section className="py-24 bg-card border-y border-border">
-        <div className="container px-4 md:px-6 max-w-3xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-serif text-primary">Membership FAQs</h2>
-          </motion.div>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-left font-serif text-lg">Can I cancel anytime?</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                  Yes, all memberships are month-to-month. Cancel anytime with no penalties.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-2">
-                <AccordionTrigger className="text-left font-serif text-lg">What counts as a scan?</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                  Each scan is a voice-based AO Scan assessment. You choose which type each month.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-3">
-                <AccordionTrigger className="text-left font-serif text-lg">Can I upgrade or downgrade?</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                  Yes, you can change your plan at any time. Changes take effect at the next billing cycle.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 bg-primary text-primary-foreground text-center">
-        <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
-            <h2 className="text-3xl md:text-4xl font-serif">Not sure which plan is right for you?</h2>
-            <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto font-light">
-              Let's find the best approach for your ongoing wellness goals.
-            </p>
-            <Button asChild size="lg" variant="outline" className="rounded-full px-8 py-6 h-auto text-foreground hover:bg-primary-foreground hover:text-primary transition-colors border-primary-foreground/30" data-testid="book-discovery-call">
-              <Link href="/contact">Book a free discovery call with Kathy</Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
+        {/* Membership Details */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-16 text-center"
+        >
+          <p className="text-[11px] text-muted-foreground/60">
+            Memberships billed monthly in USD. Cancel anytime.
+          </p>
+          <p className="text-[11px] text-muted-foreground/50 mt-2 max-w-xl mx-auto leading-relaxed">
+            Membership covers scan processing and report delivery. You receive your
+            report(s) via email within the stated processing window each month.
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }

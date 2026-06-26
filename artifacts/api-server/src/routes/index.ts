@@ -10,6 +10,7 @@ import webhooksRouter from "./webhooks";
 import promoRouter from "./promo";
 import practitionersRouter from "./practitioners";
 import feedbackRouter from "./feedback";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(webhooksRouter);
 router.use(promoRouter);
 router.use(practitionersRouter);
 router.use(feedbackRouter);
+router.use(authRouter);
 
 export default router;

@@ -1,9 +1,12 @@
+import { useRef, useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { CheckCircle } from "lucide-react";
-import { INDIVIDUAL_SCANS, PACKAGE_PLANS, PET_PLANS, PRICING_DISCLAIMER } from "@/lib/pricing";
+import { INDIVIDUAL_SCANS, BUNDLE_PLANS, PET_PLANS, MEMBERSHIP_PLANS, PRICING_DISCLAIMER } from "@/lib/pricing";
+import BodyDiagram from "@/components/BodyDiagram";
+import WellnessQuiz from "@/components/WellnessQuiz";
 import heroBg from "@/assets/hero-bg.png";
 import kathyAvatar from "@/assets/kathy-owens.jpg";
 import pemfVisual from "@/assets/pemf-visual.png";
@@ -12,6 +15,8 @@ import solexChakra from "@/assets/solex-report-chakra.png";
 import solexDigestive from "@/assets/solex-report-digestive.png";
 import solexFood from "@/assets/solex-report-food.png";
 import solexEmotional from "@/assets/solex-report-emotional.png";
+import ClientWall from "@/components/ClientWall";
+import PetShowroom from "@/components/PetShowroom";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -26,7 +31,40 @@ const staggerContainer = {
   }
 };
 
+/* ── Animated scroll counter ── */
+function Counter({ target }: { target: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!isInView) return;
+    let start = 0;
+    const duration = 2000;
+    const step = 16;
+    const increment = target / (duration / step);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, step);
+    return () => clearInterval(timer);
+  }, [isInView, target]);
+
+  return (
+    <span ref={ref} className="text-4xl font-bold text-secondary font-serif tabular-nums">
+      {count.toLocaleString()}
+    </span>
+  );
+}
+
 export default function Home() {
+  const { scrollYProgress } = useScroll();
+  const pillarParallax = useTransform(scrollYProgress, [0, 1], [0, 60]);
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -35,6 +73,45 @@ export default function Home() {
           <img src={heroBg} alt="Abstract wellness atmosphere" className="object-cover w-full h-full" />
           <div className="absolute inset-0 bg-background/60 backdrop-blur-sm"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-background/95 to-background/30"></div>
+          
+          {/* ── Floating decorative orbs ── */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-[15%] left-[10%] w-96 h-96 rounded-full bg-primary/10 blur-[100px] animate-pulse-soft animate-drift-slow" />
+            <div className="absolute top-[40%] right-[5%] w-72 h-72 rounded-full bg-[#BFA14A]/8 blur-[80px] animate-pulse-soft animate-drift-medium" style={{ animationDelay: '-2s', animationDirection: 'reverse' }} />
+            <div className="absolute bottom-[20%] left-[30%] w-48 h-48 rounded-full bg-teal-400/6 blur-[60px] animate-float" style={{ animationDelay: '-4s' }} />
+            <div className="absolute top-[60%] left-[60%] w-32 h-32 rounded-full bg-[#BFA14A]/5 blur-[50px] animate-float" style={{ animationDelay: '-1.5s', animationDuration: '7s' }} />
+          </div>
+
+          {/* ── Animated frequency wave ── */}
+          <svg className="absolute bottom-0 left-0 w-full h-[200px] opacity-[0.04] pointer-events-none" viewBox="0 0 1440 200" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="freqGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#1B4D4D" />
+                <stop offset="50%" stopColor="#BFA14A" />
+                <stop offset="100%" stopColor="#1B4D4D" />
+              </linearGradient>
+            </defs>
+            <path d="M0,100 C100,30 200,170 300,100 C400,30 500,170 600,100 C700,30 800,170 900,100 C1000,30 1100,170 1200,100 C1300,30 1400,170 1440,100 L1440,200 L0,200 Z" fill="none" stroke="url(#freqGrad)" strokeWidth="2">
+              <animate attributeName="d" dur="10s" repeatCount="indefinite"
+                values="
+                  M0,100 C100,30 200,170 300,100 C400,30 500,170 600,100 C700,30 800,170 900,100 C1000,30 1100,170 1200,100 C1300,30 1400,170 1440,100 L1440,200 L0,200 Z;
+                  M0,80 C100,150 200,10 300,80 C400,150 500,10 600,80 C700,150 800,10 900,80 C1000,150 1100,10 1200,80 C1300,150 1400,10 1440,80 L1440,200 L0,200 Z;
+                  M0,120 C100,50 200,130 300,120 C400,50 500,130 600,120 C700,50 800,130 900,120 C1000,50 1100,130 1200,120 C1300,50 1400,130 1440,120 L1440,200 L0,200 Z;
+                  M0,100 C100,30 200,170 300,100 C400,30 500,170 600,100 C700,30 800,170 900,100 C1000,30 1100,170 1200,100 C1300,30 1400,170 1440,100 L1440,200 L0,200 Z
+                "
+              />
+            </path>
+            <path d="M0,120 C150,80 300,160 450,120 C600,80 750,160 900,120 C1050,80 1200,160 1350,120 L1440,110 L1440,200 L0,200 Z" fill="none" stroke="url(#freqGrad)" strokeWidth="1.5" opacity="0.5">
+              <animate attributeName="d" dur="14s" repeatCount="indefinite"
+                values="
+                  M0,120 C150,80 300,160 450,120 C600,80 750,160 900,120 C1050,80 1200,160 1350,120 L1440,110 L1440,200 L0,200 Z;
+                  M0,100 C150,140 300,60 450,100 C600,140 750,60 900,100 C1050,140 1200,60 1350,100 L1440,110 L1440,200 L0,200 Z;
+                  M0,130 C150,90 300,150 450,130 C600,90 750,150 900,130 C1050,90 1200,150 1350,130 L1440,110 L1440,200 L0,200 Z;
+                  M0,120 C150,80 300,160 450,120 C600,80 750,160 900,120 C1050,80 1200,160 1350,120 L1440,110 L1440,200 L0,200 Z
+                "
+              />
+            </path>
+          </svg>
         </div>
         <div className="container relative z-10 px-4 md:px-6">
           <motion.div 
@@ -50,7 +127,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col gap-2 pt-4">
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="rounded-full text-base px-8 py-6 h-auto shadow-md hover:shadow-lg transition-all" data-testid="hero-book-scan">
+                <Button asChild size="lg" className="rounded-full text-base px-8 py-6 h-auto shadow-md hover:shadow-lg transition-all text-shimmer hero-cta" data-testid="hero-book-scan">
                   <Link href="/contact">Start Your Personalized Scan</Link>
                 </Button>
               </div>
@@ -138,15 +215,19 @@ export default function Home() {
             <div className="hidden sm:block h-px w-12 bg-white/10" />
           </motion.div>
 
-          <p className="text-center text-[10px] text-[#F4EFE6]/20 font-sans tracking-wider mt-3">
+          <p className="text-center text-disclaimer text-xs font-sans tracking-wider mt-3">
             For wellness education only. Not a medical service.
           </p>
         </div>
       </section>
 
       {/* What We Do Overview */}
-      <section className="py-24 bg-card">
-        <div className="container px-4 md:px-6">
+      <section className="py-24 bg-card relative overflow-hidden">
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-b from-[#BFA14A]/[0.03] to-transparent pointer-events-none"
+          style={{ y: pillarParallax }}
+        />
+        <div className="container px-4 md:px-6 relative z-10">
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}
             className="text-center max-w-3xl mx-auto mb-16"
@@ -161,22 +242,55 @@ export default function Home() {
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
           >
             {[
-              { title: "AO Scan Assessments", desc: "Non-invasive, voice-based frequency wellness assessments that provide comprehensive insights into your body's energetic patterns.", link: "/ao-scan", cta: "Learn more about AO Scan", testId: "learn-ao-scan" },
-              { title: "PEMF Therapy", desc: "Pulsed Electromagnetic Field therapy supports cellular balance, natural energy, and your body's restorative rhythms.", link: "/pemf-therapy", cta: "Learn more about PEMF", testId: "learn-pemf" },
-              { title: "BioHarmony Analytics", desc: "Our proprietary reporting layer makes complex wellness data easy to understand with client-friendly interpretations.", link: "/bioharmony-analytics", cta: "Learn more about Analytics", testId: "learn-analytics" },
+              { 
+                title: "AO Scan Assessments", 
+                desc: "Non-invasive, voice-based frequency wellness assessments that provide comprehensive insights into your body's energetic patterns.",
+                back: "Your voice carries your body's frequency story. AO Scan technology captures subtle energetic patterns across 400+ data points, revealing what your body is quietly communicating.",
+                link: "/ao-scan", 
+                cta: "Learn more about AO Scan", 
+                testId: "learn-ao-scan",
+                icon: "◇"
+              },
+              { 
+                title: "PEMF Therapy", 
+                desc: "Pulsed Electromagnetic Field therapy supports cellular balance, natural energy, and your body's restorative rhythms.",
+                back: "Like charging a battery, PEMF delivers gentle electromagnetic pulses that help your cells restore their natural frequency — supporting better sleep, recovery, and overall vitality.",
+                link: "/pemf-therapy", 
+                cta: "Learn more about PEMF", 
+                testId: "learn-pemf",
+                icon: "◈"
+              },
+              { 
+                title: "BioHarmony Analytics", 
+                desc: "Our proprietary reporting layer makes complex wellness data easy to understand with client-friendly interpretations.",
+                back: "Raw frequency data means nothing without interpretation. Our AI-powered reports transform complex bioresonance readings into clear, actionable wellness insights you can actually use.",
+                link: "/bioharmony-analytics", 
+                cta: "Learn more about Analytics", 
+                testId: "learn-analytics",
+                icon: "◇"
+              },
             ].map((item, i) => (
-              <motion.div key={i} variants={fadeInUp}>
-                <Card className="card-glow h-full border border-border/50 bg-background">
-                  <CardHeader>
-                    <CardTitle className="font-serif text-2xl text-primary">{item.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
-                    <Button asChild variant="link" className="px-0 mt-4 text-secondary-foreground" data-testid={item.testId}>
+              <motion.div key={i} variants={fadeInUp} className="flip-card h-full">
+                <div className="flip-card-inner">
+                  {/* Front */}
+                  <div className="flip-card-front glass-light p-6 flex flex-col">
+                    <div className="text-3xl text-[#BFA14A]/40 mb-3">{item.icon}</div>
+                    <h3 className="font-serif text-2xl text-primary mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed flex-1">{item.desc}</p>
+                    <p className="text-[#BFA14A]/50 text-xs mt-4 italic">Hover to explore →</p>
+                  </div>
+                  {/* Back */}
+                  <div className="flip-card-back glass-gold p-6 flex flex-col justify-between">
+                    <div>
+                      <div className="text-2xl text-[#BFA14A]/50 mb-2">↻</div>
+                      <h3 className="font-serif text-2xl text-primary mb-3">{item.title}</h3>
+                      <p className="text-[#F4EFE6]/80 leading-relaxed text-sm">{item.back}</p>
+                    </div>
+                    <Button asChild variant="link" className="px-0 mt-4 text-[#BFA14A] hover:text-[#BFA14A]/80" data-testid={item.testId}>
                       <Link href={item.link}>{item.cta} &rarr;</Link>
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </motion.div>
@@ -207,6 +321,37 @@ export default function Home() {
               ))}
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Live Social Proof Counter ── */}
+      <section className="relative py-16 bg-gradient-to-r from-[#040A0A] via-[#091515] to-[#040A0A] border-y border-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(191,161,74,0.03)_0%,_transparent_60%)] pointer-events-none" />
+        <div className="container px-4 md:px-6 max-w-4xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={staggerContainer}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center"
+          >
+            {[
+              { label: "Scans Processed", value: 500, suffix: "+", icon: "⟡" },
+              { label: "Active Clients", value: 120, suffix: "+", icon: "◇" },
+              { label: "Wellness Reports", value: 350, suffix: "+", icon: "◈" },
+              { label: "Years in Practice", value: 30, suffix: "+", icon: "✦" },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                variants={fadeInUp}
+                className="flex flex-col items-center gap-2 p-4"
+              >
+                <span className="text-2xl text-[#BFA14A]/30">{stat.icon}</span>
+                <Counter target={stat.value} />
+                <span className="text-xs text-muted-foreground uppercase tracking-widest">{stat.label}</span>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
@@ -639,6 +784,40 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Pet Scan Showroom ── */}
+      <PetShowroom />
+
+      {/* ── Interactive Body Diagram ── */}
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(27,77,77,0.08)_0%,_transparent_60%)] pointer-events-none" />
+        <div className="container px-4 md:px-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
+            <p className="text-secondary text-xs uppercase tracking-[0.2em] font-sans mb-3">Explore Your Body's Frequencies</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-primary">What Can AO Scan Reveal?</h2>
+            <p className="text-muted-foreground mt-3 text-base max-w-2xl mx-auto">
+              Tap any body zone to learn how bioresonance frequency analysis provides
+              insights into that system's energetic health.
+            </p>
+          </motion.div>
+          <BodyDiagram />
+        </div>
+      </section>
+
+      {/* ── Wellness Quiz ── */}
+      <section className="py-24 bg-card border-y border-border relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(191,161,74,0.05)_0%,_transparent_60%)] pointer-events-none" />
+        <div className="container px-4 md:px-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
+            <p className="text-secondary text-xs uppercase tracking-[0.2em] font-sans mb-3">Find Your Scan</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-primary">What's Your Body Telling You?</h2>
+            <p className="text-muted-foreground mt-3 text-base max-w-xl mx-auto">
+              Answer five quick questions and we'll recommend the right AO Scan for your needs.
+            </p>
+          </motion.div>
+          <WellnessQuiz />
+        </div>
+      </section>
+
       {/* Individual AO Scans Section */}
       <section className="py-24 bg-card border-y border-border">
         <div className="container px-4 md:px-6">
@@ -691,12 +870,12 @@ export default function Home() {
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
           >
-            {PACKAGE_PLANS.map((plan) => (
+            {BUNDLE_PLANS.map((plan) => (
               <motion.div key={plan.id} variants={fadeInUp}>
                 <Card className={`h-full flex flex-col transition-all duration-300 ${plan.popular ? "border-secondary shadow-md ring-1 ring-secondary/30 relative" : "border-border/50 hover:shadow-sm"}`}>
-                  {plan.popular && (
+                  {plan.badge && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
-                      ⭐ Most Popular
+                      ⭐ {plan.badge}
                     </div>
                   )}
                   <CardHeader className="text-center pb-3">
@@ -722,6 +901,57 @@ export default function Home() {
                 </Card>
               </motion.div>
             ))}
+          </motion.div>
+
+          {/* ── Client Memberships ── */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="mt-20">
+            <div className="text-center mb-12">
+              <p className="text-secondary text-xs uppercase tracking-[0.2em] font-sans mb-3">Ongoing Wellness</p>
+              <h3 className="text-2xl md:text-3xl font-serif text-primary">BioHarmony Membership</h3>
+              <p className="text-muted-foreground mt-2 text-sm max-w-xl mx-auto">
+                Consistent insight, month after month — with member-only scan discounts.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              {MEMBERSHIP_PLANS.map((plan) => (
+                <motion.div key={plan.id} variants={fadeInUp} className="h-full">
+                  <Card className={`h-full flex flex-col border transition-all duration-300 ${
+                    plan.popular
+                      ? "border-secondary shadow-md ring-1 ring-secondary/30 relative scale-[1.03] z-10"
+                      : "border-border/50 hover:shadow-sm"
+                  }`}>
+                    {plan.badge && (
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap z-10 shadow-sm">
+                        {plan.badge}
+                      </div>
+                    )}
+                    <CardHeader className={`text-center pb-4 ${plan.popular ? "pt-10" : "pt-8"}`}>
+                      <CardTitle className="font-serif text-xl text-primary">{plan.label}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow flex flex-col text-center pt-0 px-6 pb-8">
+                      <div className="text-4xl font-bold text-secondary mb-1">
+                        ${plan.price}<span className="text-base text-muted-foreground font-normal">/mo</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 mb-6">{plan.shortDesc}</p>
+                      <ul className="text-xs text-muted-foreground/80 flex-grow space-y-3 mb-8 text-left px-2">
+                        {plan.highlight_features?.map((f, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-secondary shrink-0 mt-0.5">✓</span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Button asChild className="w-full rounded-full text-xs mt-auto" variant={plan.popular ? "default" : "outline"} size="sm" data-testid={`membership-${plan.id}`}>
+                        <Link href="/contact">Join {plan.label}</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <p className="text-[11px] text-muted-foreground/60">Memberships billed monthly in USD. Cancel anytime.</p>
+            </div>
           </motion.div>
 
           {/* Pet Scans subsection */}
@@ -969,6 +1199,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ── Client Wall of Gratitude ── */}
+      <ClientWall />
     </div>
   );
 }

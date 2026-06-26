@@ -5,21 +5,9 @@ import { eq, ilike, desc } from "drizzle-orm";
 import { z } from "zod";
 import { buildPractitionerWelcomeEmail, sendEmail } from "../services/email";
 import { getPlanPrice } from "../pricing";
+import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
-
-function checkAuth(
-  req: Parameters<Parameters<typeof router.get>[1]>[0],
-  res: Parameters<Parameters<typeof router.get>[1]>[1],
-): boolean {
-  const adminPassword = process.env["ADMIN_PASSWORD"] ?? "bioharmony2025";
-  const auth = req.headers.authorization;
-  if (!auth || auth !== `Bearer ${adminPassword}`) {
-    res.status(401).json({ error: "Unauthorized" });
-    return false;
-  }
-  return true;
-}
 
 async function computeStats(code: string, commissionRate: number) {
   const scans = await db
@@ -40,8 +28,7 @@ async function computeStats(code: string, commissionRate: number) {
 
 // ── Admin: list all practitioners with live stats ──────────────────────────────
 
-router.get("/admin/practitioners", async (req, res) => {
-  if (!checkAuth(req, res)) return;
+router.get("/admin/practitioners", requireAuth, async (req, res) => {
   try {
     const rows = await db
       .select()
@@ -82,8 +69,7 @@ const CreateSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
-router.post("/admin/practitioners", async (req, res) => {
-  if (!checkAuth(req, res)) return;
+router.post("/admin/practitioners", requireAuth, async (req, res) => {
   const parsed = CreateSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid data", details: parsed.error.issues });
@@ -132,8 +118,7 @@ const UpdateSchema = z.object({
   creditsUsed: z.number().int().min(0).max(10000).optional(),
 });
 
-router.patch("/admin/practitioners/:id", async (req, res) => {
-  if (!checkAuth(req, res)) return;
+router.patch("/admin/practitioners/:id", requireAuth, async (req, res) => {
   const id = parseInt(req.params["id"] ?? "", 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
@@ -156,8 +141,7 @@ router.patch("/admin/practitioners/:id", async (req, res) => {
 
 // ── Admin: record payout ───────────────────────────────────────────────────────
 
-router.post("/admin/practitioners/:id/payout", async (req, res) => {
-  if (!checkAuth(req, res)) return;
+router.post("/admin/practitioners/:id/payout", requireAuth, async (req, res) => {
   const id = parseInt(req.params["id"] ?? "", 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
@@ -186,8 +170,7 @@ router.post("/admin/practitioners/:id/payout", async (req, res) => {
 
 // ── Admin: delete practitioner ─────────────────────────────────────────────────
 
-router.delete("/admin/practitioners/:id", async (req, res) => {
-  if (!checkAuth(req, res)) return;
+router.delete("/admin/practitioners/:id", requireAuth, async (req, res) => {
   const id = parseInt(req.params["id"] ?? "", 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
