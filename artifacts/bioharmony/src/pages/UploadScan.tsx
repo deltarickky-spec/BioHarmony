@@ -13,7 +13,7 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LANGUAGES, useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
-import { INDIVIDUAL_SCANS, PACKAGE_PLANS, PET_PLANS, getPlanPrice } from "@/lib/pricing";
+import { INDIVIDUAL_SCANS, BUNDLE_PLANS, PET_PLANS, getPlanPrice } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -271,7 +271,7 @@ export default function UploadScan() {
   const [reportType, setReportType] = useState<string>(typeFromUrl);
   const [selectedFile, setSelectedFile] = useState<{ name: string; blob?: Blob } | null>(null);
   const initialPlan = (() => {
-    const all = [...INDIVIDUAL_SCANS, ...PACKAGE_PLANS, ...PET_PLANS];
+    const all = [...INDIVIDUAL_SCANS, ...BUNDLE_PLANS, ...PET_PLANS];
     const match = all.find((p) => p.id === planFromUrl);
     if (!match) return DEFAULT_PLAN_ID;
     // Normalize: if user arrived with type=pet_scan, force pet plan; else force non-pet plan.
@@ -283,7 +283,7 @@ export default function UploadScan() {
 
   // Keep plan and reportType consistent when reportType changes mid-flow.
   useEffect(() => {
-    const all = [...INDIVIDUAL_SCANS, ...PACKAGE_PLANS, ...PET_PLANS];
+    const all = [...INDIVIDUAL_SCANS, ...BUNDLE_PLANS, ...PET_PLANS];
     const current = all.find((p) => p.id === plan);
     if (!current) return;
     if (reportType === "pet_scan" && current.kind !== "pet") {
@@ -893,10 +893,10 @@ export default function UploadScan() {
                         ? [{ title: "Pet Scans", items: PET_PLANS }]
                         : [
                             { title: "Individual AO Scans", items: INDIVIDUAL_SCANS },
-                            { title: "Bundled Packages", items: PACKAGE_PLANS },
+                            { title: "Bundled Packages", items: BUNDLE_PLANS },
                           ];
 
-                      const renderCard = (p: typeof INDIVIDUAL_SCANS[number] | typeof PACKAGE_PLANS[number] | typeof PET_PLANS[number]) => {
+                      const renderCard = (p: typeof INDIVIDUAL_SCANS[number] | typeof BUNDLE_PLANS[number] | typeof PET_PLANS[number]) => {
                         const isSelected = plan === p.id;
                         const isStarred = ("flagship" in p && p.flagship) || ("popular" in p && p.popular);
                         return (
@@ -1093,7 +1093,7 @@ export default function UploadScan() {
                         <span className="text-[#F4EFE6]/30 text-sm">Plan</span>
                         <div className="text-right">
                           {(() => {
-                            const all = [...INDIVIDUAL_SCANS, ...PACKAGE_PLANS, ...PET_PLANS];
+                            const all = [...INDIVIDUAL_SCANS, ...BUNDLE_PLANS, ...PET_PLANS];
                             const p = all.find((x) => x.id === plan);
                             const price = getPlanPrice(plan);
                             return promoApplied ? (

@@ -5,7 +5,7 @@ import {
   Settings, DollarSign, Clock, Globe, Mail, Webhook,
   Lock, AlertTriangle, Send, CheckCircle2, XCircle, Loader2, RefreshCw,
 } from "lucide-react";
-import { INDIVIDUAL_SCANS, PACKAGE_PLANS, PET_PLANS } from "@/lib/pricing";
+import { INDIVIDUAL_SCANS, BUNDLE_PLANS, PET_PLANS } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_KEY = "bh_admin_token";
@@ -319,7 +319,7 @@ export default function AdminSettings() {
         </Section>
 
         <Section title="Packages (CAD)" icon={DollarSign}>
-          {PACKAGE_PLANS.map((p) => (
+          {BUNDLE_PLANS.map((p) => (
             <SettingRow
               key={p.id}
               label={`${p.label}${p.popular ? " ⭐" : ""}`}

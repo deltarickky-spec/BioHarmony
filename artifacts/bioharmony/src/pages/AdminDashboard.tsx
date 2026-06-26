@@ -11,7 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { PLANS, getPlanPrice, getPlanLabel, getPlanLabelWithPrice } from "@/lib/pricing";
+import { ALL_PLANS, getPlanPrice, getPlanLabel, getPlanLabelWithPrice } from "@/lib/pricing";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const ADMIN_PASSWORD_KEY = "bh_admin_token";
@@ -324,7 +324,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 // ── Revenue Summary ────────────────────────────────────────────────────────────
 
-const PLAN_PRICES: Record<string, number> = Object.fromEntries(PLANS.map((p) => [p.id, p.price]));
+const PLAN_PRICES: Record<string, number> = Object.fromEntries(ALL_PLANS.map((p) => [p.id, p.price]));
 
 const TAG_COLORS: Record<string, string> = {
   stress: "bg-rose-900/30 text-rose-300 border-rose-700/30",
@@ -335,13 +335,13 @@ const TAG_COLORS: Record<string, string> = {
   energy: "bg-[#BFA14A]/10 text-[#BFA14A] border-[#BFA14A]/25",
 };
 const ALL_TAGS = ["stress", "digestion", "sleep", "inflammation", "hormones", "energy"] as const;
-const PLAN_LABELS: Record<string, string> = Object.fromEntries(PLANS.map((p) => [p.id, p.label]));
+const PLAN_LABELS: Record<string, string> = Object.fromEntries(ALL_PLANS.map((p) => [p.id, p.label]));
 const PLAN_COLORS: Record<string, string> = {
   individual: "text-[#4ecdc4]",
   package:    "text-[#BFA14A]",
   pet:        "text-purple-300",
 };
-const PLAN_KIND: Record<string, "individual" | "package" | "pet"> = Object.fromEntries(PLANS.map((p) => [p.id, p.kind]));
+const PLAN_KIND: Record<string, "individual" | "package" | "pet"> = Object.fromEntries(ALL_PLANS.map((p) => [p.id, p.kind]));
 
 function detectPlan(req: UnifiedRequest): string | null {
   const raw = (req.plan ?? "").trim();
