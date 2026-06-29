@@ -114,7 +114,7 @@ export async function generateDOCX(data: ReportData): Promise<Blob> {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: "BioHarmony Analytics",
+                            text: "Bio-Frequency Analytics",
                             color: "F4EFE6",
                             bold: true,
                             size: 36,
@@ -160,8 +160,18 @@ export async function generateDOCX(data: ReportData): Promise<Blob> {
           }),
           new Paragraph({
             children: [new TextRun({ text: date, color: GREY, size: 18, font: "Calibri" })],
-            spacing: { before: 0, after: 320 },
+            spacing: { before: 0, after: 80 },
           }),
+          ...(data.scanNumber
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: `Assessment #${data.scanNumber}`, color: GOLD, size: 20, font: "Calibri", bold: true }),
+                  ],
+                  spacing: { before: 0, after: 240 },
+                }),
+              ]
+            : [new Paragraph({ text: "", spacing: { after: 320 } })]),
 
           sectionHeading("Overview"),
           bodyParagraph(sections.overview),
@@ -200,7 +210,7 @@ export async function generateDOCX(data: ReportData): Promise<Blob> {
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: "Founder, BioHarmony Analytics", color: TEAL, size: 18, font: "Calibri" }),
+              new TextRun({ text: "Founder, Bio-Frequency Analytics", color: TEAL, size: 18, font: "Calibri" }),
             ],
           }),
         ],

@@ -160,6 +160,7 @@ async function processHpReportPayload(payload: HpReportPayload): Promise<Process
       row.id, row.name, row.email, row.plan,
       row.whatsapp ?? false, row.reportType,
       row.promoCode, row.discountAmount,
+      row.clientId,
     );
     emailSent = true;
 

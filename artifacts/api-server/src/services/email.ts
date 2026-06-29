@@ -174,6 +174,7 @@ export interface ClientConfirmationData {
   promoCode?: string;
   discountAmount?: number;
   plan?: string;
+  requestId?: string;
 }
 
 // ── Delivered notification ─────────────────────────────────────────────────────
@@ -677,6 +678,7 @@ export function buildClientConfirmationEmail(data: ClientConfirmationData): Emai
               <tr>
                 <td>
                   ${summaryPill("Report Type", data.reportType)}
+                  ${data.requestId ? summaryPill("BioHarmony Client ID", data.requestId) : ""}
                   ${langLabel ? summaryPill("Language", langLabel) : ""}
                   ${data.fileName ? summaryPill("File", data.fileName) : ""}
                   ${data.whatsapp ? summaryPill("Delivery", "WhatsApp") : ""}
@@ -799,6 +801,7 @@ export function buildClientConfirmationEmail(data: ClientConfirmationData): Emai
     ``,
     `--- What we received ---`,
     `Report Type: ${data.reportType}`,
+    data.requestId ? `BioHarmony Client ID: ${data.requestId}` : "",
     langLabel ? `Language: ${langLabel}` : "",
     data.fileName ? `File: ${data.fileName}` : "",
     data.whatsapp ? `Delivery: WhatsApp` : "",

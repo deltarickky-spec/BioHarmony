@@ -168,7 +168,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
           sendEmail(buildPaymentReceivedEmail({
             name: payRow.name,
             email: payRow.email,
-            requestId: `BH-${id.toString().padStart(4, "0")}`,
+            requestId: payRow.clientId ?? `BH-${id.toString().padStart(4, "0")}`,
             plan: payRow.plan ?? "basic",
             reportType: payRow.reportType,
             amount,
@@ -188,7 +188,7 @@ router.patch("/admin/requests/:source/:id", async (req, res) => {
         const row = rows[0];
         if (row && !row.deliveredEmailSentAt &&
             (row.paymentStatus === "paid" || row.paymentStatus === "waived")) {
-          await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
+          await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount, row.clientId);
           if (row.practitionerCode) {
             await sendPractitionerCommissionEmail(id, row.practitionerCode, row.reportType, row.plan);
           }
@@ -242,7 +242,7 @@ router.post("/admin/requests/scan/:id/resend-payment-reminder", async (req, res)
       .set({ paymentReminderSentAt: null })
       .where(eq(scanRequestsTable.id, id));
 
-    await sendPaymentReminderEmail(id, row.name, row.email, row.whatsapp ?? false, row.promoCode, row.discountAmount, row.plan);
+    await sendPaymentReminderEmail(id, row.name, row.email, row.whatsapp ?? false, row.promoCode, row.discountAmount, row.plan, row.clientId);
 
     req.log.info({ id, email: row.email }, "Payment reminder resent by admin");
     res.json({ success: true });
@@ -290,7 +290,7 @@ router.post("/admin/requests/scan/:id/resend-delivery-email", async (req, res) =
       .set({ deliveredEmailSentAt: null })
       .where(eq(scanRequestsTable.id, id));
 
-    await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
+    await sendDeliveryEmail(id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount, row.clientId);
 
     req.log.info({ id, email: row.email }, "Delivery email resent by admin");
     res.json({ success: true });

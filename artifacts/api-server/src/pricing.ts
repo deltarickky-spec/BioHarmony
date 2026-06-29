@@ -1,5 +1,5 @@
 /**
- * BioHarmony Analytics — central pricing source of truth (backend).
+ * Bio-Frequency Analytics — central pricing source of truth (backend).
  * Mirrored at artifacts/bioharmony/src/lib/pricing.ts.
  *
  * Any price/label/feature change must be made in BOTH files.
@@ -233,7 +233,7 @@ export const MEMBERSHIP_PLANS: readonly PlanDef[] = [
   },
 ] as const;
 
-// ─── Practitioner Plans (NO scan limits) ─────────────────────────────────────
+// ─── Practitioner Plans (capped scans per month) ──────────────────────────
 
 export const PRACTITIONER_PLANS: readonly PlanDef[] = [
   {
@@ -242,14 +242,15 @@ export const PRACTITIONER_PLANS: readonly PlanDef[] = [
     price: 49,
     kind: "practitioner",
     period: "month",
-    shortDesc: "Unlimited report processing for solo practitioners.",
+    shortDesc: "10 scans/month — perfect for starting out.",
     bestFor: "Individual practitioners with their own scan device.",
     highlight_features: [
-      "Unlimited scan uploads & report processing",
+      "10 scan reports per month included",
+      "Additional scans $4.90 each (80% off retail)",
       "Access to BioHarmony interpretation engine",
       "Client-ready formatted reports",
       "Email support",
-      "Standard report delivery (2–3 business days)",
+      "30-minute report delivery",
     ],
   },
   {
@@ -260,12 +261,13 @@ export const PRACTITIONER_PLANS: readonly PlanDef[] = [
     period: "month",
     badge: "Most Popular",
     popular: true,
-    shortDesc: "Unlimited processing + white label branding.",
+    shortDesc: "25 scans/month + your brand on every report.",
     bestFor: "Growing practices who want branded client reports.",
     highlight_features: [
-      "Unlimited scan uploads & report processing",
+      "25 scan reports per month included",
+      "Additional scans $3.16 each (85% off retail)",
       "White label — your brand on every report",
-      "Faster report delivery (1–2 business days)",
+      "30-minute report delivery",
       "All scan types (Basic + Dental + TMJ)",
       "Priority email & chat support",
     ],
@@ -276,12 +278,13 @@ export const PRACTITIONER_PLANS: readonly PlanDef[] = [
     price: 149,
     kind: "practitioner",
     period: "month",
-    shortDesc: "Everything unlocked — premium, fast, with dedicated support.",
+    shortDesc: "60 scans/month — built for high volume.",
     bestFor: "High-volume practices, wellness clinics, multi-practitioner setups.",
     highlight_features: [
-      "Unlimited scan uploads & report processing",
+      "60 scan reports per month included",
+      "Additional scans $2.48 each (90% off retail)",
       "White label — your brand on every report",
-      "Express delivery (same business day)",
+      "30-minute express delivery",
       "All scan types including Dental, TMJ, Pet",
       "Multi-practitioner accounts (up to 3 users)",
       "Dedicated account manager",

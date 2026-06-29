@@ -42,8 +42,8 @@ export default function ForPractitioners() {
           <p className="text-muted-foreground text-sm leading-relaxed">
             You already run the scans. Let BioHarmony turn them into beautiful,
             professional AI-powered client reports —{" "}
-            <strong className="text-primary">with no limit on how many you process</strong>.
-            No caps, no quotas. Just unlimited interpretation.
+            <strong className="text-primary">with predictable monthly caps that fit any practice size</strong>.
+            Choose the tier that matches your volume. Need more? Add extra scans at massive discounts.
           </p>
           <p className="text-muted-foreground/60 text-xs mt-3">
             Note: You still need your own Solex AO Scan subscription to run scans.
@@ -172,11 +172,13 @@ export default function ForPractitioners() {
             </div>
             <div>
               <h3 className="font-serif text-base text-primary mb-1">
-                Is there really no limit on report processing?
+                What if I need more scans than my plan includes?
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                None. Every practitioner plan includes unlimited uploads and report processing.
-                We believe in supporting your practice, not capping it.
+                No problem. Each plan has a monthly cap, but you can add extra scans
+                at deeply discounted per-scan rates. Solo: $4.90/extra scan,
+                Growth: $3.16/extra scan, Elite: $2.48/extra scan.
+                You only pay for what you need — and you can upgrade your plan anytime.
               </p>
             </div>
             <div>
@@ -221,7 +223,7 @@ export default function ForPractitioners() {
             Ready to simplify your reporting?
           </h2>
           <p className="text-xs text-muted-foreground mb-6 max-w-md mx-auto">
-            Start with any plan. Upgrade anytime — no lock-in, no limits.
+            Start with any plan. Upgrade anytime — no lock-in, plus per-scan flex pricing.
           </p>
           <Button asChild size="lg" className="rounded-full px-8">
             <a href="/contact">Get Started</a>

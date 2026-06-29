@@ -9,7 +9,7 @@ export default function Disclaimer() {
         <div className="mb-10 p-6 rounded-2xl border border-[#BFA14A]/30 bg-[#BFA14A]/5">
           <p className="text-[#BFA14A] font-semibold text-base mb-2">Important Notice</p>
           <p className="text-[#F4EFE6]/80 text-sm leading-relaxed">
-            BioHarmony Analytics provides wellness education and frequency-based informational reports. Our services are <strong>not</strong> a substitute for professional medical care. Always consult a qualified healthcare professional for any health concerns.
+            Bio-Frequency Analytics provides wellness education and frequency-based informational reports. Our services are <strong>not</strong> a substitute for professional medical care. Always consult a qualified healthcare professional for any health concerns.
           </p>
         </div>
 
@@ -17,7 +17,7 @@ export default function Disclaimer() {
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">Educational Purposes Only</h2>
-            <p>All content, reports, audio files, scores, and recommendations provided by BioHarmony Analytics are intended exclusively for educational and wellness informational purposes. They are not intended to diagnose, treat, cure, or prevent any disease or medical condition.</p>
+            <p>All content, reports, audio files, scores, and recommendations provided by Bio-Frequency Analytics are intended exclusively for educational and wellness informational purposes. They are not intended to diagnose, treat, cure, or prevent any disease or medical condition.</p>
           </section>
 
           <section>
@@ -33,7 +33,7 @@ export default function Disclaimer() {
 
           <section>
             <h2 className="font-serif text-xl text-[#F4EFE6]/90 mb-3">Consult Your Healthcare Provider</h2>
-            <p>Before making any changes to your diet, exercise routine, supplements, or health practices based on information from BioHarmony Analytics, please consult with your physician or other qualified healthcare professional, particularly if you:</p>
+            <p>Before making any changes to your diet, exercise routine, supplements, or health practices based on information from Bio-Frequency Analytics, please consult with your physician or other qualified healthcare professional, particularly if you:</p>
             <ul className="list-disc list-inside mt-3 space-y-2">
               <li>Have a pre-existing medical condition</li>
               <li>Are pregnant or nursing</li>
@@ -70,7 +70,7 @@ export default function Disclaimer() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/8 text-xs text-[#F4EFE6]/45 leading-relaxed">
-          © {new Date().getFullYear()} BioHarmony Analytics. This disclaimer applies to all services, reports, and content provided by BioHarmony Analytics. By using our services, you acknowledge that you have read and understood this disclaimer.
+          © {new Date().getFullYear()} Bio-Frequency Analytics. This disclaimer applies to all services, reports, and content provided by Bio-Frequency Analytics. By using our services, you acknowledge that you have read and understood this disclaimer.
         </div>
       </div>
     </div>

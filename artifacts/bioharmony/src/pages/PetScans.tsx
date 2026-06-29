@@ -159,7 +159,7 @@ export default function PetScans() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
               { step: "01", title: "Submit Information", desc: "Provide your pet's name, species, and age." },
-              { step: "02", title: "Voice Sample", desc: "Provide a brief voice sample (yours, describing your pet's concerns)." },
+              { step: "02", title: "Photo Sample", desc: "Upload a clear photo of your pet for the scan analysis." },
               { step: "03", title: "Receive Insights", desc: "Receive a wellness insight report tailored to your pet." }
             ].map((item, i) => (
               <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="bg-white/5 backdrop-blur-md border border-[#BFA14A]/20 rounded-2xl p-8 shadow-[0_0_30px_rgba(191,161,74,0.05)] text-center relative overflow-hidden">

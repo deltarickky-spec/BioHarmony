@@ -31,6 +31,9 @@ import Privacy from "@/pages/Privacy";
 import Disclaimer from "@/pages/Disclaimer";
 import WellnessLibrary from "@/pages/WellnessLibrary";
 import Feedback from "@/pages/Feedback";
+import ArticleAOScan from "@/pages/articles/article-ao-scan";
+import ArticlePEMF from "@/pages/articles/article-pemf";
+import ArticleFrequencyWellness from "@/pages/articles/article-frequency-wellness";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +69,9 @@ function Router() {
           <Route path="/client-portal" component={ClientPortal} />
           <Route path="/report/:id" component={ReportDelivery} />
           <Route path="/wellness-library" component={WellnessLibrary} />
+          <Route path="/wellness-library/ao-scan" component={ArticleAOScan} />
+          <Route path="/wellness-library/pemf-therapy" component={ArticlePEMF} />
+          <Route path="/wellness-library/frequency-wellness" component={ArticleFrequencyWellness} />
           <Route path="/terms" component={Terms} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/disclaimer" component={Disclaimer} />

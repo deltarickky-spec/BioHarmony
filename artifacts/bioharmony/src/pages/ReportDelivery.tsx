@@ -234,7 +234,7 @@ function EmailGate({ reportId, onVerified }: { reportId: string; onVerified: (em
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#0C1919] border border-[#BFA14A]/30 mb-4">
             <Sparkles className="w-6 h-6 text-[#BFA14A]" />
           </div>
-          <p className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-1">BioHarmony Analytics</p>
+          <p className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-1">Bio-Frequency Analytics</p>
           <h1 className="font-serif text-2xl text-[#F4EFE6]">Your Report</h1>
         </div>
 
@@ -459,7 +459,7 @@ export default function ReportDelivery() {
       <div className="border-b border-white/8 bg-[#060D0D]/95 backdrop-blur-sm px-4 py-5 sticky top-0 z-20">
         <div className="max-w-2xl mx-auto flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs text-[#BFA14A] uppercase tracking-widest mb-1">BioHarmony Analytics</p>
+            <p className="text-xs text-[#BFA14A] uppercase tracking-widest mb-1">Bio-Frequency Analytics</p>
             <h1 className="font-serif text-xl text-[#F4EFE6] leading-tight">{data.name}</h1>
             <p className="text-[#F4EFE6]/40 text-sm mt-0.5">{reportLabel}</p>
           </div>

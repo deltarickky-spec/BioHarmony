@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import WaterfallBackground from "@/components/waterfall-background";
 import { CheckCircle } from "lucide-react";
 import { INDIVIDUAL_SCANS, BUNDLE_PLANS, PET_PLANS, MEMBERSHIP_PLANS, PRICING_DISCLAIMER } from "@/lib/pricing";
 import BodyDiagram from "@/components/BodyDiagram";
@@ -10,11 +11,7 @@ import WellnessQuiz from "@/components/WellnessQuiz";
 import heroBg from "@/assets/hero-bg.png";
 import kathyAvatar from "@/assets/kathy-owens.jpg";
 import pemfVisual from "@/assets/pemf-visual.png";
-import solexBlood from "@/assets/solex-report-blood.png";
-import solexChakra from "@/assets/solex-report-chakra.png";
-import solexDigestive from "@/assets/solex-report-digestive.png";
-import solexFood from "@/assets/solex-report-food.png";
-import solexEmotional from "@/assets/solex-report-emotional.png";
+import splitScreenAd from "@/assets/split-screen-ad.png";
 import ClientWall from "@/components/ClientWall";
 import PetShowroom from "@/components/PetShowroom";
 
@@ -70,53 +67,20 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative h-screen min-h-[700px] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src={heroBg} alt="Abstract wellness atmosphere" className="object-cover w-full h-full" />
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-background/95 to-background/30"></div>
+          <WaterfallBackground opacity={0.12} />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#060D0D]/70 via-[#060D0D]/50 to-[#060D0D]/80 z-[2]"></div>
           
           {/* ── Floating decorative orbs ── */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-[15%] left-[10%] w-96 h-96 rounded-full bg-primary/10 blur-[100px] animate-pulse-soft animate-drift-slow" />
-            <div className="absolute top-[40%] right-[5%] w-72 h-72 rounded-full bg-[#BFA14A]/8 blur-[80px] animate-pulse-soft animate-drift-medium" style={{ animationDelay: '-2s', animationDirection: 'reverse' }} />
-            <div className="absolute bottom-[20%] left-[30%] w-48 h-48 rounded-full bg-teal-400/6 blur-[60px] animate-float" style={{ animationDelay: '-4s' }} />
-            <div className="absolute top-[60%] left-[60%] w-32 h-32 rounded-full bg-[#BFA14A]/5 blur-[50px] animate-float" style={{ animationDelay: '-1.5s', animationDuration: '7s' }} />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-[2]">
+            <div className="absolute top-[15%] left-[10%] w-96 h-96 rounded-full bg-primary/15 blur-[100px] animate-pulse-soft animate-drift-slow" />
+            <div className="absolute top-[40%] right-[5%] w-72 h-72 rounded-full bg-[#BFA14A]/10 blur-[80px] animate-pulse-soft animate-drift-medium" style={{ animationDelay: '-2s', animationDirection: 'reverse' }} />
+            <div className="absolute bottom-[20%] left-[30%] w-48 h-48 rounded-full bg-teal-400/8 blur-[60px] animate-float" style={{ animationDelay: '-4s' }} />
           </div>
-
-          {/* ── Animated frequency wave ── */}
-          <svg className="absolute bottom-0 left-0 w-full h-[200px] opacity-[0.04] pointer-events-none" viewBox="0 0 1440 200" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="freqGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#1B4D4D" />
-                <stop offset="50%" stopColor="#BFA14A" />
-                <stop offset="100%" stopColor="#1B4D4D" />
-              </linearGradient>
-            </defs>
-            <path d="M0,100 C100,30 200,170 300,100 C400,30 500,170 600,100 C700,30 800,170 900,100 C1000,30 1100,170 1200,100 C1300,30 1400,170 1440,100 L1440,200 L0,200 Z" fill="none" stroke="url(#freqGrad)" strokeWidth="2">
-              <animate attributeName="d" dur="10s" repeatCount="indefinite"
-                values="
-                  M0,100 C100,30 200,170 300,100 C400,30 500,170 600,100 C700,30 800,170 900,100 C1000,30 1100,170 1200,100 C1300,30 1400,170 1440,100 L1440,200 L0,200 Z;
-                  M0,80 C100,150 200,10 300,80 C400,150 500,10 600,80 C700,150 800,10 900,80 C1000,150 1100,10 1200,80 C1300,150 1400,10 1440,80 L1440,200 L0,200 Z;
-                  M0,120 C100,50 200,130 300,120 C400,50 500,130 600,120 C700,50 800,130 900,120 C1000,50 1100,130 1200,120 C1300,50 1400,130 1440,120 L1440,200 L0,200 Z;
-                  M0,100 C100,30 200,170 300,100 C400,30 500,170 600,100 C700,30 800,170 900,100 C1000,30 1100,170 1200,100 C1300,30 1400,170 1440,100 L1440,200 L0,200 Z
-                "
-              />
-            </path>
-            <path d="M0,120 C150,80 300,160 450,120 C600,80 750,160 900,120 C1050,80 1200,160 1350,120 L1440,110 L1440,200 L0,200 Z" fill="none" stroke="url(#freqGrad)" strokeWidth="1.5" opacity="0.5">
-              <animate attributeName="d" dur="14s" repeatCount="indefinite"
-                values="
-                  M0,120 C150,80 300,160 450,120 C600,80 750,160 900,120 C1050,80 1200,160 1350,120 L1440,110 L1440,200 L0,200 Z;
-                  M0,100 C150,140 300,60 450,100 C600,140 750,60 900,100 C1050,140 1200,60 1350,100 L1440,110 L1440,200 L0,200 Z;
-                  M0,130 C150,90 300,150 450,130 C600,90 750,150 900,130 C1050,90 1200,150 1350,130 L1440,110 L1440,200 L0,200 Z;
-                  M0,120 C150,80 300,160 450,120 C600,80 750,160 900,120 C1050,80 1200,160 1350,120 L1440,110 L1440,200 L0,200 Z
-                "
-              />
-            </path>
-          </svg>
         </div>
         <div className="container relative z-10 px-4 md:px-6">
           <motion.div 
             initial="hidden" animate="visible" variants={fadeInUp}
-            className="max-w-2xl space-y-6"
+            className="max-w-2xl mx-auto text-center space-y-6"
           >
             <p className="text-muted-foreground italic font-serif text-lg">Feeling off but not getting clear answers?</p>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif text-primary leading-[1.1]">
@@ -126,12 +90,12 @@ export default function Home() {
               Discover personalized wellness insights through AO Scan voice analysis, PEMF therapy, and easy-to-understand reports that help you finally make sense of what your body is telling you.
             </p>
             <div className="flex flex-col gap-2 pt-4">
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="rounded-full text-base px-8 py-6 h-auto shadow-md hover:shadow-lg transition-all text-shimmer hero-cta" data-testid="hero-book-scan">
-                  <Link href="/contact">Start Your Personalized Scan</Link>
+                  <Link href="/upload-scan">Start Your Personalized Scan</Link>
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground italic ml-2 mt-1">Takes less than 2 minutes • Delivered in 24–48 hours</p>
+              <p className="text-sm text-muted-foreground italic ml-2 mt-1">Takes less than 2 minutes • Delivered in 30 minutes</p>
               <Link
                 href="/track-report"
                 className="inline-flex items-center gap-1.5 ml-2 mt-1 text-sm text-[#BFA14A]/60 hover:text-[#BFA14A] transition-colors duration-200 group"
@@ -146,7 +110,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.55, duration: 0.6, ease: "easeOut" }}
-              className="flex items-start gap-4 mt-6 max-w-md bg-white/[0.04] border border-white/8 rounded-2xl px-5 py-4 backdrop-blur-sm"
+              className="flex items-start gap-4 mt-6 max-w-md mx-auto bg-white/[0.04] border border-white/8 rounded-2xl px-5 py-4 backdrop-blur-sm"
             >
               <img
                 src={kathyAvatar}
@@ -234,18 +198,18 @@ export default function Home() {
           >
             <h2 className="text-3xl md:text-4xl font-serif text-primary mb-6">A New Paradigm of Wellness</h2>
             <p className="text-muted-foreground text-lg">
-              We offer three core pillars to support your body's natural state of balance. Discover deep insights and restorative support tailored to your unique energetic signature.
+              True wellness isn't about treating isolated symptoms — it's about understanding the entire conversation your body is having with itself. We offer three core pillars to support your body's natural state of balance, uncover what's beneath the surface, and guide you toward lasting vitality.
             </p>
           </motion.div>
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto max-w-5xl"
           >
             {[
               { 
                 title: "AO Scan Assessments", 
                 desc: "Non-invasive, voice-based frequency wellness assessments that provide comprehensive insights into your body's energetic patterns.",
-                back: "Your voice carries your body's frequency story. AO Scan technology captures subtle energetic patterns across 400+ data points, revealing what your body is quietly communicating.",
+                detail: "Your voice carries your body's frequency story. AO Scan technology captures subtle energetic patterns across 400+ data points, revealing what your body is quietly communicating — no needles, no radiation, just a 15-second voice sample.",
                 link: "/ao-scan", 
                 cta: "Learn more about AO Scan", 
                 testId: "learn-ao-scan",
@@ -254,39 +218,32 @@ export default function Home() {
               { 
                 title: "PEMF Therapy", 
                 desc: "Pulsed Electromagnetic Field therapy supports cellular balance, natural energy, and your body's restorative rhythms.",
-                back: "Like charging a battery, PEMF delivers gentle electromagnetic pulses that help your cells restore their natural frequency — supporting better sleep, recovery, and overall vitality.",
+                detail: "Like charging a battery, PEMF delivers gentle electromagnetic pulses that help your cells restore their natural frequency. Supporting better sleep, recovery, and overall vitality — without any discomfort.",
                 link: "/pemf-therapy", 
                 cta: "Learn more about PEMF", 
                 testId: "learn-pemf",
                 icon: "◈"
               },
               { 
-                title: "BioHarmony Analytics", 
+                title: "Bio-Frequency Analytics", 
                 desc: "Our proprietary reporting layer makes complex wellness data easy to understand with client-friendly interpretations.",
-                back: "Raw frequency data means nothing without interpretation. Our AI-powered reports transform complex bioresonance readings into clear, actionable wellness insights you can actually use.",
+                detail: "Raw frequency data means nothing without interpretation. Our AI-powered reports transform 850+ bioresonance readings into clear, actionable wellness insights you can actually understand and use.",
                 link: "/bioharmony-analytics", 
                 cta: "Learn more about Analytics", 
                 testId: "learn-analytics",
                 icon: "◇"
               },
             ].map((item, i) => (
-              <motion.div key={i} variants={fadeInUp} className="flip-card h-full">
-                <div className="flip-card-inner">
-                  {/* Front */}
-                  <div className="flip-card-front glass-light p-6 flex flex-col">
-                    <div className="text-3xl text-[#BFA14A]/40 mb-3">{item.icon}</div>
-                    <h3 className="font-serif text-2xl text-primary mb-3">{item.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed flex-1">{item.desc}</p>
-                    <p className="text-[#BFA14A]/50 text-xs mt-4 italic">Hover to explore →</p>
+              <motion.div key={i} variants={fadeInUp} className="h-full">
+                <div className="h-full p-6 md:p-8 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md hover:border-[#BFA14A]/25 transition-all duration-300 flex flex-col">
+                  <div className="text-3xl text-[#BFA14A]/40 mb-3">{item.icon}</div>
+                  <h3 className="font-serif text-2xl text-primary mb-3">{item.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+                  <div className="mt-4 pt-4 border-t border-border/40">
+                    <p className="text-sm text-muted-foreground/80 leading-relaxed italic">{item.detail}</p>
                   </div>
-                  {/* Back */}
-                  <div className="flip-card-back glass-gold p-6 flex flex-col justify-between">
-                    <div>
-                      <div className="text-2xl text-[#BFA14A]/50 mb-2">↻</div>
-                      <h3 className="font-serif text-2xl text-primary mb-3">{item.title}</h3>
-                      <p className="text-[#F4EFE6]/80 leading-relaxed text-sm">{item.back}</p>
-                    </div>
-                    <Button asChild variant="link" className="px-0 mt-4 text-[#BFA14A] hover:text-[#BFA14A]/80" data-testid={item.testId}>
+                  <div className="mt-auto pt-6">
+                    <Button asChild className="rounded-full w-full" data-testid={item.testId}>
                       <Link href={item.link}>{item.cta} &rarr;</Link>
                     </Button>
                   </div>
@@ -333,13 +290,11 @@ export default function Home() {
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
             variants={staggerContainer}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center"
+            className="grid grid-cols-2 gap-6 text-center max-w-sm mx-auto"
           >
             {[
-              { label: "Scans Processed", value: 500, suffix: "+", icon: "⟡" },
-              { label: "Active Clients", value: 120, suffix: "+", icon: "◇" },
-              { label: "Wellness Reports", value: 350, suffix: "+", icon: "◈" },
               { label: "Years in Practice", value: 30, suffix: "+", icon: "✦" },
+              { label: "Scans Completed", value: 500, suffix: "+", icon: "⟡" },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -348,7 +303,9 @@ export default function Home() {
               >
                 <span className="text-2xl text-[#BFA14A]/30">{stat.icon}</span>
                 <Counter target={stat.value} />
-                <span className="text-xs text-muted-foreground uppercase tracking-widest">{stat.label}</span>
+                <span className="text-xs text-muted-foreground uppercase tracking-widest">
+                  {stat.label} {stat.suffix || ""}
+                </span>
               </motion.div>
             ))}
           </motion.div>
@@ -363,8 +320,8 @@ export default function Home() {
             className="bg-white/5 backdrop-blur-xl border border-[#BFA14A]/20 rounded-3xl p-8 md:p-12 shadow-[0_0_60px_rgba(15,92,94,0.2)] text-center space-y-8"
           >
             <div className="space-y-4">
-              <p className="text-[#BFA14A] text-sm font-bold tracking-widest uppercase">For AO Scan Practitioners</p>
-              <h2 className="text-4xl md:text-5xl font-serif text-[#F4EFE6]">Already Own an AO Scanner?</h2>
+              <p className="text-[#BFA14A] text-sm font-bold tracking-widest uppercase">For Solex AO Scan Practitioners</p>
+              <h2 className="text-4xl md:text-5xl font-serif text-[#F4EFE6]">Already Use the Solex AO Scan System?</h2>
               <p className="text-[#F4EFE6]/70 text-lg md:text-xl font-light">We turn your confusing reports into client-ready insights</p>
             </div>
             
@@ -411,174 +368,245 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BEFORE / AFTER COMPARISON */}
-      <section className="bg-gradient-to-b from-[#0A1818] to-[#060D0D] py-24">
-        <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16 max-w-3xl mx-auto space-y-5">
-            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">The BioHarmony Difference</p>
-            <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6] leading-tight">
-              Most People Don't Need More Data.<br className="hidden md:block" /> They Need Someone to Make Sense of It.
-            </h2>
-            <p className="text-[#F4EFE6]/55 text-lg leading-relaxed">
-              AO Scan reports can be incredibly powerful, but without interpretation they often leave people feeling confused instead of supported. BioHarmony translates raw scan data into clear, client-friendly insight.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 max-w-6xl mx-auto">
-            {/* Left Panel — BEFORE */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
-              className="space-y-3"
-            >
-              <div className="flex items-center gap-2 px-1">
-                <div className="w-2 h-2 rounded-full bg-red-400/60"></div>
-                <span className="text-red-400/70 text-xs font-bold tracking-[0.15em] uppercase">Before: Raw AO Scan Data</span>
-              </div>
-              <div className="bg-white/4 border border-white/8 rounded-2xl overflow-hidden flex flex-col h-full">
-                {/* Label bar */}
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-white/8 bg-black/20">
-                  <div className="text-[#F4EFE6]/35 text-xs font-medium">Example Raw AO Scan Report</div>
-                  <div className="ml-auto text-[10px] text-red-400/50 border border-red-400/20 rounded px-1.5 py-0.5 uppercase tracking-wide">Uninterpreted</div>
-                </div>
-
-                {/* Real report screenshot collage — slightly dimmed */}
-                <div className="relative flex-grow">
-                  {/* Main large image — blood/vitals report */}
-                  <div className="relative overflow-hidden" style={{ height: "340px" }}>
-                    <img
-                      src={solexBlood}
-                      alt="Raw Solex AO Scan blood report"
-                      className="w-full h-full object-cover object-top opacity-95 scale-105"
-                      style={{ filter: "saturate(1.0) brightness(1.0)" }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A1818]/50"></div>
-                  </div>
-
-                  {/* Mini report thumbnails — 3 across */}
-                  <div className="grid grid-cols-3 gap-0 border-t border-white/8">
-                    {[
-                      { src: solexFood, alt: "Food sensitivity grid" },
-                      { src: solexDigestive, alt: "Digestive findings" },
-                      { src: solexEmotional, alt: "Emotional vitals page" },
-                    ].map((img, i) => (
-                      <div key={i} className="relative overflow-hidden" style={{ height: "120px" }}>
-                        <img
-                          src={img.src}
-                          alt={img.alt}
-                          className="w-full h-full object-cover object-top opacity-90"
-                          style={{ filter: "saturate(0.95) brightness(1.0)" }}
-                        />
-                        {i < 2 && <div className="absolute right-0 top-0 bottom-0 w-px bg-white/8"></div>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="px-5 py-4 border-t border-white/8 space-y-3">
-                  <p className="text-[#F4EFE6]/35 italic text-xs text-center">
-                    "Hundreds of readings. Technical language. Color codes. Charts. No clear explanation of what it means or where to begin."
-                  </p>
-                  <ul className="grid grid-cols-2 gap-1.5">
-                    {["Difficult to understand", "Hard to explain to clients", "Too much raw data", "No clear priority or story"].map((b, i) => (
-                      <li key={i} className="flex items-center gap-1.5 text-[11px] text-[#F4EFE6]/30">
-                        <div className="w-1 h-1 rounded-full bg-red-400/40 shrink-0"></div>{b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right Panel — AFTER */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
-              className="space-y-3"
-            >
-              <div className="flex items-center gap-2 px-1">
-                <div className="w-2 h-2 rounded-full bg-[#BFA14A]"></div>
-                <span className="text-[#BFA14A] text-xs font-bold tracking-[0.15em] uppercase">After: BioHarmony Interpretation</span>
-              </div>
-              <div className="bg-[#0F5C5E]/15 border border-[#BFA14A]/35 rounded-2xl p-6 md:p-8 flex flex-col h-full shadow-[0_0_50px_rgba(191,161,74,0.12)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#BFA14A]/5 blur-[60px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#0F5C5E]/20 blur-[50px] rounded-full pointer-events-none"></div>
-                {/* Mock report header */}
-                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#BFA14A]/15 z-10">
-                  <div className="font-serif text-[#BFA14A] text-base">Wellness Insight Report</div>
-                  <div className="ml-auto text-[10px] text-[#BFA14A]/60 border border-[#BFA14A]/20 rounded px-1.5 py-0.5">CLIENT-READY</div>
-                </div>
-                <div className="space-y-5 flex-grow z-10">
-                  {/* Insight rows */}
-                  <div className="space-y-3">
-                    {[
-                      { label: "Emotional Stress Patterns", status: "Elevated", color: "text-amber-400/80" },
-                      { label: "Digestive System Balance", status: "Needs Attention", color: "text-orange-400/70" },
-                      { label: "Energy & Vitality", status: "Within Range", color: "text-emerald-400/70" },
-                      { label: "Hormonal Frequency Patterns", status: "Mild Imbalance", color: "text-amber-400/70" },
-                    ].map((row, i) => (
-                      <div key={i} className="flex items-center justify-between bg-white/4 rounded-xl px-4 py-3 border border-white/6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#BFA14A] shrink-0"></div>
-                          <span className="text-[#F4EFE6]/85 text-sm">{row.label}</span>
-                        </div>
-                        <span className={`text-xs font-medium ${row.color}`}>{row.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-2 border-t border-[#BFA14A]/15">
-                    <p className="text-[#F4EFE6]/50 text-xs mb-3 uppercase tracking-wider">Wellness Focus Areas</p>
-                    <div className="flex flex-wrap gap-2">
-                      {["Stress Support", "Digestive Balance", "Hormonal Harmony", "Emotional Clarity"].map((tag, i) => (
-                        <span key={i} className="bg-[#BFA14A]/12 text-[#BFA14A] border border-[#BFA14A]/25 rounded-full px-3 py-1 text-xs">{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="bg-white/4 rounded-xl p-4 border border-white/6">
-                    <p className="text-[#F4EFE6]/55 text-xs leading-relaxed italic">
-                      "Your scan shows some elevated stress patterns that may be contributing to the digestive sensitivity you've noticed. This is a very common combination — your body is communicating clearly. Here's where we'd suggest focusing first…"
-                    </p>
-                  </div>
-                </div>
-                <p className="text-[#BFA14A]/60 italic text-xs mt-5 text-center pt-4 border-t border-[#BFA14A]/10 z-10">
-                  "BioHarmony turns the same scan data into a clear, warm, story-style report your client can actually understand."
-                </p>
-                <ul className="mt-4 space-y-1.5 z-10">
-                  {["Clear plain-English explanation", "Connected body-system patterns", "Emotional and energetic insight", "Gentle wellness focus areas", "Client-ready PDF format"].map((b, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs text-[#F4EFE6]/55">
-                      <div className="w-1 h-1 rounded-full bg-[#BFA14A] shrink-0"></div>{b}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Center transformation line + CTA */}
+      {/* ── BEFORE & AFTER — Raw Data → Clear Insight ── */}
+      <section className="bg-[#F8F4ED] py-24">
+        <div className="container px-4 md:px-6 mx-auto">
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
-            className="text-center mt-14 space-y-6"
+            className="text-center mb-12"
           >
-            <p className="text-[#F4EFE6]/35 text-sm tracking-widest font-mono">
-              Raw data &nbsp;→&nbsp; Connected insight &nbsp;→&nbsp; Client-ready report
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-full bg-[#0F5C5E] text-[#F4EFE6] border border-[#BFA14A]/25 px-8 py-6 h-auto shadow-[0_0_20px_rgba(191,161,74,0.3)] hover:shadow-[0_0_35px_rgba(191,161,74,0.55)] transition-all duration-300"
-                data-testid="before-after-upload-cta"
-              >
-                <Link href="/upload-scan">Upload Your Scan for Interpretation</Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full border-[#BFA14A]/30 text-[#F4EFE6]/75 px-8 py-6 h-auto hover:border-[#BFA14A]/60 hover:text-[#BFA14A] bg-transparent transition-all duration-300"
-                data-testid="before-after-sample-report-cta"
-              >
-                <Link href="/sample-report">View Sample Report</Link>
-              </Button>
+            <p className="text-[#BFA14A]/80 text-xs uppercase tracking-[0.2em] font-sans mb-2">The BioHarmony Difference</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-[#1A1A1A] leading-tight">Before & After</h2>
+          </motion.div>
+
+          {/* Two-column comparison */}
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mb-16"
+          >
+            {/* ── BEFORE — Actual Solex AO Scan Report ── */}
+            <motion.div variants={fadeInUp} className="bg-white rounded-2xl shadow-sm border border-[#E5DDD0] overflow-hidden">
+              {/* Report Header — no logo */}
+              <div className="bg-[#F0EDE6] px-5 py-3 border-b border-[#E5DDD0]">
+                <div className="flex justify-between text-xs text-[#6B6356]">
+                  <span>Name: Sample Client</span>
+                  <span>Date: 2026-06-27</span>
+                  <span>DOB: 1986-04-12</span>
+                </div>
+              </div>
+
+              {/* Risk Bar */}
+              <div className="flex h-5 text-[9px] font-medium text-white">
+                <div className="flex-1 flex justify-center items-center bg-gradient-to-r from-blue-400 via-green-400 to-yellow-400">Dyslipidemia Function Risk</div>
+                <div className="flex-1 flex justify-center items-center bg-gradient-to-r from-blue-400 via-green-400 to-yellow-400">Optimal and Balanced</div>
+                <div className="flex-1 flex justify-center items-center bg-gradient-to-r from-yellow-400 to-orange-400">Increased Information Risk</div>
+                <div className="w-16 flex justify-center items-center bg-red-500">Critical</div>
+              </div>
+
+              {/* Report Data — sectioned */}
+              <div className="p-4 space-y-4 text-xs max-h-[420px] overflow-y-auto">
+                {/* Blood Section */}
+                <div>
+                  <div className="bg-[#3B82F6] text-white font-semibold px-3 py-1.5 rounded-t text-xs tracking-wide">Blood</div>
+                  <div className="border-x border-b border-[#E5DDD0] rounded-b">
+                    {[
+                      { name: "Blood Type", icon: "●", color: "text-green-600" },
+                      { name: "Rh Factor", icon: "●", color: "text-green-600" },
+                      { name: "Iron", icon: "●", color: "text-yellow-500" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-[#F7F5F0] border-b border-[#E5DDD0]/60 last:border-b-0">
+                        <span className="text-[#1A1A1A]">{r.name}</span>
+                        <span className={`${r.color} text-lg`}>{r.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Blood Lipids Section */}
+                <div>
+                  <div className="bg-[#3B82F6] text-white font-semibold px-3 py-1.5 rounded-t text-xs tracking-wide">Blood Lipids</div>
+                  <div className="border-x border-b border-[#E5DDD0] rounded-b">
+                    {[
+                      { name: "HDL-C", icon: "●", color: "text-green-600" },
+                      { name: "LDL-C Direct", icon: "✕", color: "text-red-500" },
+                      { name: "Neutral Fat (MB)", icon: "●", color: "text-yellow-500" },
+                      { name: "Non-HDL-C", icon: "●", color: "text-yellow-500" },
+                      { name: "Total Cholesterol", icon: "●", color: "text-green-600" },
+                      { name: "Triglycerides", icon: "●", color: "text-green-600" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-[#F7F5F0] border-b border-[#E5DDD0]/60 last:border-b-0">
+                        <span className="text-[#1A1A1A]">{r.name}</span>
+                        <span className={`${r.color} text-sm`}>{r.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Blood Lipids 2 Section */}
+                <div>
+                  <div className="bg-[#3B82F6] text-white font-semibold px-3 py-1.5 rounded-t text-xs tracking-wide">Blood Lipids 2</div>
+                  <div className="border-x border-b border-[#E5DDD0] rounded-b">
+                    {[
+                      { name: "Apo-A-I", icon: "●", color: "text-green-600" },
+                      { name: "Apo-B", icon: "✕", color: "text-red-500" },
+                      { name: "Lipoprotein (a)", icon: "●", color: "text-yellow-500" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-[#F7F5F0] border-b border-[#E5DDD0]/60 last:border-b-0">
+                        <span className="text-[#1A1A1A]">{r.name}</span>
+                        <span className={`${r.color} text-sm`}>{r.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CBC Section */}
+                <div>
+                  <div className="bg-[#3B82F6] text-white font-semibold px-3 py-1.5 rounded-t text-xs tracking-wide">CBC</div>
+                  <div className="border-x border-b border-[#E5DDD0] rounded-b">
+                    {[
+                      { name: "Neutrophils", icon: "●", color: "text-green-600" },
+                      { name: "Platelets", icon: "●", color: "text-green-600" },
+                      { name: "Monocytes", icon: "●", color: "text-green-600" },
+                      { name: "HCY", icon: "✕", color: "text-red-500" },
+                      { name: "Lymphocytes", icon: "●", color: "text-green-600" },
+                      { name: "Hemoglobin", icon: "●", color: "text-green-600" },
+                      { name: "Hematocrit", icon: "●", color: "text-green-600" },
+                      { name: "MCH", icon: "●", color: "text-green-600" },
+                      { name: "MCHC", icon: "●", color: "text-yellow-500" },
+                      { name: "RBC", icon: "●", color: "text-green-600" },
+                      { name: "White Blood Cells", icon: "●", color: "text-green-600" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-1.5 hover:bg-[#F7F5F0] border-b border-[#E5DDD0]/60 last:border-b-0">
+                        <span className="text-[#1A1A1A]">{r.name}</span>
+                        <span className={`${r.color} text-sm`}>{r.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fatty Acids, Omega-3 Section */}
+                <div>
+                  <div className="bg-[#3B82F6] text-white font-semibold px-3 py-1.5 rounded-t text-xs tracking-wide">Fatty Acids, Omega-3</div>
+                  <div className="border-x border-b border-[#E5DDD0] rounded-b">
+                    {[
+                      { name: "EPA", icon: "✕", color: "text-red-500" },
+                      { name: "DHA", icon: "●", color: "text-yellow-500" },
+                      { name: "ALA", icon: "●", color: "text-green-600" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-[#F7F5F0] border-b border-[#E5DDD0]/60 last:border-b-0">
+                        <span className="text-[#1A1A1A]">{r.name}</span>
+                        <span className={`${r.color} text-sm`}>{r.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fatty Acids, Omega-6 Section */}
+                <div>
+                  <div className="bg-[#3B82F6] text-white font-semibold px-3 py-1.5 rounded-t text-xs tracking-wide">Fatty Acids, Omega-6</div>
+                  <div className="border-x border-b border-[#E5DDD0] rounded-b">
+                    {[
+                      { name: "LA", icon: "●", color: "text-green-600" },
+                      { name: "GLA", icon: "●", color: "text-yellow-500" },
+                      { name: "AA", icon: "●", color: "text-green-600" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-[#F7F5F0] border-b border-[#E5DDD0]/60 last:border-b-0">
+                        <span className="text-[#1A1A1A]">{r.name}</span>
+                        <span className={`${r.color} text-sm`}>{r.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Blood Other Section */}
+                <div>
+                  <div className="bg-[#3B82F6] text-white font-semibold px-3 py-1.5 rounded-t text-xs tracking-wide">Blood Other</div>
+                  <div className="border-x border-b border-[#E5DDD0] rounded-b">
+                    {[
+                      { name: "Fibrinogen", icon: "●", color: "text-yellow-500" },
+                      { name: "CRP", icon: "✕", color: "text-red-500" },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-[#F7F5F0] border-b border-[#E5DDD0]/60 last:border-b-0">
+                        <span className="text-[#1A1A1A]">{r.name}</span>
+                        <span className={`${r.color} text-sm`}>{r.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-[9px] text-[#6B6356]/50 px-4 pb-3 text-center italic border-t border-[#E5DDD0]/60 pt-3">Solex AO Scan raw report — isolated data points, no connections drawn</p>
+            </motion.div>
+
+            {/* ── AFTER ── */}
+            <motion.div variants={fadeInUp} className="bg-[#2E5E41] rounded-2xl p-6 md:p-8 shadow-md text-white">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-xl">Connecting the Dots</h3>
+                <span className="text-xs px-3 py-1.5 rounded-full bg-white/15 text-white font-medium border border-white/20">AFTER</span>
+              </div>
+              <p className="text-sm text-white/70 mb-5">What it means in your gold-standard report</p>
+
+              <div className="space-y-3">
+                {[
+                  {
+                    title: "Microbiome → Digestive → Neuro",
+                    text: "Gut microbiome diversity connects to neurotransmitter production, influencing mood, focus, and digestive comfort.",
+                  },
+                  {
+                    title: "TMJ → Vagus Nerve → Nervous System Regulation",
+                    text: "TMJ tension directly impacts vagal tone. Addressing jaw stress supports parasympathetic activation and stress resilience.",
+                  },
+                  {
+                    title: "Blood Sugar → Hormone → Cellular Energy",
+                    text: "Stable blood glucose supports balanced hormones. When cellular energy dips, cortisol rises — creating a cycle of fatigue.",
+                  },
+                  {
+                    title: "Melatonin → Sleep → Cellular Repair",
+                    text: "Melatonin isn't just for sleep — it's a master antioxidant. Low levels impair overnight cellular repair and regeneration.",
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/15 transition-colors border border-white/8">
+                    <h4 className="font-semibold text-sm mb-1">{item.title}</h4>
+                    <p className="text-xs text-white/75 leading-relaxed">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Value Proposition */}
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+            className="text-center max-w-3xl mx-auto mb-10"
+          >
+            <h3 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-6">From Raw Data to Meaningful Wellness Insight</h3>
+            <div className="space-y-4 text-left max-w-xl mx-auto">
+              {[
+                "850+ frequency readings synthesized into clear themes",
+                "Systems-level connections your standard scan misses",
+                "Actionable 30-day plan with PEMF + supplement protocols",
+                "Personalised coaching pathway included",
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="text-[#BFA14A] font-serif text-lg leading-none mt-0.5">§</span>
+                  <span className="text-[#1A1A1A]/80">{item}</span>
+                </div>
+              ))}
             </div>
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+            className="text-center"
+          >
+            <Button
+              asChild
+              className="rounded-full bg-[#D4B99A] hover:bg-[#C4A98A] text-white px-10 py-6 h-auto text-base shadow-md hover:shadow-lg transition-all duration-300"
+              data-testid="home-beforeafter-cta"
+            >
+              <Link href="/upload-scan">Book Your Scan</Link>
+            </Button>
+            <p className="text-xs text-[#6B6356]/50 mt-3">BioHarmony Solutions</p>
           </motion.div>
         </div>
       </section>
@@ -588,7 +616,7 @@ export default function Home() {
         <div className="container px-4 md:px-6 max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
-              <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">For AO Scan Practitioners</p>
+              <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">For Solex AO Scan Practitioners</p>
               <h2 className="text-3xl md:text-4xl font-serif text-[#F4EFE6] leading-tight">
                 Stop Sending Confusing Reports to Your Clients
               </h2>
@@ -671,7 +699,7 @@ export default function Home() {
               </ul>
               <div className="pt-6">
                 <Button asChild className="rounded-full" data-testid="section-book-ao">
-                  <Link href="/contact">Schedule an AO Scan</Link>
+                  <Link href="/upload-scan">Schedule an AO Scan</Link>
                 </Button>
               </div>
             </motion.div>
@@ -710,7 +738,7 @@ export default function Home() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-8">
             <h2 className="text-3xl md:text-5xl font-serif text-primary">Clarity Over Confusion</h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              BioAnalytics is our proprietary reporting layer — by BioHarmony Analytics — that translates complex scan data into clear, actionable insights you can actually use.
+              BioAnalytics is our proprietary reporting layer — by Bio-Frequency Analytics — that translates complex scan data into clear, actionable insights you can actually use.
             </p>
             <div className="bg-background rounded-2xl p-8 md:p-12 shadow-sm border border-border mt-12">
               <h3 className="text-2xl font-serif text-foreground mb-4">No confusing charts — just clear, actionable wellness insights.</h3>
@@ -724,6 +752,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ── Before & After — Raw Data → Clear Insight ── */}
+      {/* Replaced by inline ad graphic above */}
 
       {/* How It Works */}
       <section className="py-24 bg-[#040A0A] border-t border-white/6">
@@ -758,7 +789,7 @@ export default function Home() {
                 num: "3",
                 icon: "✦",
                 title: "Your Report Arrives",
-                desc: "Receive a personalized, client-ready report delivered in 24–48 hours.",
+                desc: "Receive a personalized, client-ready report delivered within 30 minutes.",
               },
             ].map((step, i) => (
               <motion.div
@@ -942,7 +973,7 @@ export default function Home() {
                         ))}
                       </ul>
                       <Button asChild className="w-full rounded-full text-xs mt-auto" variant={plan.popular ? "default" : "outline"} size="sm" data-testid={`membership-${plan.id}`}>
-                        <Link href="/contact">Join {plan.label}</Link>
+                        <Link href="/membership">Join {plan.label}</Link>
                       </Button>
                     </CardContent>
                   </Card>
@@ -982,39 +1013,6 @@ export default function Home() {
           <p className="text-center text-xs text-muted-foreground/70 italic mt-12 max-w-3xl mx-auto leading-relaxed">
             {PRICING_DISCLAIMER}
           </p>
-        </div>
-      </section>
-
-      {/* Services */}
-      <section className="py-24 bg-background">
-        <div className="container px-4 md:px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif text-primary">Other Assessments & Services</h2>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: "Inner Voice Scan", desc: "Emotional wellness scan using voice frequency analysis." },
-              { title: "Vitals Scan", desc: "Core wellness indicators for a snapshot of your energetic wellbeing." },
-              { title: "Comprehensive Scan", desc: "Full-spectrum energetic assessment across body systems." },
-              { title: "Pet Scan", desc: "Frequency-based wellness support tailored for your animals." },
-              { title: "Practitioner Review", desc: "Expert interpretation session with Kathy to walk through your results." }
-            ].map((service, i) => (
-              <Card key={i} className="border-border/50 bg-card shadow-sm hover:shadow-md transition-all duration-300 group">
-                <CardHeader>
-                  <CardTitle className="font-serif text-xl group-hover:text-primary transition-colors">{service.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{service.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
-            <Card className="border-secondary/30 bg-secondary/5 shadow-sm flex items-center justify-center p-6">
-              <Button asChild variant="ghost" className="text-secondary-foreground hover:bg-secondary/10 hover:text-secondary-foreground text-lg h-auto py-4">
-                <Link href="/contact">Book a Service &rarr;</Link>
-              </Button>
-            </Card>
-          </div>
         </div>
       </section>
 
@@ -1108,9 +1106,9 @@ export default function Home() {
                     <div className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">{article.tag}</div>
                     <h3 className="font-serif text-lg text-primary mb-3">{article.title}</h3>
                     <p className="text-sm text-muted-foreground flex-grow mb-6">{article.excerpt}</p>
-                    <a href="#" className="text-sm font-medium text-primary hover:text-secondary transition-colors mt-auto inline-flex items-center">
+                    <Link href="/wellness-library" className="text-sm font-medium text-primary hover:text-secondary transition-colors mt-auto inline-flex items-center">
                       Read more &rarr;
-                    </a>
+                    </Link>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -1125,8 +1123,8 @@ export default function Home() {
         <div className="container relative z-10 px-4 md:px-6">
           <div className="max-w-4xl mx-auto text-center space-y-6">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="space-y-6">
-              <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">For AO Scan Practitioners</p>
-              <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">Are You an AO Scan Practitioner?</h2>
+              <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans">For Solex AO Scan Practitioners</p>
+              <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6]">Do You Use the Solex AO Scan System?</h2>
               <p className="text-lg text-[#F4EFE6]/65 leading-relaxed font-light">
                 BioHarmony helps Solex users turn scan data into client-ready reports.
               </p>
@@ -1194,7 +1192,7 @@ export default function Home() {
               Discover the profound insights waiting within your own frequency.
             </p>
             <Button asChild size="lg" className="rounded-full bg-background text-foreground hover:bg-background/90 text-lg px-10 py-6 h-auto mt-4 shadow-xl" data-testid="bottom-cta-book">
-              <Link href="/contact">Start Your Scan Now</Link>
+              <Link href="/upload-scan">Start Your Scan Now</Link>
             </Button>
           </motion.div>
         </div>

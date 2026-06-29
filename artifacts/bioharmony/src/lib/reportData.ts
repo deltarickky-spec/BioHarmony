@@ -16,6 +16,7 @@ export interface ReportData {
   scanType: string;
   date: string;
   reportType: string;
+  scanNumber?: number;
   sections: ReportSections;
 }
 
@@ -25,6 +26,7 @@ export const REPORT_DATA: Record<"jane" | "maria" | "bella", ReportData> = {
     scanType: "Inner Voice + Basic Vitals",
     date: "January 15, 2025",
     reportType: "Basic Report",
+    scanNumber: 12,
     sections: {
       overview:
         "Jane, as I went through your scan, a few clear patterns began to stand out. What your body is showing isn't random — it's actually communicating a very connected story between your digestion, stress response, and energy levels. This is something I see quite often, and the good news is that once we understand the pattern, we can begin supporting it in a much more targeted and gentle way.",
@@ -48,6 +50,7 @@ export const REPORT_DATA: Record<"jane" | "maria" | "bella", ReportData> = {
     scanType: "Comprehensive AO Scan",
     date: "February 3, 2025",
     reportType: "Advanced Case",
+    scanNumber: 8,
     sections: {
       overview:
         "Hi Maria, as I reviewed your scan, your body revealed a deeper pattern that has likely been building over time. This isn't just one isolated area — it's a layered response, where your system has been adapting to ongoing stress, inflammation, and internal imbalance. What stood out most is that your body is not overwhelmed — it's actually working very hard to keep things functioning, but it's now asking for more consistent support.",
@@ -71,6 +74,7 @@ export const REPORT_DATA: Record<"jane" | "maria" | "bella", ReportData> = {
     scanType: "AO Scan — Canine Wellness",
     date: "February 20, 2025",
     reportType: "Pet Report",
+    scanNumber: 3,
     sections: {
       overview:
         "As I reviewed Bella's scan, she presents as a loving, sensitive dog who is very tuned into her environment and the people around her. What stood out most is that her system is overall stable — but there are a few areas where her body is working a little harder than it should. Here's what I found, and what I'd suggest to keep her balanced, happy, and thriving.",

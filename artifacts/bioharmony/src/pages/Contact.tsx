@@ -58,7 +58,7 @@ export default function Contact() {
                 <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans mb-4">Get in Touch</p>
                 <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6] mb-4">Book a Session or Ask a Question</h1>
                 <p className="text-lg text-[#F4EFE6]/60 leading-relaxed">
-                  We look forward to welcoming you to BioHarmony Analytics. Fill out the form and we will confirm your appointment or answer your inquiry.
+                  We look forward to welcoming you to Bio-Frequency Analytics. Fill out the form and we will confirm your appointment or answer your inquiry.
                 </p>
               </div>
 
@@ -161,7 +161,7 @@ export default function Contact() {
                             <SelectContent>
                               <SelectItem value="ao-scan">AO Scan</SelectItem>
                               <SelectItem value="pemf">PEMF Therapy</SelectItem>
-                              <SelectItem value="analytics">BioHarmony Analytics</SelectItem>
+                              <SelectItem value="analytics">Bio-Frequency Analytics</SelectItem>
                               <SelectItem value="upload">Upload Scan Interpretation</SelectItem>
                               <SelectItem value="practitioner">Practitioner Plan</SelectItem>
                               <SelectItem value="membership">Membership</SelectItem>

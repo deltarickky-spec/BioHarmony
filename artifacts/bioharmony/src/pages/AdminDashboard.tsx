@@ -1975,7 +1975,7 @@ function AuthGate({ onAuth }: { onAuth: (token: string) => void }) {
     <div className="min-h-screen bg-[#060D0D] flex items-center justify-center">
       <div className="w-full max-w-sm mx-4">
         <div className="text-center mb-8">
-          <div className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-2">BioHarmony Analytics</div>
+          <div className="text-[#BFA14A] text-xs tracking-[0.3em] uppercase mb-2">Bio-Frequency Analytics</div>
           <h1 className="text-2xl font-light text-[#F4EFE6]">Admin Dashboard</h1>
         </div>
         <form onSubmit={submit} className="bg-[#0C1919] border border-white/10 rounded-2xl p-8 space-y-5">

@@ -14,7 +14,7 @@ const CATEGORIES = [
 const ARTICLES = [
   {
     id: 1, category: "ao-scan", tag: "AO Scan Education", readTime: "5 min",
-    title: "What Is AO Scan Technology?",
+    title: "What Is AO Scan Technology?", link: "/wellness-library/ao-scan",
     excerpt: "Discover how AO Scan uses bio-frequency resonance to create a comprehensive picture of your body's energetic blueprint — and what those frequencies mean for your wellness.",
     featured: true,
   },
@@ -32,7 +32,7 @@ const ARTICLES = [
   },
   {
     id: 4, category: "pemf", tag: "PEMF Therapy", readTime: "5 min",
-    title: "How PEMF Therapy Supports Cellular Recovery",
+    title: "How PEMF Therapy Supports Cellular Recovery", link: "/wellness-library/pemf-therapy",
     excerpt: "Pulsed Electromagnetic Field therapy has been studied for decades. Here's what the research says about its role in cellular repair, inflammation, and sleep.",
     featured: true,
   },
@@ -44,7 +44,7 @@ const ARTICLES = [
   },
   {
     id: 6, category: "frequency", tag: "Frequency Wellness", readTime: "7 min",
-    title: "The Science of Frequency Medicine",
+    title: "The Science of Frequency Medicine", link: "/wellness-library/frequency-wellness",
     excerpt: "From ancient tuning forks to modern bio-resonance devices, the study of frequency as a healing modality has a rich and evolving history.",
     featured: true,
   },
@@ -132,21 +132,26 @@ export default function WellnessLibrary() {
           <div className="mb-12">
             <p className="text-xs uppercase tracking-widest text-[#F4EFE6]/30 mb-6">Featured</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {featured.map((article) => (
-                <div key={article.id}
-                  className="group rounded-2xl border border-white/10 bg-[#0C1919] p-6 hover:border-[#BFA14A]/30 transition-all duration-300 cursor-pointer"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] uppercase tracking-widest text-[#BFA14A]/70 bg-[#BFA14A]/8 px-2.5 py-1 rounded-full">{article.tag}</span>
-                    <span className="text-[10px] text-[#F4EFE6]/30">{article.readTime} read</span>
+              {featured.map((article) => {
+                const cardContent = (
+                  <div className="rounded-2xl border border-white/10 bg-[#0C1919] p-6 hover:border-[#BFA14A]/30 transition-all duration-300 h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[10px] uppercase tracking-widest text-[#BFA14A]/70 bg-[#BFA14A]/8 px-2.5 py-1 rounded-full">{article.tag}</span>
+                      <span className="text-[10px] text-[#F4EFE6]/30">{article.readTime} read</span>
+                    </div>
+                    <h3 className="font-serif text-xl text-[#F4EFE6] mb-3 group-hover:text-[#BFA14A] transition-colors">{article.title}</h3>
+                    <p className="text-sm text-[#F4EFE6]/50 leading-relaxed line-clamp-3">{article.excerpt}</p>
+                    <div className="mt-5 flex items-center gap-1 text-xs text-[#BFA14A]/50 group-hover:text-[#BFA14A] transition-colors">
+                      Read article <span>→</span>
+                    </div>
                   </div>
-                  <h3 className="font-serif text-xl text-[#F4EFE6] mb-3 group-hover:text-[#BFA14A] transition-colors">{article.title}</h3>
-                  <p className="text-sm text-[#F4EFE6]/50 leading-relaxed line-clamp-3">{article.excerpt}</p>
-                  <div className="mt-5 flex items-center gap-1 text-xs text-[#BFA14A]/50 group-hover:text-[#BFA14A] transition-colors">
-                    Read article <span>→</span>
-                  </div>
-                </div>
-              ))}
+                );
+                return article.link ? (
+                  <Link key={article.id} href={article.link} className="block group">{cardContent}</Link>
+                ) : (
+                  <div key={article.id} className="group">{cardContent}</div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -156,22 +161,27 @@ export default function WellnessLibrary() {
           <div>
             {featured.length > 0 && <p className="text-xs uppercase tracking-widest text-[#F4EFE6]/30 mb-6">More Articles</p>}
             <div className="space-y-3">
-              {regular.map((article) => (
-                <div key={article.id}
-                  className="group flex items-start gap-5 px-5 py-4 rounded-xl border border-white/8 bg-[#0C1919]/60 hover:border-white/15 hover:bg-[#0C1919] transition-all cursor-pointer"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[9px] uppercase tracking-widest text-[#BFA14A]/55">{article.tag}</span>
-                      <span className="text-[9px] text-[#F4EFE6]/20">·</span>
-                      <span className="text-[9px] text-[#F4EFE6]/25">{article.readTime} read</span>
+              {regular.map((article) => {
+                const cardContent = (
+                  <div className="flex items-start gap-5 px-5 py-4 rounded-xl border border-white/8 bg-[#0C1919]/60 hover:border-white/15 hover:bg-[#0C1919] transition-all">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-[9px] uppercase tracking-widest text-[#BFA14A]/55">{article.tag}</span>
+                        <span className="text-[9px] text-[#F4EFE6]/20">·</span>
+                        <span className="text-[9px] text-[#F4EFE6]/25">{article.readTime} read</span>
+                      </div>
+                      <h3 className="text-sm font-medium text-[#F4EFE6]/85 group-hover:text-[#F4EFE6] transition-colors">{article.title}</h3>
+                      <p className="text-xs text-[#F4EFE6]/40 mt-1 leading-relaxed line-clamp-2">{article.excerpt}</p>
                     </div>
-                    <h3 className="text-sm font-medium text-[#F4EFE6]/85 group-hover:text-[#F4EFE6] transition-colors">{article.title}</h3>
-                    <p className="text-xs text-[#F4EFE6]/40 mt-1 leading-relaxed line-clamp-2">{article.excerpt}</p>
+                    <span className="text-[#F4EFE6]/20 group-hover:text-[#BFA14A]/50 transition-colors text-sm shrink-0">→</span>
                   </div>
-                  <span className="text-[#F4EFE6]/20 group-hover:text-[#BFA14A]/50 transition-colors text-sm shrink-0">→</span>
-                </div>
-              ))}
+                );
+                return article.link ? (
+                  <Link key={article.id} href={article.link} className="block group">{cardContent}</Link>
+                ) : (
+                  <div key={article.id} className="group">{cardContent}</div>
+                );
+              })}
             </div>
           </div>
         )}

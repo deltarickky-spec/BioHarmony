@@ -139,7 +139,7 @@ function AuthGate({ onAuth }: { onAuth: () => void }) {
           <div className="w-14 h-14 rounded-2xl bg-[#BFA14A]/12 border border-[#BFA14A]/25 flex items-center justify-center mx-auto mb-5">
             <Lock className="w-6 h-6 text-[#BFA14A]" />
           </div>
-          <p className="text-[#BFA14A] text-xs uppercase tracking-[0.25em] mb-2">BioHarmony Analytics</p>
+          <p className="text-[#BFA14A] text-xs uppercase tracking-[0.25em] mb-2">Bio-Frequency Analytics</p>
           <h1 className="text-2xl font-serif text-[#F4EFE6]">Practitioner Portal</h1>
           <p className="text-[#F4EFE6]/40 text-sm mt-2">For licensed wellness practitioners only</p>
         </div>

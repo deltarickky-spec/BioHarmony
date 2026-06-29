@@ -7,7 +7,7 @@ export function buildNarrationScript(data: ReportData): string {
     .map((item, i) => `${i + 1}. ${item.title}. ${item.desc}`)
     .join("\n\n");
 
-  return `Welcome to BioHarmony Analytics.
+  return `Welcome to Bio-Frequency Analytics.
 
 This is your ${reportType} wellness interpretation report for ${clientName}, prepared by Kathy Owens.
 
@@ -31,5 +31,5 @@ A closing note from Kathy.
 
 ${sections.closing}
 
-Thank you for trusting BioHarmony Analytics with your wellness journey. This report was prepared with care by Kathy Owens, Founder of BioHarmony Analytics.`;
+Thank you for trusting Bio-Frequency Analytics with your wellness journey. This report was prepared with care by Kathy Owens, Founder of Bio-Frequency Analytics.`;
 }

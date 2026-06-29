@@ -61,7 +61,7 @@ function PractitionerNote({ children }: { children: React.ReactNode }) {
       <p className="text-[#F4EFE6]/78 text-[15px] leading-[1.9] font-serif italic">
         {children}
       </p>
-      <p className="text-[#BFA14A]/50 text-xs mt-4 font-sans not-italic">— Kathy Owens, BioHarmony Analytics</p>
+      <p className="text-[#BFA14A]/50 text-xs mt-4 font-sans not-italic">— Kathy Owens, Bio-Frequency Analytics</p>
     </div>
   );
 }

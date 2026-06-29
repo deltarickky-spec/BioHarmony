@@ -22,7 +22,7 @@ const PLANS: { plan: string; name: string; description: string; amount: number }
 
 async function seedProducts() {
   const stripe = await getUncachableStripeClient();
-  console.log("Seeding BioHarmony Analytics products in Stripe (CAD)...\n");
+  console.log("Seeding Bio-Frequency Analytics products in Stripe (CAD)...\n");
 
   for (const plan of PLANS) {
     const existing = await stripe.products.search({

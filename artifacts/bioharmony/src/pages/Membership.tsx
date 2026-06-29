@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { MEMBERSHIP_PLANS } from "@/lib/pricing";
 
@@ -15,6 +16,71 @@ const fadeInUp = {
 
 export default function Membership() {
   const [selected, setSelected] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoValid, setPromoValid] = useState<{ type: string; value: number; label: string } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  // Validate promo code
+  const validatePromo = async () => {
+    if (!promoCode.trim()) {
+      setPromoValid(null);
+      setPromoError("");
+      return;
+    }
+    setPromoLoading(true);
+    setPromoError("");
+    try {
+      const res = await fetch(`/api/promo/validate?code=${encodeURIComponent(promoCode)}`);
+      if (!res.ok) {
+        setPromoValid(null);
+        setPromoError("Invalid promo code");
+      } else {
+        const data = await res.json();
+        setPromoValid(data);
+        setPromoError("");
+      }
+    } catch {
+      setPromoValid(null);
+      setPromoError("Could not validate code");
+    }
+    setPromoLoading(false);
+  };
+
+  // Subscribe handler
+  const handleSubscribe = async (planId: string) => {
+    setLoading(planId);
+    setError("");
+    try {
+      const body: Record<string, string> = {
+        planId,
+        successUrl: `${window.location.origin}/membership?success=true`,
+        cancelUrl: `${window.location.origin}/membership`,
+      };
+      if (promoValid) {
+        body.promoCode = promoCode.trim().toUpperCase();
+      }
+
+      const res = await fetch("/api/stripe/subscription-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Checkout failed");
+      }
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
+    }
+    setLoading(null);
+  };
 
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
@@ -34,6 +100,43 @@ export default function Membership() {
           <p className="text-muted-foreground text-base max-w-xl mx-auto">
             Consistent insight, month after month. Get member-only scan discounts and priority processing.
           </p>
+        </motion.div>
+
+        {/* Promo Code */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="max-w-sm mx-auto mb-10"
+        >
+          <div className="flex gap-2">
+            <Input
+              placeholder="Promo code"
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value);
+                setPromoValid(null);
+                setPromoError("");
+              }}
+              className="text-xs"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={validatePromo}
+              disabled={promoLoading || !promoCode.trim()}
+            >
+              {promoLoading ? "..." : "Apply"}
+            </Button>
+          </div>
+          {promoValid && (
+            <p className="text-green-600 text-xs mt-1 text-center">
+              ✓ {promoValid.label} applied
+            </p>
+          )}
+          {promoError && (
+            <p className="text-red-500 text-xs mt-1 text-center">{promoError}</p>
+          )}
         </motion.div>
 
         {/* Membership Cards */}
@@ -85,12 +188,23 @@ export default function Membership() {
                     ))}
                   </ul>
                   <Button
-                    asChild
                     className="w-full rounded-full text-xs mt-auto"
                     variant={plan.popular ? "default" : "outline"}
                     size="sm"
+                    disabled={loading === plan.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSubscribe(plan.id);
+                    }}
                   >
-                    <a href="/contact">Join {plan.label}</a>
+                    {loading === plan.id ? (
+                      <span className="flex items-center gap-2">
+                        <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+                        Redirecting...
+                      </span>
+                    ) : (
+                      `Subscribe — $${plan.price}/mo`
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -98,7 +212,20 @@ export default function Membership() {
           ))}
         </div>
 
-        {/* Membership Details */}
+        {/* Error */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 text-center"
+          >
+            <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3 inline-block">
+              {error}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

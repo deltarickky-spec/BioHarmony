@@ -23,6 +23,7 @@ const cards = [
     description:
       "A frequency-based energetic snapshot of your pet's blood biology, vital organs, and foundational glandular systems. Perfect for a quick wellness check-in or when your pet seems slightly \"off\" but you can't pinpoint why.",
     species: "Dogs, Cats, Horses",
+    photo: "/assets/pet-dog.jpg",
     features: [
       "Blood biology frequency reading",
       "Organ & gland energetic assessment",
@@ -38,6 +39,7 @@ const cards = [
     description:
       "A full body system analysis for your animal companion — covering every major body system, cellular frequencies, and energetic pathways. Includes a personalized 30-day wellness plan tailored to your pet's unique energetic profile.",
     species: "Dogs, Cats, Horses",
+    photo: "/assets/pet-cat.jpg",
     features: [
       "Complete body system frequency analysis",
       "Cellular & energetic pathway mapping",
@@ -64,23 +66,41 @@ export default function PetShowroom() {
           className="text-center mb-14 max-w-3xl mx-auto"
         >
           <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans mb-3">
-            Paws &amp; Whiskers Wellness
+            Animal Companions
           </p>
           <h2 className="text-3xl md:text-5xl font-serif text-[#F4EFE6] leading-tight">
-            Frequency Wellness for Your Animal Companions
+            Advanced Analytics for<br />
+            <span className="text-[#BFA14A]">Animal Companions</span>
           </h2>
-          <p className="text-[#F4EFE6]/60 text-lg mt-4 leading-relaxed">
-            Dogs, cats, and horses carry their own unique energetic signatures.
-            Our non-invasive pet scans help you understand what your companion's
-            body is quietly communicating — so you can support them with clarity
-            and confidence.
+          <p className="text-[#F4EFE6]/60 text-lg mt-4 leading-relaxed max-w-2xl mx-auto">
+            Our proprietary Pet Protocol extends the same rigorous Bio-Digital Synthesis methodology to your animal companions. Unlike human-generic interpretations, our species-appropriate analysis accounts for the unique physiological frequency baselines of dogs, cats, and horses — delivering owner-friendly reports that your veterinarian can understand and work alongside.
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <span className="text-[#BFA14A]/30 text-xs">⟡</span>
-            <span className="text-[#F4EFE6]/30 text-xs uppercase tracking-widest font-sans">
-              Species-specific frequency assessment
-            </span>
-            <span className="text-[#BFA14A]/30 text-xs">⟡</span>
+
+          {/* Pet checkmark badges */}
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            {[
+              "Species-Appropriate Analysis",
+              "Veterinary Disclaimer Included",
+              "Owner-Friendly Reports",
+            ].map((badge) => (
+              <div
+                key={badge}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#BFA14A]/15 bg-[#BFA14A]/5 text-xs text-[#F4EFE6]/70"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-3.5 h-3.5 text-[#BFA14A] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>{badge}</span>
+              </div>
+            ))}
           </div>
         </motion.div>
 
@@ -109,14 +129,12 @@ export default function PetShowroom() {
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border border-[#BFA14A]/10" />
                 </div>
 
-                {/* Paw silhouette SVG */}
-                <svg
-                  viewBox="0 0 80 80"
-                  className="w-20 h-20 text-[#F4EFE6]/10 group-hover:text-[#BFA14A]/20 transition-colors duration-500 relative z-10"
-                  fill="currentColor"
-                >
-                  <path d="M40,10 C45,10 50,14 50,20 C50,26 45,30 40,30 C35,30 30,26 30,20 C30,14 35,10 40,10 Z M18,22 C22,22 26,26 26,31 C26,36 22,40 18,40 C14,40 10,36 10,31 C10,26 14,22 18,22 Z M62,22 C66,22 70,26 70,31 C70,36 66,40 62,40 C58,40 54,36 54,31 C54,26 58,22 62,22 Z M24,44 C28,44 32,48 32,53 C32,58 28,62 24,62 C20,62 16,58 16,53 C16,48 20,44 24,44 Z M56,44 C60,44 64,48 64,53 C64,58 60,62 56,62 C52,62 48,58 48,53 C48,48 52,44 56,44 Z" />
-                </svg>
+                {/* Animal photo background */}
+                <img
+                  src={card.photo}
+                  alt={card.title}
+                  className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-35 transition-opacity duration-500"
+                />
 
                 {/* Pattern accent */}
                 <span className="absolute bottom-3 right-4 text-[#F4EFE6]/8 text-2xl font-serif">

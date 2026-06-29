@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getUncachableStripeClient } from "../stripeClient";
 import { getPlan } from "../pricing";
+import { createClientId } from "../lib/clientId";
 
 const router = Router();
 
@@ -69,12 +70,19 @@ router.post("/stripe/checkout", async (req, res) => {
 
     const stripe = await getUncachableStripeClient();
 
-    const requestId = `BH-${scanRequestId.toString().padStart(4, "0")}`;
+    let requestId = row.clientId;
+    if (!requestId) {
+      requestId = createClientId();
+      await db.update(scanRequestsTable)
+        .set({ clientId: requestId })
+        .where(eq(scanRequestsTable.id, scanRequestId));
+    }
     const domain =
       process.env.SITE_URL ??
       `https://${(process.env.REPLIT_DOMAINS ?? "localhost").split(",")[0]}`;
 
     const session = await stripe.checkout.sessions.create({
+      client_reference_id: requestId,
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
@@ -83,16 +91,14 @@ router.post("/stripe/checkout", async (req, res) => {
         scanRequestId: String(scanRequestId),
         requestId,
         plan,
-        clientName: row.name,
       },
       success_url: `${domain}/track-report?id=${requestId}`,
       cancel_url: `${domain}/upload-scan`,
       payment_intent_data: {
-        description: `BioHarmony ${planDef.label} — $${planDef.price}`,
+        description: `BioHarmony ${planDef.label} — ${requestId}`,
         metadata: {
           scanRequestId: String(scanRequestId),
           requestId,
-          clientName: row.name,
         },
       },
     });

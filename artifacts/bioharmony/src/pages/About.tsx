@@ -32,12 +32,12 @@ export default function About() {
               <div>
                 <p className="text-[#BFA14A] text-xs uppercase tracking-[0.2em] font-sans mb-4">Founder & Practitioner</p>
                 <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6] mb-3">Meet Kathy Owens</h1>
-                <p className="text-xl font-serif text-[#BFA14A]/80 font-medium">Founder, BioHarmony Analytics</p>
+                <p className="text-xl font-serif text-[#BFA14A]/80 font-medium">Founder, Bio-Frequency Analytics</p>
               </div>
 
               <div className="space-y-5">
                 <p className="text-[#F4EFE6]/65 leading-relaxed text-lg">
-                  Kathy Owens founded BioHarmony Analytics from a deeply personal belief: that every body has a unique energetic signature, and understanding that signature is the key to profound wellness.
+                  Kathy Owens founded Bio-Frequency Analytics from a deeply personal belief: that every body has a unique energetic signature, and understanding that signature is the key to profound wellness.
                 </p>
                 <p className="text-[#F4EFE6]/65 leading-relaxed text-lg">
                   After experiencing the limitations of conventional wellness tracking, Kathy discovered the remarkable world of frequency-based tools. The clarity and gentle support these technologies provided inspired her to create a sanctuary where others could access the same insights.

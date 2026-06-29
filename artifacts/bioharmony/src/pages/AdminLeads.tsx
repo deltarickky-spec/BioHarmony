@@ -367,7 +367,7 @@ function LeadsDashboard({ token, onSignOut }: { token: string; onSignOut: () => 
             </div>
             <div>
               <h1 className="text-sm font-semibold text-[#F4EFE6]">Client Leads</h1>
-              <p className="text-[#F4EFE6]/35 text-xs">BioHarmony Analytics Admin</p>
+              <p className="text-[#F4EFE6]/35 text-xs">Bio-Frequency Analytics Admin</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

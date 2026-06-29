@@ -145,7 +145,7 @@ export default function AdminSettings() {
       <div className="min-h-screen bg-[#060D0D] flex items-center justify-center px-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">BioHarmony Analytics</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-[#BFA14A] mb-3">Bio-Frequency Analytics</p>
             <h1 className="font-serif text-3xl text-[#F4EFE6]">Admin Settings</h1>
           </div>
           <form onSubmit={handleAuth} className="bg-[#0C1919] rounded-2xl border border-white/10 p-8 space-y-4">

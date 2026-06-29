@@ -423,10 +423,10 @@ export default function UploadScan() {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Something went wrong");
       }
-      const data = (await res.json()) as { id?: number };
+      const data = (await res.json()) as { id?: number; clientId?: string };
       const numericId = data.id;
       if (numericId) {
-        const rid = `BH-${numericId.toString().padStart(4, "0")}`;
+        const rid = data.clientId ?? `BH-${numericId.toString().padStart(4, "0")}`;
         setRequestId(rid);
 
         // Step 2: Create Stripe checkout session and redirect
@@ -470,7 +470,7 @@ export default function UploadScan() {
           <h1 className="font-serif text-4xl text-[#F4EFE6] mb-4">Thank you.</h1>
           <p className="text-[#F4EFE6]/60 text-lg leading-relaxed mb-8">
             We'll review your submission and prepare your personalized report within{" "}
-            <span className="text-[#BFA14A] font-medium">24–48 hours</span>.
+            <span className="text-[#BFA14A] font-medium">30 minutes</span>.
           </p>
 
           {requestId && (
@@ -885,7 +885,7 @@ export default function UploadScan() {
                 {step === 4 && (
                   <div>
                     <h2 className="font-serif text-2xl text-[#F4EFE6] mb-2">Select your plan</h2>
-                    <p className="text-[#F4EFE6]/40 text-sm mb-6">All plans include a fully personalized report delivered within 24–48 hours.</p>
+                    <p className="text-[#F4EFE6]/40 text-sm mb-6">All plans include a fully personalized report delivered within 30 minutes.</p>
 
                     {(() => {
                       const isPet = reportType === "pet_scan";

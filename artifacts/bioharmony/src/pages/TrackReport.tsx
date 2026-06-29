@@ -58,6 +58,10 @@ interface TrackResult {
 
 function formatRequestId(raw: string): string | null {
   const cleaned = raw.trim().toUpperCase().replace(/\s/g, "");
+  if (/^BH-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(cleaned)) {
+    return cleaned;
+  }
+  // Temporary compatibility for clients who received an older numeric ID.
   const withPrefix = cleaned.startsWith("BH-")
     ? cleaned
     : cleaned.startsWith("BH")
@@ -542,12 +546,11 @@ export default function TrackReport() {
   const doFetch = useCallback(async (silent = false) => {
     const formatted = formatRequestId(requestIdRef.current);
     if (!formatted) return;
-    const numId = parseInt(formatted.replace("BH-", ""), 10);
     try {
       if (silent) setSilentRefreshing(true);
       else setLoading(true);
       const resp = await fetch(
-        `${BASE}/api/scan-requests/track?id=${numId}&email=${encodeURIComponent(emailRef.current.trim())}`,
+        `${BASE}/api/scan-requests/track?id=${encodeURIComponent(formatted)}&email=${encodeURIComponent(emailRef.current.trim())}`,
       );
       if (resp.ok) {
         const data = (await resp.json()) as TrackResult;
@@ -580,14 +583,13 @@ export default function TrackReport() {
     setLastUpdated(null);
     const formatted = formatRequestId(requestId);
     if (!formatted) {
-      setError("Invalid Request ID format. Use the format BH-0042 (found in your confirmation screen or email).");
+      setError("Invalid BioHarmony Client ID. Please use the ID from your confirmation screen or email.");
       return;
     }
     setLoading(true);
     try {
-      const numId = parseInt(formatted.replace("BH-", ""), 10);
       const resp = await fetch(
-        `${BASE}/api/scan-requests/track?id=${numId}&email=${encodeURIComponent(email.trim())}`,
+        `${BASE}/api/scan-requests/track?id=${encodeURIComponent(formatted)}&email=${encodeURIComponent(email.trim())}`,
       );
       const data = (await resp.json()) as { error?: string } & Partial<TrackResult>;
       if (!resp.ok) {
@@ -613,7 +615,7 @@ export default function TrackReport() {
       <section className="py-20 border-b border-white/5">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.3em] mb-4">BioHarmony Analytics</p>
+            <p className="text-[#BFA14A] text-xs uppercase tracking-[0.3em] mb-4">Bio-Frequency Analytics</p>
             <h1 className="text-4xl md:text-5xl font-serif text-[#F4EFE6] mb-4 leading-tight">Track Your Report</h1>
             <p className="text-[#F4EFE6]/50 text-lg leading-relaxed">
               Enter your email and Request ID to see exactly where your report is in our AI processing pipeline.
@@ -639,7 +641,7 @@ export default function TrackReport() {
                 <label className="block text-xs text-[#F4EFE6]/45 uppercase tracking-wider mb-2">Request ID</label>
                 <input
                   type="text" required value={requestId} onChange={(e) => setRequestId(e.target.value)}
-                  placeholder="e.g. BH-0042" className={`${inputCls} font-mono tracking-wider`}
+                  placeholder="e.g. BH-7K4M-92QX-F3RT" className={`${inputCls} font-mono tracking-wider`}
                 />
                 <p className="text-xs text-[#F4EFE6]/22 mt-1.5 ml-1">Found on your confirmation screen or in your email.</p>
               </div>

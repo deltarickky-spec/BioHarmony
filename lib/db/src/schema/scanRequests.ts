@@ -3,6 +3,9 @@ import { sql } from "drizzle-orm";
 
 export const scanRequestsTable = pgTable("scan_requests", {
   id: serial("id").primaryKey(),
+  // Random, non-identifying identifier used outside the restricted client record.
+  // Nullable only so existing records can be backfilled safely during rollout.
+  clientId: varchar("client_id", { length: 32 }).unique(),
   name: varchar("name", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 50 }),

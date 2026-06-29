@@ -28,54 +28,30 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
-  plugins: [
-    react(),
-    tailwindcss(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer({
-              root: path.resolve(import.meta.dirname, ".."),
-            }),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
-  ],
+  plugins: [react(), tailwindcss(), runtimeErrorOverlay()],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
-    },
-    dedupe: ["react", "react-dom"],
-  },
-  root: path.resolve(import.meta.dirname),
-  optimizeDeps: {
-    include: ["@react-pdf/renderer"],
-  },
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
-    commonjsOptions: {
-      include: [/@react-pdf\/renderer/, /node_modules/],
+      "@": path.resolve(__dirname, "./src"),
+      "@db": path.resolve(__dirname, "./db"),
+      "@shared": path.resolve(__dirname, "./shared"),
+      "@assets": path.resolve(__dirname, "./attached_assets"),
+      "stripe-replit-sync": path.resolve(__dirname, "./node_modules/stripe-replit-sync"),
     },
   },
   server: {
     port,
-    strictPort: true,
     host: "0.0.0.0",
     allowedHosts: true,
-    fs: {
-      strict: true,
+    proxy: {
+      // Proxy Stripe and promo API calls to the standalone Stripe server
+      "/api/stripe": {
+        target: "http://localhost:8303",
+        changeOrigin: true,
+      },
+      "/api/promo": {
+        target: "http://localhost:8303",
+        changeOrigin: true,
+      },
     },
-  },
-  preview: {
-    port,
-    host: "0.0.0.0",
-    allowedHosts: true,
   },
 });

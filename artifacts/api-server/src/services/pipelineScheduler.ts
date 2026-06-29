@@ -213,7 +213,7 @@ async function tick(): Promise<void> {
 
       // Notify client that AI processing has started (first active stage)
       if (nextStage === "extracting") {
-        const requestId = `BH-${row.id.toString().padStart(4, "0")}`;
+        const requestId = row.clientId ?? `BH-${row.id.toString().padStart(4, "0")}`;
         sendEmail(buildProcessingStartedEmail({
           name: row.name,
           email: row.email,
@@ -228,13 +228,13 @@ async function tick(): Promise<void> {
       // Send "Your report is ready" email when advancing to delivered
       // Only if email hasn't been sent yet (deliveredEmailSentAt is null)
       if (nextStage === "delivered" && !row.deliveredEmailSentAt) {
-        await sendDeliveryEmail(row.id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount);
+        await sendDeliveryEmail(row.id, row.name, row.email, row.plan, row.whatsapp ?? false, row.reportType, row.promoCode, row.discountAmount, row.clientId);
         // Notify the referring practitioner (if any) of their earned commission
         if (row.practitionerCode) {
           await sendPractitionerCommissionEmail(row.id, row.practitionerCode, row.reportType, row.plan);
         }
         // Send testimonial / feedback request alongside the delivery email
-        const requestId = `BH-${row.id.toString().padStart(4, "0")}`;
+        const requestId = row.clientId ?? `BH-${row.id.toString().padStart(4, "0")}`;
         sendEmail(buildTestimonialRequestEmail({
           name: row.name,
           email: row.email,
@@ -268,8 +268,9 @@ export async function sendPaymentReminderEmail(
   promoCode?: string | null,
   discountAmount?: number | null,
   plan?: string | null,
+  clientId?: string | null,
 ): Promise<void> {
-  const requestId = `BH-${id.toString().padStart(4, "0")}`;
+  const requestId = clientId ?? `BH-${id.toString().padStart(4, "0")}`;
   const paymentUrl = `${SITE_URL_SCHEDULER}/upload?resume=${encodeURIComponent(requestId)}`;
   try {
     const payload = buildPaymentReminderEmail({
@@ -325,6 +326,7 @@ async function paymentReminderTick(): Promise<void> {
       await sendPaymentReminderEmail(
         row.id, row.name, row.email, row.whatsapp ?? false,
         row.promoCode, row.discountAmount, row.plan,
+        row.clientId,
       );
     }
   } catch (err) {
@@ -417,8 +419,9 @@ export async function sendDeliveryEmail(
   reportType: string,
   promoCode?: string | null,
   discountAmount?: number | null,
+  clientId?: string | null,
 ): Promise<void> {
-  const requestId = `BH-${id.toString().padStart(4, "0")}`;
+  const requestId = clientId ?? `BH-${id.toString().padStart(4, "0")}`;
   try {
     const payload = buildDeliveredEmail({
       name,
